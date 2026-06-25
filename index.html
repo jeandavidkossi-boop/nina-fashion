@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nina Fashion - Système de Caisse</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 15px; background: #f3f4f6; color: #1f2937; }
+        .header { text-align: center; background: #1e3a8a; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .layout { display: grid; grid-template-columns: 1fr; gap: 15px; max-width: 1200px; margin: 0 auto; }
+        @media(min-width: 768px) { .layout { grid-template-columns: 1fr 1fr; } }
+        .panel { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; font-size: 16px; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; color: #1e3a8a; display: flex; justify-content: space-between; }
+        .cat-title { font-size: 13px; font-weight: bold; color: #4b5563; margin: 15px 0 5px 0; text-transform: uppercase; background: #e5e7eb; padding: 4px 8px; border-radius: 4px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+        .item-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 70px; }
+        .item-card:hover { border-color: #3b82f6; background: #eff6ff; transform: translateY(-2px); }
+        .item-name { font-size: 12px; font-weight: 600; color: #374151; }
+        .item-price { font-size: 13px; font-weight: bold; color: #10b981; margin-top: 4px; }
+        .item-unit { font-size: 10px; color: #6b7280; font-weight: normal; }
+        .basket-item { display: flex; justify-content: space-between; align-items: center; background: #f9fafb; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #3b82f6; font-size: 13px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 10px; text-transform: uppercase; transition: background 0.2s; }
+        .btn-blue { background: #3b82f6; color: white; } .btn-blue:hover { background: #2563eb; }
+        .btn-green { background: #10b981; color: white; } .btn-green:hover { background: #059669; }
+        .btn-red { background: #ef4444; color: white; font-size: 12px; padding: 8px; } .btn-red:hover { background: #dc2626; }
+        .badge { background: #f59e0b; color: white; padding: 1px 4px; font-size: 9px; border-radius: 3px; font-weight: bold; margin-left: 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>NINA FASHION — Gestion Autonome</h1>
+        <div style="font-size: 11px; margin-top: 4px; opacity: 0.9;">Système Anti-Fraude Garanti</div>
+    </div>
+
+    <div class="layout">
+        
+        <div class="panel">
+            <h2>1. Côté Vendeur <span style="font-size:11px; color:#6b7280; font-weight:normal;">(Sélection des articles)</span></h2>
+            <div id="catalogue-content"></div>
+            
+            <div style="margin-top:20px; background:#f3f4f6; padding:12px; border-radius:8px;">
+                <h4 style="margin:0 0 10px 0; font-size:13px;">Panier Client en préparation :</h4>
+                <div id="vendeur-panier"><p style="color:gray; font-size:12px; margin:0;">Aucun article sélectionné.</p></div>
+                <button class="btn btn-blue" onclick="envoyerCaisse()">Envoyer le panier à la caisse</button>
+            </div>
+        </div>
+
+        <div class="panel" style="border-top: 4px solid #10b981;">
+            <h2>2. Côté Caissière <span id="statut-caisse" style="font-size:11px; color:#ef4444;">[🔒 Caisse Bloquée]</span></h2>
+            
+            <div id="bloc-fond" style="background:#fef3c7; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #f59e0b;">
+                <h4 style="margin:0 0 5px 0; font-size:13px; color:#b45309;">Étape Obligatoire du Matin :</h4>
+                <p style="margin:0 0 8px 0; font-size:11px;">Saisir le montant d'espèces dispo pour la monnaie :</p>
+                <input type="number" id="fond-valeur" value="10000" style="padding:6px; width:100px; border-radius:4px; border:1px solid #d1d5db;">
+                <button onclick="verrouillerFond()" style="padding:6px 12px; background:#d97706; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">Valider et Activer la Caisse</button>
+            </div>
+
+            <div id="bloc-caissiere-operationnel" style="display:none;">
+                <h4 style="margin:0 0 8px 0; font-size:13px;">Commandes en attente de paiement :</h4>
+                <div id="caisse-attente"><p style="color:gray; font-size:12px; margin:0;">En attente qu'un vendeur envoie une commande...</p></div>
+
+                <div style="margin-top:20px; background:#ecfdf5; padding:15px; border-radius:8px; border:1px solid #a7f3d0;">
+                    <h4 style="margin:0 0 10px 0; font-size:13px; color:#065f46;">Commande Encaissée :</h4>
+                    <div id="caisse-detail" style="font-size:12px; color:#374151;">Sélectionnez une commande ci-dessus.</div>
+                    <div id="caisse-total" style="font-size:20px; font-weight:bold; color:#10b981; margin:10px 0;">TOTAL : 0 F CFA</div>
+                    
+                    <div style="margin-bottom:12px; font-size:13px;">
+                        <input type="radio" name="mode-paie" id="p-cash" checked> <label for="p-cash">💵 Espèces</label>
+                        <input type="radio" name="mode-paie" id="p-momo" style="margin-left:15px;"> <label for="p-momo">📱 Mobile Money</label>
+                    </div>
+                    <button class="btn btn-green" onclick="encaisserVente()">Valider le Paiement</button>
+                </div>
+
+                <button class="btn btn-red" style="margin-top:25px;" onclick="fermetureAveugle()">🔒 Fermeture de Caisse (Fin de journée)</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // BASE DE DONNÉES DE LA MERCERIE NINA FASHION
+        const articlesBase = [
+            // SECTION A : SERVICES
+            { id: 'S1', cat: 'Services Machines (S1)', nom: 'Pagne en bande', prix: 50, unite: 'mètre' },
+            { id: 'S2', cat: 'Services Machines (S1)', nom: 'Surfilage Pantalon', prix: 100, unite: 'pièce' },
+            { id: 'S5', cat: 'Services Machines (S1)', nom: 'Intérieur Robe/Boubou', prix: 100, unite: 'pièce' },
+            { id: 'S8', cat: 'Boutons Machines (S2)', nom: 'Bouton simple n18-24', prix: 25, unite: 'pièce' },
+            { id: 'S9', cat: 'Boutons Machines (S2)', nom: 'Bouton simple n28', prix: 50, unite: 'pièce' },
+            { id: 'S11', cat: 'Boutons Machines (S2)', nom: 'Bouton doré n16-28', prix: 100, unite: 'pièce' },
+            { id: 'S13', cat: 'Pressions (S3)', nom: 'Pression Caoutchouc', prix: 50, unite: 'pièce' },
+            // SECTION B : FOURNITURES
+            { id: '101', cat: 'Fermetures (Ch. 10)', nom: 'Chaîne démontable', prix: 100, unite: 'pièce' },
+            { id: '102', cat: 'Fermetures (Ch. 10)', nom: 'Chaîne Jeans 75cm', prix: 500, unite: 'pièce' },
+            { id: '43', cat: 'Tissus au Mètre (Ch. 5)', nom: 'Tissu Duchesse', prix: 2500, unite: 'mètre' },
+            { id: '45', cat: 'Tissus au Mètre (Ch. 5)', nom: 'Grain de diamant', prix: 1500, unite: 'mètre' },
+            { id: '138', cat: 'Boutons Fournitures (Ch. 14)', nom: 'Bouton Pantalon x3', prix: 25, unite: 'pièce' }
+        ];
+
+        let panierVendeur = [];
+        let filesAttenteCaisse = [];
+        let indexSelectionne = null;
+        let fondInitial = 0;
+        let especesDuJour = 0;
+
+        // Génération dynamique du catalogue vendeur
+        function initialiserCatalogue() {
+            const conteneur = document.getElementById('catalogue-content');
+            let categories = [...new Set(articlesBase.map(a => a.cat))];
+            conteneur.innerHTML = "";
+            
+            categories.forEach(cat => {
+                conteneur.innerHTML += `<div class="cat-title">${cat}</div>`;
+                let grid = document.createElement('div');
+                grid.className = 'grid';
+                
+                articlesBase.filter(a => a.cat === cat).forEach(art => {
+                    grid.innerHTML += `
+                        <div class="item-card" onclick="ajouterAuPanier('${art.id}')">
+                            <div class="item-name">${art.nom} <span class="badge">${art.id}</span></div>
+                            <div class="item-price">${art.prix} F <span class="item-unit">/${art.unite === 'mètre' ? 'm' : 'u'}</span></div>
+                        </div>
+                    `;
+                });
+                conteneur.appendChild(grid);
+            });
+        }
+
+        function ajouterAuPanier(id) {
+            let art = articlesBase.find(a => a.id === id);
+            let qte = 1;
+            if (art.unite === 'mètre') {
+                let r = prompt(`Entrez la longueur en mètre pour ${art.nom} (ex: 1.5 ou 0.5) :`, "1");
+                if (!r) return;
+                qte = parseFloat(r.replace(',', '.'));
+                if (isNaN(qte) || qte <= 0) return;
+            } else {
+                let r = prompt(`Entrez le nombre d'unités pour ${art.nom} :`, "1");
+                if (!r) return;
+                qte = parseInt(r);
+                if (isNaN(qte) || qte <= 0) return;
+            }
+            panierVendeur.push({ ...art, qte, total: art.prix * qte });
+            afficherPanierVendeur();
+        }
+
+        function afficherPanierVendeur() {
+            const div = document.getElementById('vendeur-panier');
+            if(panierVendeur.length === 0) { div.innerHTML = "<p style='color:gray;font-size:12px;margin:0;'>Aucun article.</p>"; return; }
+            div.innerHTML = "";
+            panierVendeur.forEach(i => {
+                div.innerHTML += `<div class="basket-item"><span>${i.nom} (x${i.qte})</span><b>${i.total} F</b></div>`;
+            });
+        }
+
+        function envoyerCaisse() {
+            if(panierVendeur.length === 0) { alert("Le panier est vide."); return; }
+            filesAttenteCaisse.push([...panierVendeur]);
+            panierVendeur = [];
+            afficherPanierVendeur();
+            afficherCaisseAttente();
+            alert("Panier transféré au comptoir de la caissière !");
+        }
+
+        // FONCTIONS CAISSIÈRE
+        function verrouillerFond() {
+            fondInitial = parseFloat(document.getElementById('fond-valeur').value) || 0;
+            document.getElementById('bloc-fond').style.display = 'none';
+            document.getElementById('bloc-caissiere-operationnel').style.display = 'block';
+            document.getElementById('statut-caisse').innerText = "[🟢 Caisse Active]";
+            document.getElementById('statut-caisse').style.color = "#10b981";
+        }
+
+        function afficherCaisseAttente() {
+            const div = document.getElementById('caisse-attente');
+            if(filesAttenteCaisse.length === 0) { div.innerHTML = "<p style='color:gray;font-size:12px;margin:0;'>Aucun client en attente.</p>"; return; }
+            div.innerHTML = "";
+            filesAttenteCaisse.forEach((p, idx) => {
+                let t = p.reduce((acc, i) => acc + i.total, 0);
+                div.innerHTML += `
+                    <div style="background:#fffbeb; border:1px solid #fef3c7; padding:8px; border-radius:6px; margin-bottom:5px; cursor:pointer;" onclick="choisirCommande(${idx})">
+                        <strong>Client #${idx+1}</strong> — ${p.length} articles — <span style="color:#10b981;font-weight:bold;">${t} F</span>
+                    </div>
+                `;
+            });
+        }
+
+        function choisirCommande(idx) {
+            indexSelectionne = idx;
+            const p = filesAttenteCaisse[idx];
+            let t = p.reduce((acc, i) => acc + i.total, 0);
+            let txt = "";
+            p.forEach(i => txt += `• ${i.nom} (x${i.qte}) = ${i.total} F<br>`);
+            document.getElementById('caisse-detail').innerHTML = txt;
+            document.getElementById('caissiere-total').innerText = `TOTAL : ${t} F CFA`;
+        }
+
+        function encaisserVente() {
+            if(indexSelectionne === null) { alert("Sélectionnez d'abord un client."); return; }
+            let p = filesAttenteCaisse[indexSelectionne];
+            let t = p.reduce((acc, i) => acc + i.total, 0);
+            
+            if(document.getElementById('p-cash').checked) {
+                especesDuJour += t; // Enregistré en tâche de fond secrète
+            }
+
+            filesAttenteCaisse.splice(indexSelectionne, 1);
+            indexSelectionne = null;
+            document.getElementById('caisse-detail').innerText = "Sélectionnez une commande ci-dessus.";
+            document.getElementById('caissiere-total').innerText = "TOTAL : 0 F CFA";
+            afficherCaisseAttente();
+            alert("Vente validée et verrouillée dans l'historique !");
+        }
+
+        function fermetureAveugle() {
+            let saisie = prompt("CONTRÔLE À L'AVEUGLE :\nCaissière, comptez TOUT l'argent physique du tiroir et écrivez le montant total ici :");
+            if(!saisie) return;
+            let totalSaisi = parseFloat(saisie);
+            let attendu = fondInitial + especesDuJour;
+            let ecart = totalSaisi - attendu;
+
+            let bilan = `--- BILAN DE FERMETURE (Envoyé au Gérant) ---\n`;
+            bilan += `Fond initial du matin : ${fondInitial} F\n`;
+            bilan += `Ventes espèces calculées par la machine : ${especesDuJour} F\n`;
+            bilan += `Total théorique attendu : ${attendu} F\n`;
+            bilan += `Déclaration physique caissière : ${totalSaisi} F\n`;
+            
+            if(ecart === 0) bilan += `✅ COMPTE PARFAIT ! Aucun écart.`;
+            else if(ecart < 0) bilan += `❌ ALERTE VOL / ERREUR : Il manque ${Math.abs(ecart)} F dans la caisse !`;
+            else bilan += `⚠️ ALERTE SURPLUS : ${ecart} F en trop dans la caisse !`;
+
+            alert(bilan);
+        }
+
+        window.onload = initialiserCatalogue;
+    </script>
+</body>
+  </html>
+  
