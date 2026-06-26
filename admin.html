@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration — Nina Fashion</title>
+    <style>
+        :root {
+            --primary: #1a1c1e;
+            --gold: #b38728;
+            --bg-gray: #f4f6f8;
+            --border: #e2e8f0;
+            --text-dark: #2c3e50;
+        }
+        body { font-family: sans-serif; background-color: var(--bg-gray); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 18px; color: var(--gold); }
+        .nav-back { color: white; text-decoration: none; font-size: 14px; }
+        
+        .dashboard { padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card h2 { font-size: 16px; color: var(--gold); margin-bottom: 10px; }
+        .value { font-size: 24px; font-weight: bold; color: var(--text-dark); }
+        
+        .management-links { padding: 20px; }
+        .btn-link { display: inline-block; padding: 10px 20px; background: var(--primary); color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Tableau de Bord Administrateur</h1>
+    <a href="index.html" class="nav-back">⬅ Retour Accueil</a>
+</header>
+
+<div class="dashboard">
+    <div class="card">
+        <h2>Chiffre d'Affaires</h2>
+        <div class="value" id="ca-total">0 F</div>
+    </div>
+    <div class="card">
+        <h2>Commandes en cours</h2>
+        <div class="value" id="cmd-count">0</div>
+    </div>
+    <div class="card">
+        <h2>Alertes Stock</h2>
+        <div class="value" id="stock-alerts" style="color: red;">0</div>
+    </div>
+</div>
+
+<div class="management-links">
+    <h2>Gestion</h2>
+    <a href="vendeur.html" class="btn-link">Gérer les Ventes</a>
+    <a href="stock.html" class="btn-link">Gérer les Stocks</a>
+    <a href="machiniste.html" class="btn-link">Gestion Atelier</a>
+</div>
+
+<script>
+    // Ici, plus tard, nous connecterons Supabase pour charger les vraies données
+    console.log("Module Administrateur chargé.");
+</script>
+
+</body>
+</html>
