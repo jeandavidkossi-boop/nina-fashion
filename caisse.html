@@ -3,146 +3,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caisse - Nina Fashion</title>
+    <title>Caisse — Nina Fashion</title>
     <style>
+        /* Couleurs & Graphisme Nina Fashion */
         :root {
-            --primary: #2c3e50;
-            --secondary: #27ae60;
-            --bg-color: #ecf0f1;
-            --text-dark: #333;
+            --primary: #8e24aa; /* Violet élégant */
+            --primary-light: #f3e5f5;
+            --accent: #ffb300; /* Or / Jaune chaleureux */
+            --dark: #263238;
+            --light: #f8f9fa;
+            --border: #cfd8dc;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-        /* --- COLONNE GAUCHE : CATÉGORIES --- */
-        .categories {
-            width: 20%;
-            background-color: var(--primary);
-            color: white;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .categories h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #576574; padding-bottom: 10px; }
-        .btn-cat {
-            width: 100%;
-            background-color: #34495e;
-            color: white;
-            border: none;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            text-align: left;
-            transition: 0.2s;
-        }
-        .btn-cat:hover, .btn-cat.active { background-color: var(--secondary); }
 
-        /* --- CENTRE : ARTICLES --- */
-        .articles-area {
-            width: 50%;
-            padding: 20px;
-            overflow-y: auto;
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
         }
-        .articles-area h2 { color: var(--primary); margin-top: 0; }
-        .grid-articles {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
+
+        body { 
+            background-color: #f4f6f8; 
+            color: var(--dark); 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
         }
-        .card-article {
+
+        header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+
+        header h1 { font-size: 18px; font-weight: 600; }
+        
+        .badge { 
+            background: var(--accent); 
+            color: var(--dark); 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 12px; 
+        }
+
+        /* Layout Flexible adaptatif (Ordinateur / Tablette / Téléphone) */
+        .main-container { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            flex: 1;
+        }
+
+        @media(min-width: 900px) {
+            .main-container { 
+                grid-template-columns: 2fr 1fr; /* 2 tiers catalogue, 1 tier ticket */
+                height: calc(100vh - 54px);
+            }
+        }
+
+        /* Section de gauche : Le Catalogue */
+        .catalog-section { 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 25px; 
+        }
+
+        .category-block {
             background: white;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.1s;
+            border: 1px solid var(--border);
         }
-        .card-article:active { transform: scale(0.95); }
-        .card-article h3 { font-size: 0.9rem; margin: 0 0 10px 0; color: var(--text-dark); }
-        .card-article p { font-weight: bold; color: var(--secondary); margin: 0; font-size: 1.1rem; }
 
-        /* --- COLONNE DROITE : TICKET DE CAISSE --- */
-        .cart-area {
-            width: 30%;
-            background-color: white;
-            border-left: 1px solid #ccc;
-            display: flex;
-            flex-direction: column;
+        .category-title { 
+            font-size: 15px; 
+            font-weight: bold; 
+            color: var(--primary); 
+            border-left: 4px solid var(--primary); 
+            padding-left: 8px; 
+            margin-bottom: 15px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
         }
-        .cart-header { padding: 20px; background-color: #eee; border-bottom: 1px solid #ddd; }
-        .cart-header h2 { margin: 0; font-size: 1.2rem; color: var(--primary); }
-        .cart-items { flex-grow: 1; padding: 20px; overflow-y: auto; }
-        .cart-item { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
-        .cart-footer { padding: 20px; background-color: var(--primary); color: white; }
-        .total-row { display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; }
-        .btn-pay { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 15px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-pay:hover { background-color: #219653; }
+
+        .products-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 12px; 
+        }
+
+        .product-card { 
+            background: var(--light); 
+            border: 1px solid #e2e8f0; 
+            border-radius: 6px; 
+            padding: 12px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.15s ease-in-out; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            min-height: 95px; 
+        }
+
+        .product-card:hover { 
+            border-color: var(--primary); 
+            background: white;
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 6px rgba(142,36,170,0.08); 
+        }
+
+        .product-card .name { 
+            font-size: 13px; 
+            font-weight: 500; 
+            margin-bottom: 8px; 
+            line-height: 1.3;
+        }
+
+        .product-card .price { 
+            font-size: 12px; 
+            font-weight: bold; 
+            background: var(--primary-light); 
+            color: var(--primary); 
+            padding: 3px; 
+            border-radius: 4px; 
+        }
+
+        /* Section de droite : Le Ticket de caisse */
+        .ticket-section { 
+            background: white; 
+            border-top: 2px solid var(--primary);
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        @media(min-width: 900px) {
+            .ticket-section {
+                border-top: none;
+                border-left: 1px solid var(--border); 
+                height: 100%;
+            }
+        }
+
+        .ticket-header { 
+            padding: 15px 20px; 
+            border-bottom: 1px dashed var(--border); 
+            font-weight: bold; 
+            font-size: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            background: #fafafa;
+        }
+
+        .ticket-items { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 10px 20px; 
+            min-height: 200px;
+        }
+
+        .ticket-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #edf0f2; 
+            font-size: 13px; 
+        }
+
+        .item-details { flex: 1; padding-right: 10px; }
+        .item-name { font-weight: 500; }
+        .item-price-calc { font-size: 11px; color: #666; margin-top: 2px; }
+        
+        .item-qty-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            margin: 0 10px;
+        }
+
+        .qty-btn { 
+            background: #cfd8dc; 
+            border: none; 
+            width: 26px; 
+            height: 26px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        .qty-btn:hover { background: #b0bec5; }
+        .qty-val { font-weight: bold; min-width: 15px; text-align: center; }
+        .item-total-price { font-weight: bold; min-width: 65px; text-align: right; }
+        
+        /* Pied du ticket */
+        .ticket-footer { 
+            padding: 20px; 
+            border-top: 2px dashed var(--border); 
+            background: #fafafa; 
+        }
+
+        .total-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 18px; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+        }
+
+        .total-amount { color: var(--primary); font-size: 22px; }
+        
+        .action-btn { 
+            width: 100%; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 14px; 
+            border-radius: 6px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 0 3px 6px rgba(142,36,170,0.2); 
+        }
+
+        .action-btn:hover { background: #7b1fa2; }
+        .action-btn:disabled { background: #b0bec5; cursor: not-allowed; box-shadow: none; }
+        
+        .clear-btn { 
+            width: 100%; 
+            background: transparent; 
+            color: #d32f2f; 
+            border: 1px solid #d32f2f; 
+            padding: 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            cursor: pointer; 
+            margin-top: 8px; 
+        }
+        .clear-btn:hover { background: #ffebee; }
+        
+        .empty-cart { text-align: center; color: #78909c; margin-top: 30px; font-style: italic; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div class="categories">
-        <h2>Nina Fashion</h2>
-        <button class="btn-cat active">5. TISSUS & ÉTOFFES</button>
-        <button class="btn-cat">1. FINITIONS & DÉCORS</button>
-        <button class="btn-cat">14. BOUTONS</button>
-        <button class="btn-cat">18. POPELINES</button>
-        <button class="btn-cat">SERVICES MACHINES</button>
+    <header>
+        <h1>Nina Fashion — Comptoir de Vente</h1>
+        <div class="badge">Bouaflé — Magasin</div>
+    </header>
+    
+    <div class="main-container">
+        
+        <div class="catalog-section">
+            
+            <div class="category-block">
+                <div class="category-title">S1. Services Surfilage</div>
+                <div class="products-grid">
+                    <div class="product-card" onclick="ajouterAuPanier('S1', 'Pagne en bande (mètre)', 50)">
+                        <div class="name">Pagne en bande (au m)</div>
+                        <div class="price">50 F</div>
+                    </div>
+                    <div class="product-card" onclick="ajouterAuPanier('S2', 'Surfilage Pantalon', 100)">
+                        <div class="name">Pantalon</div>
+                        <div class="price">100 F</div>
+                    </div>
+                    <div class="product-card" onclick="ajouterAuPanier('S3', 'Robe petit volant', 100)">
+                        <div class="name">Robe avec petit volant</div>
+                        <div class="price">100 F</div>
+                    </div>
+                    <div class="product-card" onclick="ajouterAuPanier('S4', 'Robe gros volant', 200)">
+                        <div class="name">Robe avec gros volant</div>
+                        <div class="price">200 F</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-block">
+                <div class="category-title">S2. Fabrication Boutons</div>
+                <div class="products-grid">
+                    <div class="product-card" onclick="ajouterAuPanier('S8', 'Bouton simple n°16-24', 25)">
+                        <div class="name">Boutons simples n°16 à n°24</div>
+                        <div class="price">25 F</div>
+                    </div>
+                    <div class="product-card" onclick="ajouterAuPanier('S9', 'Bouton simple n°28', 50)">
+                        <div class="name">Boutons simples n°28</div>
+                        <div class="price">50 F</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-block">
+                <div class="category-title">Fournitures & Articles VIP</div>
+                <div class="products-grid">
+                    <div class="product-card" onclick="ajouterAuPanier('276', 'Bouba petit', 100)">
+                        <div class="name">Bouba petit</div>
+                        <div class="price">100 F</div>
+                    </div>
+                    <div class="product-card" onclick="ajouterAuPanier('277', 'Bouba grand', 150)">
+                        <div class="name">Bouba grand</div>
+                        <div class="price">150 F</div>
+                    </div>
+                    <div class="product-card" onclick="ajouterAuPanier('279', 'Cou broderie femme VIP', 8000)">
+                        <div class="name">Cou de broderie VIP</div>
+                        <div class="price">8 000 F</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="ticket-section">
+            <div class="ticket-header">
+                <span>Panier Actuel</span>
+                <span id="badge-nb-articles">0 art.</span>
+            </div>
+            
+            <div class="ticket-items" id="ticket-items-box">
+                <div class="empty-cart">Cliquez sur un article pour l'ajouter au panier.</div>
+            </div>
+            
+            <div class="ticket-footer">
+                <div class="total-row">
+                    <span>TOTAL :</span>
+                    <span class="total-amount" id="total-final">0 FCFA</span>
+                </div>
+                <button class="action-btn" id="btn-valider" disabled onclick="encaisserVente()">Valider la vente</button>
+                <button class="clear-btn" id="btn-vider" style="display:none;" onclick="viderPanier()">Vider le panier</button>
+            </div>
+        </div>
+        
     </div>
 
-    <div class="articles-area">
-        <h2>Tissus & Étoffes</h2>
-        <div class="grid-articles">
-            <div class="card-article">
-                <h3>Tissu Duchesse</h3>
-                <p>1000 F /m</p>
-            </div>
-            <div class="card-article">
-                <h3>Grain de diamant</h3>
-                <p>1500 F /m</p>
-            </div>
-            <div class="card-article">
-                <h3>Strèche</h3>
-                <p>1500 F /m</p>
-            </div>
-            <div class="card-article">
-                <h3>Frappe homme</h3>
-                <p>1000 F /m</p>
-            </div>
-        </div>
-    </div>
+    <script>
+        // Le tableau vide qui va stocker nos achats
+        let panier = [];
 
-    <div class="cart-area">
-        <div class="cart-header">
-            <h2>Ticket en cours #001</h2>
-        </div>
-        <div class="cart-items">
-            <div class="cart-item">
-                <span>2.5m x Tissu Duchesse</span>
-                <span>2 500 F</span>
-            </div>
-            <div class="cart-item">
-                <span>1 x Décor perlé</span>
-                <span>2 900 F</span>
-            </div>
-        </div>
-        <div class="cart-footer">
-            <div class="total-row">
-                <span>TOTAL</span>
-                <span>5 400 F CFA</span>
-            </div>
-            <button class="btn-pay">ENCAISSER</button>
-        </div>
-    </div>
+        // 1. Ajouter un produit
+        function ajouterAuPanier(id, nom, prix) {
+            const produitExistant = panier.find(item => item.id === id);
+            
+            if (produitExistant) {
+                produitExistant.quantite += 1;
+            } else {
+                panier.push({
+                    id: id,
+                    nom: nom,
+                    prix: prix,
+                    quantite: 1
+                });
+            }
+            rafraichirTicket();
+        }
 
+        // 2. Modifier les quantités (+ / -)
+        function modifierQuantite(id, changement) {
+            const produit = panier.find(item => item.id === id);
+            if (!produit) return;
+
+            produit.quantite += changement;
+            
+            // Si la quantité passe à 0 ou moins, on retire l'élément
+            if (produit.quantite <= 0) {
+                panier = panier.filter(item => item.id !== id);
+            }
+            rafraichirTicket();
+        }
+
+        // 3. Vider tout
+        function viderPanier() {
+            panier = [];
+            rafraichirTicket();
+        }
+
+        // 4. Simuler l'encaissement final
+        function encaisserVente() {
+            if (panier.length === 0) return;
+            
+            let total = panier.reduce((somme, item) => somme + (item.prix * item.quantite), 0);
+            
+            // Alerte de confirmation
+            alert(`💰 Vente enregistrée pour Nina Fashion !\n\nMontant perçu : ${total.toLocaleString('fr-FR')} FCFA.\n\nLe panier va maintenant se réinitialiser.`);
+            
+            viderPanier();
+        }
+
+        // 5. Calculs généraux et mise à jour de l'affichage
+        function rafraichirTicket() {
+            const boiteItems = document.getElementById('ticket-items-box');
+            const affichageTotal = document.getElementById('total-final');
+            const affichageBadge = document.getElementById('badge-nb-articles');
+            const btnValider = document.getElementById('btn-valider');
+            const btnVider = document.getElementById('btn-vider');
+            
+            // On nettoie la zone visuelle
+            boiteItems.innerHTML = '';
+            
+            if (panier.length === 0) {
+                boiteItems.innerHTML = '<div class="empty-cart">Cliquez sur un article pour l'ajouter au panier.</div>';
+                affichageTotal.innerText = '0 FCFA';
+                affichageBadge.innerText = '0 art.';
+                btnValider.disabled = true;
+                btnVider.style.display = 'none';
+                return;
+            }
+            
+            let montantGlobal = 0;
+            let quantiteGlobale = 0;
+            
+            // Génération ligne par ligne du ticket
+            panier.forEach(item => {
+                const totalLigne = item.prix * item.quantite;
+                montantGlobal += totalLigne;
+                quantiteGlobale += item.quantite;
+                
+                const elementLigne = document.createElement('div');
+                elementLigne.className = 'ticket-item';
+                elementLigne.innerHTML = `
+                    <div class="item-details">
+                        <div class="item-name">${item.nom}</div>
+                        <div class="item-price-calc">${item.prix} F × ${item.quantite}</div>
+                    </div>
+                    <div class="item-qty-controls">
+                        <button class="qty-btn" onclick="modifierQuantite('${item.id}', -1)">-</button>
+                        <span class="qty-val">${item.quantite}</span>
+                        <button class="qty-btn" onclick="modifierQuantite('${item.id}', 1)">+</button>
+                    </div>
+                    <div class="item-total-price">${totalLigne.toLocaleString('fr-FR')} F</div>
+                `;
+                boiteItems.appendChild(elementLigne);
+            });
+            
+            // Injection des totaux calculés
+            affichageTotal.innerText = `${montantGlobal.toLocaleString('fr-FR')} FCFA`;
+            affichageBadge.innerText = `${quantiteGlobale} art.`;
+            btnValider.disabled = false;
+            btnVider.style.display = 'block';
+        }
+    </script>
 </body>
-</html>
-
+    </html>
+    
