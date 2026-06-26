@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caisse - Nina Fashion</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --bg-color: #ecf0f1;
+            --text-dark: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* --- COLONNE GAUCHE : CATÉGORIES --- */
+        .categories {
+            width: 20%;
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .categories h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #576574; padding-bottom: 10px; }
+        .btn-cat {
+            width: 100%;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+        }
+        .btn-cat:hover, .btn-cat.active { background-color: var(--secondary); }
+
+        /* --- CENTRE : ARTICLES --- */
+        .articles-area {
+            width: 50%;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .articles-area h2 { color: var(--primary); margin-top: 0; }
+        .grid-articles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .card-article {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .card-article:active { transform: scale(0.95); }
+        .card-article h3 { font-size: 0.9rem; margin: 0 0 10px 0; color: var(--text-dark); }
+        .card-article p { font-weight: bold; color: var(--secondary); margin: 0; font-size: 1.1rem; }
+
+        /* --- COLONNE DROITE : TICKET DE CAISSE --- */
+        .cart-area {
+            width: 30%;
+            background-color: white;
+            border-left: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+        }
+        .cart-header { padding: 20px; background-color: #eee; border-bottom: 1px solid #ddd; }
+        .cart-header h2 { margin: 0; font-size: 1.2rem; color: var(--primary); }
+        .cart-items { flex-grow: 1; padding: 20px; overflow-y: auto; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
+        .cart-footer { padding: 20px; background-color: var(--primary); color: white; }
+        .total-row { display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; }
+        .btn-pay { width: 100%; background-color: var(--secondary); color: white; border: none; padding: 15px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-pay:hover { background-color: #219653; }
+    </style>
+</head>
+<body>
+
+    <div class="categories">
+        <h2>Nina Fashion</h2>
+        <button class="btn-cat active">5. TISSUS & ÉTOFFES</button>
+        <button class="btn-cat">1. FINITIONS & DÉCORS</button>
+        <button class="btn-cat">14. BOUTONS</button>
+        <button class="btn-cat">18. POPELINES</button>
+        <button class="btn-cat">SERVICES MACHINES</button>
+    </div>
+
+    <div class="articles-area">
+        <h2>Tissus & Étoffes</h2>
+        <div class="grid-articles">
+            <div class="card-article">
+                <h3>Tissu Duchesse</h3>
+                <p>1000 F /m</p>
+            </div>
+            <div class="card-article">
+                <h3>Grain de diamant</h3>
+                <p>1500 F /m</p>
+            </div>
+            <div class="card-article">
+                <h3>Strèche</h3>
+                <p>1500 F /m</p>
+            </div>
+            <div class="card-article">
+                <h3>Frappe homme</h3>
+                <p>1000 F /m</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-area">
+        <div class="cart-header">
+            <h2>Ticket en cours #001</h2>
+        </div>
+        <div class="cart-items">
+            <div class="cart-item">
+                <span>2.5m x Tissu Duchesse</span>
+                <span>2 500 F</span>
+            </div>
+            <div class="cart-item">
+                <span>1 x Décor perlé</span>
+                <span>2 900 F</span>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="total-row">
+                <span>TOTAL</span>
+                <span>5 400 F CFA</span>
+            </div>
+            <button class="btn-pay">ENCAISSER</button>
+        </div>
+    </div>
+
+</body>
+</html>
+
