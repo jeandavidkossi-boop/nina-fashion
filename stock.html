@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Stocks — Nina Fashion</title>
+    <style>
+        /* Charte Graphique Nina Fashion (Noir Royal & Or) */
+        :root {
+            --primary: #1a1c1e;
+            --gold: #b38728;
+            --bg-gray: #f4f6f8;
+            --border: #e2e8f0;
+            --text-dark: #2c3e50;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); overflow: hidden; }
+
+        /* En-tête */
+        header { 
+            background: var(--primary); color: white; padding: 12px 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10;
+        }
+        header h1 { font-size: 18px; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; margin-right: 10px; }
+
+        /* Disposition */
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* COLONNE GAUCHE : INVENTAIRE ET RECHERCHE */
+        .inventory-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--border); }
+        
+        .top-bar { padding: 15px; border-bottom: 1px solid var(--border); background: #fafafa; display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
+        .search-input:focus { border-color: var(--gold); }
+        
+        .stock-table-container { flex: 1; overflow-y: auto; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #f8f9fa; padding: 12px; font-weight: 600; color: #7f8c8d; border-bottom: 2px solid var(--border); position: sticky; top: 0; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        
+        /* Badges d'état de stock */
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .status-ok { background: #e8f8f0; color: var(--success); }
+        .status-low { background: #fef5e7; color: var(--warning); }
+        .status-empty { background: #fceae8; color: var(--danger); }
+
+        /* COLONNE DROITE : MOUVEMENTS DE STOCK */
+        .movement-panel { width: 380px; background: #fff; display: flex; flex-direction: column; border-left: 1px solid var(--border); padding: 20px; }
+        .panel-title { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #7f8c8d; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+
+        .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+        .radio-option { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
+
+        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; margin-top: 10px; }
+        .btn-save { background: var(--gold); }
+        .btn-save:hover { background: #967120; }
+
+        /* Responsive */
+        @media (max-width: 850px) {
+            .main-layout { flex-direction: column; }
+            .movement-panel { width: 100%; height: auto; border-left: none; border-top: 2px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Accueil</button>
+            <h1>Nina Fashion</h1>
+        </div>
+        <div class="badge-role">📦 GESTION DES STOCKS</div>
+    </header>
+
+    <div class="main-layout">
+        
+        <!-- PARTIE INVENTAIRE DES PRODUITS -->
+        <div class="inventory-panel">
+            <div class="top-bar">
+                <input type="text" id="search-stock" class="search-input" placeholder="🔍 Rechercher un produit physique (fil, bouton, finition...)" oninput="filtrerStock()">
+            </div>
+            
+            <div class="stock-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Réf</th>
+                            <th>Désignation Article</th>
+                            <th>Famille</th>
+                            <th style="text-align: center;">Stock Restant</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body">
+                        <!-- Injecté par JavaScript (Extraits réels de votre catalogue) -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PARTIE ENREGISTREMENT MOUVEMENT -->
+        <div class="movement-panel">
+            <div class="panel-title">🔄 Enregistrer un Mouvement</div>
+            
+            <form id="movement-form" onsubmit="validerMouvement(event)">
+                <div class="form-group">
+                    <label for="select-article">Sélectionner l'article</label>
+                    <select id="select-article" required>
+                        <option value="">-- Choisir un produit --</option>
+                        <!-- Rempli dynamiquement -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Type de mouvement</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="type_mvt" value="ENTREE" checked> 📈 Entrée (Nouvel arrivage / Achat)
+                        </label>
+                    </div>
+                    <div class="radio-group" style="margin-top: 8px;">
+                        <label class="radio-option">
+                            <input type="radio" name="type_mvt" value="SORTIE"> 📉 Sortie (Perte / Abîmé / Utilisation interne)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mvt-qty">Quantité (Nombre de paquets / pièces / mètres)</label>
+                    <input type="number" id="mvt-qty" min="1" required placeholder="Ex: 5">
+                </div>
+
+                <div class="form-group">
+                    <label for="mvt-note">Note / Commentaire (Optionnel)</label>
+                    <input type="text" id="mvt-note" placeholder="Ex: Colis reçu de Chine via Alibaba">
+                </div>
+
+                <button type="submit" class="btn-action btn-save">💾 VALIDER LE MOUVEMENT</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // --- EXTRAIT RÉEL ISSU DE VOTRE DOSSIER DE STOCK NINA FASHION ---
+        // Note : Les services de pure prestation machine (comme le surfilage) ne sont pas inclus ici, 
+        // car le magasinier gère uniquement le matériel physique.
+        let INVENTAIRE = [
+            { ref: "M60", nom: "Finition brillant", cat: "Finitions", stock: 45, mini: 10 },
+            { ref: "M61", nom: "Finition gros autruche", cat: "Finitions", stock: 8, mini: 10 },
+            { ref: "M65", nom: "Décor perlé", cat: "Décors", stock: 22, mini: 5 },
+            { ref: "M66", nom: "Décor en paillette", cat: "Décors", stock: 3, mini: 5 },
+            { ref: "M14", nom: "Chaîne démontable (paquet)", cat: "Accessoires", stock: 0, mini: 3 },
+            { ref: "S8", nom: "Boutons simples n°16 à n°24", cat: "Boutons", stock: 120, mini: 20 },
+            { ref: "R4", nom: "Frappe pour homme (mètre)", cat: "VIP", stock: 15, mini: 5 }
+        ];
+
+        // 1. Rendre le stock visible dans le tableau et le formulaire
+        function chargerInterfaceStock() {
+            const tbody = document.getElementById('stock-table-body');
+            const select = document.getElementById('select-article');
+            const recherche = document.getElementById('search-stock').value.toLowerCase();
+            
+            tbody.innerHTML = '';
+            
+            // On ne vide pas le select à chaque recherche pour éviter les bugs de sélection
+            if(select.options.length <= 1) {
+                INVENTAIRE.forEach(art => {
+                    let opt = document.createElement('option');
+                    opt.value = art.ref;
+                    opt.innerText = `[${art.ref}] ${art.nom}`;
+                    select.appendChild(opt);
+                });
+            }
+
+            INVENTAIRE.forEach(art => {
+                if (recherche && !art.nom.toLowerCase().includes(recherche) && !art.ref.toLowerCase().includes(recherche)) return;
+
+                // Déterminer le niveau et le badge
+                let badgeHtml = '';
+                if(art.stock === 0) {
+                    badgeHtml = '<span class="status-badge status-empty">Rupture de stock</span>';
+                } else if (art.stock <= art.mini) {
+                    badgeHtml = '<span class="status-badge status-low">Stock critique</span>';
+                } else {
+                    badgeHtml = '<span class="status-badge status-ok">En stock</span>';
+                }
+
+                let row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight:bold; color:var(--gold);">${art.ref}</td>
+                    <td style="font-weight:500;">${art.nom}</td>
+                    <td style="color:#7f8c8d;">${art.cat}</td>
+                    <td style="text-align:center; font-weight:bold;">${art.stock}</td>
+                    <td>${badgeHtml}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filtrerStock() {
+            chargerInterfaceStock();
+        }
+
+        // 2. Traitement du formulaire d'entrée/sortie
+        function validerMouvement(event) {
+            event.preventDefault();
+
+            const refSelectionnee = document.getElementById('select-article').value;
+            const typeMvt = document.querySelector('input[name="type_mvt"]:checked').value;
+            const quantite = parseInt(document.getElementById('mvt-qty').value);
+            const commentaire = document.getElementById('mvt-note').value;
+
+            // Trouver l'article concerné
+            let article = INVENTAIRE.find(art => art.ref === refSelectionnee);
+
+            if(article) {
+                if(typeMvt === "ENTREE") {
+                    article.stock += quantite;
+                    alert(`📈 ENTRÉE ENREGISTRÉE !\n\n+${quantite} unité(s) ajoutée(s) pour l'article : ${article.nom}.`);
+                } else if(typeMvt === "SORTIE") {
+                    if(article.stock < quantite) {
+                        alert(`⚠️ ACTION IMPOSSIBLE !\n\nVous ne pouvez pas faire sortir ${quantite} pièces car il n'en reste que ${article.stock} en stock.`);
+                        return;
+                    }
+                    article.stock -= quantite;
+                    alert(`📉 SORTIE ENREGISTRÉE !\n\n-${quantite} unité(s) retirée(s) pour l'article : ${article.nom}.`);
+                }
+
+                // Réinitialiser le formulaire
+                document.getElementById('movement-form').reset();
+                // Actualiser le tableau
+                chargerInterfaceStock();
+            }
+        }
+
+        // Lancement initial
+        chargerInterfaceStock();
+    </script>
+</body>
+</html>
