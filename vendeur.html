@@ -2,239 +2,178 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace Vendeur — Nina Fashion</title>
-    <!-- Importation de la bibliothèque Supabase -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caisse — Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Charte Graphique Unifiée Nina Fashion */
-        :root {
-            --primary: #1a1c1e;
-            --gold: #b38728;
-            --bg-gray: #f4f6f8;
-            --border: #e2e8f0;
-            --text-dark: #2c3e50;
-        }
-
+        :root { --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-
         body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); overflow: hidden; }
 
-        header { 
-            background: var(--primary); color: white; padding: 12px 20px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10;
-        }
-        header h1 { font-size: 18px; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        /* EN-TÊTE */
+        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); z-index: 20; }
+        header h1 { font-size: 16px; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 11px; }
         .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; margin-right: 10px; }
 
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        /* STRUCTURE PRINCIPALE */
+        .main-layout { display: flex; flex: 1; overflow: hidden; flex-direction: row; }
 
-        /* PARTIE GAUCHE : CATALOGUE */
-        .catalog-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--border); }
-        
-        .search-box { padding: 15px; border-bottom: 1px solid var(--border); background: #fafafa; }
-        .search-input { width: 100%; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
+        /* CATALOGUE (GAUCHE) */
+        .catalog-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--border); overflow: hidden; }
+        .search-box { padding: 10px; border-bottom: 1px solid var(--border); background: #fafafa; }
+        .search-input { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; }
         .search-input:focus { border-color: var(--gold); }
-
-        /* Zone des catégories défilables (Très important pour vos nombreuses catégories) */
-        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; padding: 0 10px; }
-        /* Style de la barre de défilement (invisible mais fonctionnelle) */
-        .category-tabs::-webkit-scrollbar { height: 4px; }
-        .category-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-        .tab-btn { padding: 12px 15px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; color: #7f8c8d; border-bottom: 2px solid transparent; flex-shrink: 0; }
-        .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: #fff; }
-
-        .products-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; }
+        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; padding: 5px 10px; }
+        .category-tabs::-webkit-scrollbar { height: 0px; } 
+        .tab-btn { padding: 10px 15px; border: 1px solid var(--border); background: white; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: #7f8c8d; margin-right: 8px; transition: 0.2s; }
+        .tab-btn.active { color: white; background: var(--gold); border-color: var(--gold); }
+        .products-grid { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; align-content: start; }
         
-        .product-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: white; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 90px; }
-        .product-card:hover { border-color: var(--gold); box-shadow: 0 4px 12px rgba(179, 135, 40, 0.08); transform: translateY(-1px); }
-        .product-ref { font-size: 11px; color: #95a5a6; margin-bottom: 4px; font-weight: bold; }
-        .product-name { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; line-height: 1.3; }
-        .product-price { font-size: 14px; font-weight: bold; color: var(--gold); }
+        .product-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 90px; }
+        .product-card:active { transform: scale(0.97); border-color: var(--gold); }
+        .product-ref { font-size: 11px; color: white; background: var(--primary); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; font-weight: bold; }
+        .product-name { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 5px; line-height: 1.2; }
+        .product-price { font-size: 12px; font-weight: bold; color: var(--gold); }
 
-        /* Loader de chargement */
-        #loader { text-align: center; padding: 40px; color: #7f8c8d; font-size: 14px; grid-column: 1 / -1; }
+        /* PANIER (DROITE OU BAS) */
+        .cart-panel { width: 380px; background: #fff; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); z-index: 10; }
+        .cart-header { padding: 12px 15px; background: var(--bg-gray); border-bottom: 1px solid var(--border); font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .cart-count { background: var(--primary); color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 0; background: #fafafa; }
+        .cart-item { display: flex; flex-direction: column; padding: 10px 15px; border-bottom: 1px solid #e1e8ed; background: white; }
+        .cart-item-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .cart-item-title { font-size: 13px; font-weight: 700; color: var(--primary); }
+        .cart-item-subtotal { font-size: 14px; font-weight: bold; color: var(--gold); }
+        
+        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--bg-gray); border-radius: 6px; padding: 4px; }
+        .qty-btn { height: 32px; width: 35px; border-radius: 4px; border: 1px solid var(--border); background: white; font-weight: bold; font-size: 16px; cursor: pointer; color: var(--primary); }
+        .half-btn { color: var(--gold); font-size: 13px; font-weight: 800; }
+        .qty-input { width: 50px; text-align: center; border: 1px solid var(--border); border-radius: 4px; height: 32px; font-weight: bold; font-size: 15px; outline: none; }
+        .btn-delete { color: #e74c3c; background: transparent; border: none; font-size: 18px; cursor: pointer; }
 
-        /* PARTIE DROITE : PANIER */
-        .cart-panel { width: 360px; background: #fff; display: flex; flex-direction: column; }
-        .cart-header { padding: 15px; background: var(--primary); color: white; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .cart-count { background: var(--gold); color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
-        
-        .cart-items { flex: 1; overflow-y: auto; padding: 10px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid #f1f2f6; }
-        .cart-item-info { flex: 1; padding-right: 10px; }
-        .cart-item-title { font-size: 13px; font-weight: 600; }
-        .cart-item-price { font-size: 12px; color: #7f8c8d; margin-top: 2px; }
-        
-        .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .qty-btn { width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--border); background: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .qty-btn:hover { background: #f8f9fa; border-color: var(--gold); }
-        .qty-val { font-size: 14px; font-weight: bold; width: 20px; text-align: center; }
-
-        .cart-footer { padding: 15px; background: #fafafa; border-top: 1px solid var(--border); }
-        .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
-        
-        .btn-send { width: 100%; background: var(--gold); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-send:hover { background: #967120; }
+        .cart-footer { padding: 15px; background: white; border-top: 2px solid var(--border); }
+        .total-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
+        .total-label { font-size: 14px; color: #7f8c8d; font-weight: 600; text-transform: uppercase; }
+        .total-amount { font-size: 22px; font-weight: 900; color: var(--primary); }
+        .btn-send { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .btn-send:disabled { background: #bdc3c7; cursor: not-allowed; }
 
+        #loader { padding: 40px; text-align: center; font-size: 15px; color: #7f8c8d; font-weight: bold; grid-column: 1 / -1; }
+
+        /* OPTIMISATION MOBILE */
         @media (max-width: 768px) {
             .main-layout { flex-direction: column; }
-            .cart-panel { width: 100%; height: 280px; border-top: 2px solid var(--border); }
+            .catalog-panel { flex: 1; }
+            .cart-panel { width: 100%; height: 38vh; min-height: 250px; border-top: 3px solid var(--primary); }
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div>
+        <div style="display: flex; align-items: center;">
             <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Accueil</button>
             <h1>Nina Fashion</h1>
         </div>
-        <div class="badge-role">🛍️ ESPACE VENDEUR</div>
+        <div class="badge-role">🛍️ CAISSE</div>
     </header>
 
     <div class="main-layout">
-        
-        <!-- CATALOGUE (CONNECTÉ À SUPABASE) -->
+        <!-- CATALOGUE -->
         <div class="catalog-panel">
             <div class="search-box">
-                <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher un fil, bouton, tissu..." oninput="filtrerArticles()">
+                <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher un article..." oninput="filtrerArticles()">
             </div>
-            
-            <!-- Les boutons de catégorie seront générés ici automatiquement -->
-            <div class="category-tabs" id="category-tabs">
-                <!-- Vider en attendant le chargement -->
-            </div>
-
+            <div class="category-tabs" id="category-tabs"></div>
             <div class="products-grid" id="products-grid">
-                <div id="loader">⏳ Chargement de la base de données...</div>
+                <div id="loader">⏳ Chargement des articles...</div>
             </div>
         </div>
 
-        <!-- PANIER CLIENT -->
+        <!-- PANIER -->
         <div class="cart-panel">
             <div class="cart-header">
-                <span>Panier du Client</span>
-                <span class="cart-count" id="cart-count">0</span>
+                <span>Panier en cours</span>
+                <span class="cart-count" id="cart-count">0 art.</span>
             </div>
-            
             <div class="cart-items" id="cart-items">
-                <div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 40px 10px; font-size: 13px;">
-                    🛒 Le panier est vide.<br>Cliquez sur des articles à gauche.
+                <div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 30px 10px; font-size: 13px;">
+                    🛒 Le panier est vide.<br>Touchez un article pour l'ajouter.
                 </div>
             </div>
-
             <div class="cart-footer">
                 <div class="total-row">
-                    <span>Total :</span>
-                    <span id="cart-total">0 FCFA</span>
+                    <span class="total-label">Net à Payer :</span>
+                    <span class="total-amount" id="cart-total">0 F</span>
                 </div>
-                <button class="btn-send" id="btn-envoyer" disabled onclick="envoyerALaCaisse()">
-                    🚀 ENVOYER À LA CAISSE
-                </button>
+                <button class="btn-send" id="btn-envoyer" disabled onclick="envoyerALaCaisse()">💳 VALIDER LA VENTE</button>
             </div>
         </div>
-
     </div>
 
     <script>
-        // 1. CONNEXION À SUPABASE
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let CATALOGUE = [];
         let panier = [];
         let categorieActive = 'Tous';
 
-        // 2. TÉLÉCHARGEMENT DES DONNÉES DEPUIS SUPABASE
         async function chargerBaseDeDonnees() {
             try {
-                // On va chercher toutes les lignes de la table "articles"
                 const { data, error } = await clientSupabase.from('articles').select('*').order('ref', { ascending: true });
-                
                 if (error) throw error;
 
-                // Formatage des données pour l'application
-                CATALOGUE = data.map(item => {
-                    // Certains articles ont un prix de détail, d'autres un prix au paquet. On prend le bon.
-                    let prixReel = item.prix_detail > 0 ? item.prix_detail : item.prix_paquet;
-                    
-                    return {
-                        id: item.ref,
-                        ref: item.ref,
-                        nom: item.designation,
-                        prix: prixReel,
-                        cat: item.categorie
-                    };
-                });
+                CATALOGUE = data.map(item => ({
+                    id: item.ref,
+                    ref: item.ref,
+                    nom: item.designation,
+                    prix: item.prix_detail || 0,
+                    cat: item.categorie || 'Autre'
+                }));
 
-                // Supprimer le loader
                 document.getElementById('loader').style.display = 'none';
-
-                // Générer les onglets et afficher
                 genererOngletsCategories();
                 afficherCatalogue();
-
             } catch (err) {
-                console.error("Erreur de chargement:", err);
-                document.getElementById('loader').innerText = "❌ Erreur de connexion à la base de données.";
+                document.getElementById('loader').innerHTML = "❌ Erreur de connexion.";
             }
         }
 
-        // 3. GÉNÉRATION AUTOMATIQUE DES ONGLETS DE CATÉGORIE
         function genererOngletsCategories() {
             const tabsContainer = document.getElementById('category-tabs');
-            tabsContainer.innerHTML = ''; // On vide
-
-            // Bouton "Tous" par défaut
-            const btnTous = document.createElement('button');
-            btnTous.className = 'tab-btn active';
-            btnTous.innerText = 'Tous les articles';
-            btnTous.onclick = (e) => filtrerCategorie('Tous', e.target);
-            tabsContainer.appendChild(btnTous);
-
-            // Extraire toutes les catégories uniques de Supabase
-            const categoriesUniques = [...new Set(CATALOGUE.map(art => art.cat))].filter(Boolean);
-            
-            // Créer un bouton pour chaque catégorie
+            tabsContainer.innerHTML = '<button class="tab-btn active" onclick="filtrerCategorie(\'Tous\', this)">Tous</button>';
+            const categoriesUniques = [...new Set(CATALOGUE.map(art => art.cat))].filter(Boolean).sort();
             categoriesUniques.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = 'tab-btn';
-                btn.innerText = cat; // Nom de la catégorie lu dans la base
-                btn.onclick = (e) => filtrerCategorie(cat, e.target);
-                tabsContainer.appendChild(btn);
+                let nomAffiche = cat.includes(".") ? cat.split(".")[1].trim() : cat;
+                tabsContainer.innerHTML += `<button class="tab-btn" onclick="filtrerCategorie('${cat}', this)">${nomAffiche}</button>`;
             });
         }
 
-        // 4. AFFICHAGE ET FILTRES
         function afficherCatalogue() {
             const grid = document.getElementById('products-grid');
-            // Garder le loader si on n'a pas encore de données, sinon vider
             if(CATALOGUE.length > 0) grid.innerHTML = '';
-            
             const recherche = document.getElementById('search-input').value.toLowerCase();
 
             CATALOGUE.forEach(art => {
-                // Filtre Catégorie
                 if (categorieActive !== 'Tous' && art.cat !== categorieActive) return;
-                
-                // Filtre Texte (Recherche dans le nom OU la référence)
                 if (recherche && !art.nom.toLowerCase().includes(recherche) && !art.ref.toLowerCase().includes(recherche)) return;
 
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.onclick = () => ajouterAuPanier(art);
+                // Si le prix est à 0, on affiche "Prix à saisir"
+                let affichagePrix = art.prix === 0 ? '📝 Prix à saisir' : art.prix.toLocaleString('fr-FR') + ' F';
+                
                 card.innerHTML = `
                     <div>
-                        <div class="product-ref">Réf: ${art.ref}</div>
+                        <span class="product-ref">${art.ref}</span>
                         <div class="product-name">${art.nom}</div>
                     </div>
-                    <div class="product-price">${art.prix.toLocaleString('fr-FR')} F</div>
+                    <div class="product-price">${affichagePrix}</div>
                 `;
                 grid.appendChild(card);
             });
@@ -242,101 +181,115 @@ const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
         function filtrerCategorie(cat, btnElement) {
             categorieActive = cat;
-            
-            // Mise à jour visuelle du bouton cliqué
-            const boutons = document.querySelectorAll('.tab-btn');
-            boutons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             btnElement.classList.add('active');
-            
             afficherCatalogue();
         }
 
-        function filtrerArticles() {
-            afficherCatalogue();
-        }
+        function filtrerArticles() { afficherCatalogue(); }
 
-        // 5. GESTION DU PANIER
+        // --- LA MAGIE EST ICI : GESTION DES PRIX A ZERO ---
         function ajouterAuPanier(article) {
-            const existant = panier.find(item => item.id === article.id);
+            let prixFinal = article.prix;
+
+            if (prixFinal === 0) {
+                let saisie = prompt(`💲 Vente : ${article.nom}\n\nQuel est le PRIX UNITAIRE de cet article ?\n(Saisissez uniquement des chiffres, ex: 1500)`);
+                if (saisie === null || saisie.trim() === "") return; // Le vendeur a annulé
+                
+                prixFinal = parseFloat(saisie);
+                if (isNaN(prixFinal) || prixFinal < 0) {
+                    alert("❌ Le montant saisi est invalide.");
+                    return;
+                }
+            }
+
+            // On crée un identifiant unique dans le panier (ref + prix) pour séparer les différents tarifs si besoin
+            let cartId = article.id + '_' + prixFinal;
+            const existant = panier.find(item => item.cartId === cartId);
+            
             if (existant) {
-                existant.qte++;
+                existant.qte += 1;
             } else {
-                panier.push({ ...article, qte: 1 });
+                panier.push({ ...article, cartId: cartId, prix: prixFinal, qte: 1 });
             }
             mettreAJourPanier();
         }
 
-        function changerQuantite(id, delta) {
-            const item = panier.find(i => i.id === id);
+        function modifierQuantite(cartId, delta) {
+            const item = panier.find(i => i.cartId === cartId);
             if (item) {
                 item.qte += delta;
-                if (item.qte <= 0) {
-                    panier = panier.filter(i => i.id !== id);
-                }
-                mettreAJourPanier();
+                if (item.qte <= 0) supprimerDuPanier(cartId);
+                else mettreAJourPanier();
             }
+        }
+
+        function definirQuantiteExacte(cartId, valeur) {
+            const item = panier.find(i => i.cartId === cartId);
+            if (item) {
+                let val = parseFloat(valeur);
+                if (isNaN(val) || val <= 0) supprimerDuPanier(cartId);
+                else { item.qte = val; mettreAJourPanier(); }
+            }
+        }
+
+        function supprimerDuPanier(cartId) {
+            panier = panier.filter(i => i.cartId !== cartId);
+            mettreAJourPanier();
         }
 
         function mettreAJourPanier() {
             const conteneur = document.getElementById('cart-items');
-            const txtVide = document.getElementById('cart-empty');
-            const lblTotal = document.getElementById('cart-total');
-            const lblCount = document.getElementById('cart-count');
-            const btnEnvoyer = document.getElementById('btn-envoyer');
-
-            const lignes = conteneur.querySelectorAll('.cart-item');
-            lignes.forEach(l => l.remove());
-
+            conteneur.innerHTML = '';
+            
             if (panier.length === 0) {
-                txtVide.style.display = 'block';
-                lblTotal.innerText = "0 FCFA";
-                lblCount.innerText = "0";
-                btnEnvoyer.disabled = true;
+                conteneur.innerHTML = '<div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 30px 10px; font-size: 13px;">🛒 Le panier est vide.<br>Touchez un article pour l\'ajouter.</div>';
+                document.getElementById('cart-total').innerText = "0 F";
+                document.getElementById('cart-count').innerText = "0 art.";
+                document.getElementById('btn-envoyer').disabled = true;
                 return;
             }
 
-            txtVide.style.display = 'none';
-            btnEnvoyer.disabled = false;
-
+            document.getElementById('btn-envoyer').disabled = false;
             let totalGeneral = 0;
-            let totalArticles = 0;
 
             panier.forEach(item => {
                 const sousTotal = item.prix * item.qte;
                 totalGeneral += sousTotal;
-                totalArticles += item.qte;
 
-                const row = document.createElement('div');
-                row.className = 'cart-item';
-                row.innerHTML = `
-                    <div class="cart-item-info">
-                        <div class="cart-item-title">${item.nom}</div>
-                        <div class="cart-item-price">${item.prix.toLocaleString('fr-FR')} x ${item.qte} = ${sousTotal.toLocaleString('fr-FR')} F</div>
-                    </div>
-                    <div class="qty-controls">
-                        <button class="qty-btn" onclick="changerQuantite('${item.id}', -1)">-</button>
-                        <span class="qty-val">${item.qte}</span>
-                        <button class="qty-btn" onclick="changerQuantite('${item.id}', 1)">+</button>
+                conteneur.innerHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-header">
+                            <div class="cart-item-title">${item.nom} <span style="color:#7f8c8d; font-size:11px; font-weight:normal;">(${item.prix}F/u)</span></div>
+                            <div class="cart-item-subtotal">${sousTotal.toLocaleString('fr-FR')} F</div>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="btn-delete" onclick="supprimerDuPanier('${item.cartId}')">🗑️</button>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <button class="qty-btn" onclick="modifierQuantite('${item.cartId}', -1)">-1</button>
+                                <button class="qty-btn half-btn" onclick="modifierQuantite('${item.cartId}', -0.5)">-½</button>
+                                <input type="number" step="0.5" class="qty-input" value="${item.qte}" onchange="definirQuantiteExacte('${item.cartId}', this.value)">
+                                <button class="qty-btn half-btn" onclick="modifierQuantite('${item.cartId}', 0.5)">+½</button>
+                                <button class="qty-btn" onclick="modifierQuantite('${item.cartId}', 1)">+1</button>
+                            </div>
+                        </div>
                     </div>
                 `;
-                conteneur.appendChild(row);
             });
 
-            lblTotal.innerText = `${totalGeneral.toLocaleString('fr-FR')} FCFA`;
-            lblCount.innerText = totalArticles;
+            document.getElementById('cart-total').innerText = `${totalGeneral.toLocaleString('fr-FR')} FCFA`;
+            document.getElementById('cart-count').innerText = `${panier.length} art.`;
         }
 
         function envoyerALaCaisse() {
             if (panier.length === 0) return;
             let total = 0;
             panier.forEach(i => total += (i.prix * i.qte));
-            alert(`🚀 TICKET ENVOYÉ À LA CAISSE !\n\nMontant total : ${total.toLocaleString('fr-FR')} FCFA.`);
+            alert(`✅ VENTE ENREGISTRÉE ! \n\nMontant à encaisser : ${total.toLocaleString('fr-FR')} FCFA.`);
             panier = [];
             mettreAJourPanier();
         }
 
-        // 6. DÉMARRAGE DE L'APPLICATION
-        // Lancer la lecture de la base au moment où la page s'affiche
         chargerBaseDeDonnees();
     </script>
 </body>
