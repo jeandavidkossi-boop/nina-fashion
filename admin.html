@@ -5,37 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration — Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Outil pour lire les fichiers CSV facilement -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        :root {
-            --primary: #1a1c1e;
-            --gold: #b38728;
-            --bg-gray: #f4f6f8;
-            --border: #e2e8f0;
-        }
-
+        :root { --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; --border: #e2e8f0; }
         * { box-sizing: border-box; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
         body { background-color: var(--bg-gray); padding-bottom: 50px; }
-
-        header { 
-            background: var(--primary); color: white; padding: 15px 20px; 
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 20px; color: var(--gold); }
-        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 5px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; }
-
+        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; }
         .container { max-width: 800px; margin: 30px auto; padding: 0 15px; }
-
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .card h2 { font-size: 18px; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--gold); padding-bottom: 10px; display: inline-block; }
-
         .import-zone { border: 2px dashed #bdc3c7; border-radius: 8px; padding: 40px 20px; text-align: center; background: #fafafa; }
         .import-zone input { display: none; }
-        .import-btn { background: var(--gold); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 15px; }
-        .import-btn:hover { background: #967120; }
-
+        .import-btn { background: var(--gold); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         #status-message { margin-top: 20px; font-weight: bold; padding: 15px; border-radius: 8px; display: none; }
         .status-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .status-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
@@ -50,24 +33,19 @@
     </header>
 
     <div class="container">
-        
         <div class="card">
-            <h2>📥 Importer le Catalogue</h2>
+            <h2>📥 Importer le Catalogue (Mode Forcé)</h2>
             <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 20px;">
-                Importez votre fichier CSV contenant tous les articles du magasin. L'opération mettra à jour les prix et ajoutera les nouveaux articles automatiquement.
+                Ce mode spécial va importer tous vos articles, mais forcera tous les prix à ZERO (0) pour permettre une saisie manuelle à la caisse.
             </p>
-
             <div class="import-zone">
-                <p>Sélectionnez le fichier <strong>catalogue_nina_fashion.csv</strong> sur votre téléphone</p>
                 <input type="file" id="csv-file" onchange="fichierSelectionne()" />
-                <button class="import-btn" onclick="document.getElementById('csv-file').click()">Choisir le fichier CSV</button>
+                <button class="import-btn" onclick="document.getElementById('csv-file').click()">Choisir le fichier TSV ou CSV</button>
                 <br>
-                <button id="btn-valider-import" class="import-btn" style="background: var(--primary); display: none; margin-top: 20px;" onclick="importerDansSupabase()">🚀 Lancer l'injection dans la base</button>
+                <button id="btn-valider-import" class="import-btn" style="background: var(--primary); display: none;" onclick="importerDansSupabase()">🚀 Lancer l'injection dans la base</button>
             </div>
-
             <div id="status-message"></div>
         </div>
-
     </div>
 
     <script>
@@ -78,9 +56,7 @@
         function afficherStatut(message, type) {
             const div = document.getElementById('status-message');
             div.innerText = message;
-            div.className = ''; 
-            div.classList.add('status-' + type);
-            div.style.display = 'block';
+            div.className = ''; div.classList.add('status-' + type); div.style.display = 'block';
         }
 
         function fichierSelectionne() {
@@ -93,38 +69,35 @@
 
         function importerDansSupabase() {
             const file = document.getElementById('csv-file').files[0];
-            if(!file) return alert("Veuillez d'abord sélectionner un fichier.");
+            if(!file) return alert("Veuillez sélectionner un fichier.");
 
-            afficherStatut("⏳ Lecture du fichier et envoi vers la base de données... Patientez...", "loading");
+            afficherStatut("⏳ Lecture du fichier... L'ordinateur met tous les prix à zéro... Patientez...", "loading");
 
-            // PapaParse lit le fichier CSV directement depuis le téléphone
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
                 complete: async function(results) {
                     const data = results.data;
                     
-                    // On prépare les données au format attendu par Supabase
                     const articlesToInsert = data.map(row => ({
                         ref: row.ref,
                         designation: row.designation,
                         categorie: row.categorie,
-                        prix_detail: parseInt(row.prix_detail) || 0,
-                        prix_paquet: parseInt(row.prix_paquet) || 0,
-                        prix_achat: parseInt(row.prix_achat) || 0,
-                        stock_actuel: parseInt(row.stock_actuel) || 0,
-                        stock_minimum: parseInt(row.stock_minimum) || 0,
+                        // LA MAGIE EST ICI : On ignore ce qu'il y a dans Excel et on force tout à ZÉRO !
+                        prix_detail: 0,
+                        prix_paquet: 0,
+                        prix_achat: 0,
+                        stock_actuel: 0,
+                        stock_minimum: 0,
                         notes: row.notes || ''
-                    })).filter(art => art.ref && art.designation); // On ignore les lignes vides
+                    })).filter(art => art.ref && art.designation);
 
-                    // Envoi à Supabase
                     const { error } = await clientSupabase.from('articles').upsert(articlesToInsert, { onConflict: 'ref' });
 
                     if(error) {
-                        afficherStatut("❌ Erreur lors de l'envoi : " + error.message, "error");
-                        console.error(error);
+                        afficherStatut("❌ Erreur : " + error.message, "error");
                     } else {
-                        afficherStatut("✅ Merveilleux ! " + articlesToInsert.length + " articles ont été enregistrés avec succès dans la base de Nina Fashion.", "success");
+                        afficherStatut("✅ VICTOIRE ! " + articlesToInsert.length + " articles ont été enregistrés avec succès. Tous les prix sont à 0.", "success");
                     }
                 }
             });
