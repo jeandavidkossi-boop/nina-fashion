@@ -59,7 +59,7 @@
 
             <div class="import-zone">
                 <p>Sélectionnez le fichier <strong>catalogue_nina_fashion.csv</strong> sur votre téléphone</p>
-                <input type="file" id="csv-file" accept=".csv" onchange="fichierSelectionne()" />
+                <input type="file" id="csv-file" onchange="fichierSelectionne()" />
                 <button class="import-btn" onclick="document.getElementById('csv-file').click()">Choisir le fichier CSV</button>
                 <br>
                 <button id="btn-valider-import" class="import-btn" style="background: var(--primary); display: none; margin-top: 20px;" onclick="importerDansSupabase()">🚀 Lancer l'injection dans la base</button>
