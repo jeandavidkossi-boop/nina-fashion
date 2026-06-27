@@ -144,8 +144,8 @@
     <script>
         // 1. CONNEXION À SUPABASE
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let CATALOGUE = [];
         let panier = [];
@@ -155,7 +155,7 @@
         async function chargerBaseDeDonnees() {
             try {
                 // On va chercher toutes les lignes de la table "articles"
-                const { data, error } = await supabase.from('articles').select('*').order('ref', { ascending: true });
+                const { data, error } = await clientSupabase.from('articles').select('*').order('ref', { ascending: true });
                 
                 if (error) throw error;
 
