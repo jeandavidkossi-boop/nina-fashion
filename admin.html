@@ -34,15 +34,15 @@
 
     <div class="container">
         <div class="card">
-            <h2>📥 Importer le Catalogue (Mode Forcé)</h2>
+            <h2>📥 Importer le Catalogue (Anti-Doublons)</h2>
             <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 20px;">
-                Ce mode spécial va importer tous vos articles, mais forcera tous les prix à ZERO (0) pour permettre une saisie manuelle à la caisse.
+                Ce mode va importer vos articles, forcer les prix à 0, et <strong>supprimer automatiquement les références en double</strong>.
             </p>
             <div class="import-zone">
                 <input type="file" id="csv-file" onchange="fichierSelectionne()" />
                 <button class="import-btn" onclick="document.getElementById('csv-file').click()">Choisir le fichier TSV ou CSV</button>
                 <br>
-                <button id="btn-valider-import" class="import-btn" style="background: var(--primary); display: none;" onclick="importerDansSupabase()">🚀 Lancer l'injection dans la base</button>
+                <button id="btn-valider-import" class="import-btn" style="background: var(--primary); display: none;" onclick="importerDansSupabase()">🚀 Lancer l'injection</button>
             </div>
             <div id="status-message"></div>
         </div>
@@ -71,7 +71,7 @@
             const file = document.getElementById('csv-file').files[0];
             if(!file) return alert("Veuillez sélectionner un fichier.");
 
-            afficherStatut("⏳ Lecture du fichier... L'ordinateur met tous les prix à zéro... Patientez...", "loading");
+            afficherStatut("⏳ Nettoyage des doublons et envoi à la base... Patientez...", "loading");
 
             Papa.parse(file, {
                 header: true,
@@ -79,25 +79,42 @@
                 complete: async function(results) {
                     const data = results.data;
                     
-                    const articlesToInsert = data.map(row => ({
-                        ref: row.ref,
-                        designation: row.designation,
-                        categorie: row.categorie,
-                        // LA MAGIE EST ICI : On ignore ce qu'il y a dans Excel et on force tout à ZÉRO !
-                        prix_detail: 0,
-                        prix_paquet: 0,
-                        prix_achat: 0,
-                        stock_actuel: 0,
-                        stock_minimum: 0,
-                        notes: row.notes || ''
-                    })).filter(art => art.ref && art.designation);
+                    // ANTI-DOUBLONS : On utilise un dictionnaire pour ne garder qu'une seule référence unique
+                    const articlesUniques = new Map();
+
+                    data.forEach(row => {
+                        // On vérifie que la ligne a bien une référence et un nom (accepte les deux formats)
+                        const reference = row.ref || row["N°"]; 
+                        const nom = row.designation || row.ARTICLE; 
+
+                        if (reference && nom) {
+                            articlesUniques.set(reference.trim(), {
+                                ref: reference.trim(),
+                                designation: nom.trim(),
+                                categorie: row.categorie || row.SECTION || 'Catalogue',
+                                prix_detail: 0,
+                                prix_paquet: 0,
+                                prix_achat: 0,
+                                stock_actuel: 0,
+                                stock_minimum: 0,
+                                notes: row.notes || row.NOTES || ''
+                            });
+                        }
+                    });
+
+                    const articlesToInsert = Array.from(articlesUniques.values());
+
+                    if (articlesToInsert.length === 0) {
+                         afficherStatut("❌ Erreur : L'ordinateur n'a trouvé aucun article. Vérifiez votre fichier.", "error");
+                         return;
+                    }
 
                     const { error } = await clientSupabase.from('articles').upsert(articlesToInsert, { onConflict: 'ref' });
 
                     if(error) {
                         afficherStatut("❌ Erreur : " + error.message, "error");
                     } else {
-                        afficherStatut("✅ VICTOIRE ! " + articlesToInsert.length + " articles ont été enregistrés avec succès. Tous les prix sont à 0.", "success");
+                        afficherStatut("✅ VICTOIRE ! " + articlesToInsert.length + " articles uniques ont été enregistrés avec succès. Tous les prix sont à 0.", "success");
                     }
                 }
             });
