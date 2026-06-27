@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Espace Vendeur — Nina Fashion</title>
+    <!-- Importation de la bibliothèque Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Charte Graphique Unifiée Nina Fashion (Noir Royal & Or) */
+        /* Charte Graphique Unifiée Nina Fashion */
         :root {
             --primary: #1a1c1e;
             --gold: #b38728;
-            --gold-light: #fffdf5;
             --bg-gray: #f4f6f8;
             --border: #e2e8f0;
             --text-dark: #2c3e50;
@@ -19,7 +20,6 @@
 
         body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); overflow: hidden; }
 
-        /* En-tête de l'application */
         header { 
             background: var(--primary); color: white; padding: 12px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -29,29 +29,36 @@
         .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; }
         .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; margin-right: 10px; }
 
-        /* Organisation de l'espace de travail */
         .main-layout { display: flex; flex: 1; overflow: hidden; }
 
-        /* PARTIE GAUCHE : LE CATALOGUE PRODUITS */
+        /* PARTIE GAUCHE : CATALOGUE */
         .catalog-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--border); }
         
         .search-box { padding: 15px; border-bottom: 1px solid var(--border); background: #fafafa; }
         .search-input { width: 100%; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
         .search-input:focus { border-color: var(--gold); }
 
-        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; }
-        .tab-btn { padding: 12px 20px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; color: #7f8c8d; border-bottom: 2px solid transparent; }
+        /* Zone des catégories défilables (Très important pour vos nombreuses catégories) */
+        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; padding: 0 10px; }
+        /* Style de la barre de défilement (invisible mais fonctionnelle) */
+        .category-tabs::-webkit-scrollbar { height: 4px; }
+        .category-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .tab-btn { padding: 12px 15px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; color: #7f8c8d; border-bottom: 2px solid transparent; flex-shrink: 0; }
         .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: #fff; }
 
-        .products-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .products-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; }
         
-        /* Cartes d'articles */
-        .product-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: white; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: white; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 90px; }
         .product-card:hover { border-color: var(--gold); box-shadow: 0 4px 12px rgba(179, 135, 40, 0.08); transform: translateY(-1px); }
+        .product-ref { font-size: 11px; color: #95a5a6; margin-bottom: 4px; font-weight: bold; }
         .product-name { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; line-height: 1.3; }
         .product-price { font-size: 14px; font-weight: bold; color: var(--gold); }
 
-        /* PARTIE DROITE : LE PANIER DU CLIENT (COMMANDE EN COURS) */
+        /* Loader de chargement */
+        #loader { text-align: center; padding: 40px; color: #7f8c8d; font-size: 14px; grid-column: 1 / -1; }
+
+        /* PARTIE DROITE : PANIER */
         .cart-panel { width: 360px; background: #fff; display: flex; flex-direction: column; }
         .cart-header { padding: 15px; background: var(--primary); color: white; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
         .cart-count { background: var(--gold); color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
@@ -62,13 +69,11 @@
         .cart-item-title { font-size: 13px; font-weight: 600; }
         .cart-item-price { font-size: 12px; color: #7f8c8d; margin-top: 2px; }
         
-        /* Sélecteur de quantité */
         .qty-controls { display: flex; align-items: center; gap: 8px; }
         .qty-btn { width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--border); background: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .qty-btn:hover { background: #f8f9fa; border-color: var(--gold); }
         .qty-val { font-size: 14px; font-weight: bold; width: 20px; text-align: center; }
 
-        /* Totalisateur et validation */
         .cart-footer { padding: 15px; background: #fafafa; border-top: 1px solid var(--border); }
         .total-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         
@@ -76,11 +81,9 @@
         .btn-send:hover { background: #967120; }
         .btn-send:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .main-layout { flex-direction: column; }
             .cart-panel { width: 100%; height: 280px; border-top: 2px solid var(--border); }
-            .products-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); padding: 8px; }
         }
     </style>
 </head>
@@ -96,22 +99,23 @@
 
     <div class="main-layout">
         
+        <!-- CATALOGUE (CONNECTÉ À SUPABASE) -->
         <div class="catalog-panel">
             <div class="search-box">
-                <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher un fil, bouton, tissu, service..." oninput="filtrerArticles()">
+                <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher un fil, bouton, tissu..." oninput="filtrerArticles()">
             </div>
             
+            <!-- Les boutons de catégorie seront générés ici automatiquement -->
             <div class="category-tabs" id="category-tabs">
-                <button class="tab-btn active" onclick="filtrerCategorie('Tous')">Tous</button>
-                <button class="tab-btn" onclick="filtrerCategorie('Machines')">Atelier Machines</button>
-                <button class="tab-btn" onclick="filtrerCategorie('VIP')">Articles VIP</button>
-                <button class="tab-btn" onclick="filtrerCategorie('Mercerie')">Mercerie Courante</button>
+                <!-- Vider en attendant le chargement -->
             </div>
 
             <div class="products-grid" id="products-grid">
-                </div>
+                <div id="loader">⏳ Chargement de la base de données...</div>
+            </div>
         </div>
 
+        <!-- PANIER CLIENT -->
         <div class="cart-panel">
             <div class="cart-header">
                 <span>Panier du Client</span>
@@ -120,7 +124,7 @@
             
             <div class="cart-items" id="cart-items">
                 <div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 40px 10px; font-size: 13px;">
-                    🛒 Le panier est vide.<br>Cliquez sur des articles à gauche pour composer le ticket.
+                    🛒 Le panier est vide.<br>Cliquez sur des articles à gauche.
                 </div>
             </div>
 
@@ -138,54 +142,112 @@
     </div>
 
     <script>
-        // --- EXTRAIT RÉEL DE VOTRE CATALOGUE REÇU (Fichier Excel Nina Fashion) ---
-        const CATALOGUE = [
-            { id: 1, nom: "Surfilage Pagne en bande (au mètre)", prix: 50, cat: "Machines" },
-            { id: 2, nom: "Surfilage Pantalon", prix: 100, cat: "Machines" },
-            { id: 3, nom: "Surfilage Robe avec petit volant", prix: 100, cat: "Machines" },
-            { id: 4, nom: "Surfilage Robe avec gros volant", prix: 200, cat: "Machines" },
-            { id: 5, nom: "Boutons simples n°16 à n°24", prix: 25, cat: "Mercerie" },
-            { id: 6, nom: "Boutons simples n°28", prix: 50, cat: "Mercerie" },
-            { id: 7, nom: "Cou de broderie femme VIP", prix: 8000, cat: "VIP" },
-            { id: 8, nom: "Tission bande VIP (au mètre)", prix: 6000, cat: "VIP" },
-            { id: 9, nom: "Cerceau (petit, moyen, gros)", prix: 50, cat: "Mercerie" },
-            { id: 10, nom: "Mélon d'ornement", prix: 200, cat: "Mercerie" }
-        ];
+        // 1. CONNEXION À SUPABASE
+        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
+        const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let CATALOGUE = [];
         let panier = [];
         let categorieActive = 'Tous';
 
-        // 1. Charger et afficher le catalogue
+        // 2. TÉLÉCHARGEMENT DES DONNÉES DEPUIS SUPABASE
+        async function chargerBaseDeDonnees() {
+            try {
+                // On va chercher toutes les lignes de la table "articles"
+                const { data, error } = await supabase.from('articles').select('*').order('ref', { ascending: true });
+                
+                if (error) throw error;
+
+                // Formatage des données pour l'application
+                CATALOGUE = data.map(item => {
+                    // Certains articles ont un prix de détail, d'autres un prix au paquet. On prend le bon.
+                    let prixReel = item.prix_detail > 0 ? item.prix_detail : item.prix_paquet;
+                    
+                    return {
+                        id: item.ref,
+                        ref: item.ref,
+                        nom: item.designation,
+                        prix: prixReel,
+                        cat: item.categorie
+                    };
+                });
+
+                // Supprimer le loader
+                document.getElementById('loader').style.display = 'none';
+
+                // Générer les onglets et afficher
+                genererOngletsCategories();
+                afficherCatalogue();
+
+            } catch (err) {
+                console.error("Erreur de chargement:", err);
+                document.getElementById('loader').innerText = "❌ Erreur de connexion à la base de données.";
+            }
+        }
+
+        // 3. GÉNÉRATION AUTOMATIQUE DES ONGLETS DE CATÉGORIE
+        function genererOngletsCategories() {
+            const tabsContainer = document.getElementById('category-tabs');
+            tabsContainer.innerHTML = ''; // On vide
+
+            // Bouton "Tous" par défaut
+            const btnTous = document.createElement('button');
+            btnTous.className = 'tab-btn active';
+            btnTous.innerText = 'Tous les articles';
+            btnTous.onclick = (e) => filtrerCategorie('Tous', e.target);
+            tabsContainer.appendChild(btnTous);
+
+            // Extraire toutes les catégories uniques de Supabase
+            const categoriesUniques = [...new Set(CATALOGUE.map(art => art.cat))].filter(Boolean);
+            
+            // Créer un bouton pour chaque catégorie
+            categoriesUniques.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn';
+                btn.innerText = cat; // Nom de la catégorie lu dans la base
+                btn.onclick = (e) => filtrerCategorie(cat, e.target);
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        // 4. AFFICHAGE ET FILTRES
         function afficherCatalogue() {
             const grid = document.getElementById('products-grid');
-            grid.innerHTML = '';
+            // Garder le loader si on n'a pas encore de données, sinon vider
+            if(CATALOGUE.length > 0) grid.innerHTML = '';
+            
             const recherche = document.getElementById('search-input').value.toLowerCase();
 
             CATALOGUE.forEach(art => {
-                // Filtre par catégorie
+                // Filtre Catégorie
                 if (categorieActive !== 'Tous' && art.cat !== categorieActive) return;
                 
-                // Filtre par recherche textuelle
-                if (recherche && !art.nom.toLowerCase().includes(recherche)) return;
+                // Filtre Texte (Recherche dans le nom OU la référence)
+                if (recherche && !art.nom.toLowerCase().includes(recherche) && !art.ref.toLowerCase().includes(recherche)) return;
 
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.onclick = () => ajouterAuPanier(art);
                 card.innerHTML = `
-                    <div class="product-name">${art.nom}</div>
+                    <div>
+                        <div class="product-ref">Réf: ${art.ref}</div>
+                        <div class="product-name">${art.nom}</div>
+                    </div>
                     <div class="product-price">${art.prix.toLocaleString('fr-FR')} F</div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        // 2. Gestion des filtres
-        function filtrerCategorie(cat) {
+        function filtrerCategorie(cat, btnElement) {
             categorieActive = cat;
-            // Mettre à jour le style visuel des onglets
+            
+            // Mise à jour visuelle du bouton cliqué
             const boutons = document.querySelectorAll('.tab-btn');
             boutons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            btnElement.classList.add('active');
+            
             afficherCatalogue();
         }
 
@@ -193,7 +255,7 @@
             afficherCatalogue();
         }
 
-        // 3. Logique du Panier d'achat
+        // 5. GESTION DU PANIER
         function ajouterAuPanier(article) {
             const existant = panier.find(item => item.id === article.id);
             if (existant) {
@@ -222,7 +284,6 @@
             const lblCount = document.getElementById('cart-count');
             const btnEnvoyer = document.getElementById('btn-envoyer');
 
-            // Nettoyage des anciennes lignes
             const lignes = conteneur.querySelectorAll('.cart-item');
             lignes.forEach(l => l.remove());
 
@@ -250,12 +311,12 @@
                 row.innerHTML = `
                     <div class="cart-item-info">
                         <div class="cart-item-title">${item.nom}</div>
-                        <div class="cart-item-price">${sousTotal.toLocaleString('fr-FR')} F</div>
+                        <div class="cart-item-price">${item.prix.toLocaleString('fr-FR')} x ${item.qte} = ${sousTotal.toLocaleString('fr-FR')} F</div>
                     </div>
                     <div class="qty-controls">
-                        <button class="qty-btn" onclick="changerQuantite(${item.id}, -1)">-</button>
+                        <button class="qty-btn" onclick="changerQuantite('${item.id}', -1)">-</button>
                         <span class="qty-val">${item.qte}</span>
-                        <button class="qty-btn" onclick="changerQuantite(${item.id}, 1)">+</button>
+                        <button class="qty-btn" onclick="changerQuantite('${item.id}', 1)">+</button>
                     </div>
                 `;
                 conteneur.appendChild(row);
@@ -265,24 +326,18 @@
             lblCount.innerText = totalArticles;
         }
 
-        // 4. Action : Envoyer la commande à la Caisse Centrale
         function envoyerALaCaisse() {
             if (panier.length === 0) return;
-
-            // Calcul du total pour l'affichage de confirmation
             let total = 0;
             panier.forEach(i => total += (i.prix * i.qte));
-
-            // Message de succès simulant le réseau local
-            alert(`🚀 TICKET ENVOYÉ AVEC SUCCÈS !\n\nLe ticket d'un montant de ${total.toLocaleString('fr-FR')} FCFA a été transféré dans la file d'attente de la caissière.`);
-            
-            // On vide le panier pour le prochain client
+            alert(`🚀 TICKET ENVOYÉ À LA CAISSE !\n\nMontant total : ${total.toLocaleString('fr-FR')} FCFA.`);
             panier = [];
             mettreAJourPanier();
         }
 
-        // Lancement initial au chargement de la page
-        afficherCatalogue();
+        // 6. DÉMARRAGE DE L'APPLICATION
+        // Lancer la lecture de la base au moment où la page s'affiche
+        chargerBaseDeDonnees();
     </script>
 </body>
 </html>
