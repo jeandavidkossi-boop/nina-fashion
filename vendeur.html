@@ -281,15 +281,50 @@
             document.getElementById('cart-count').innerText = `${panier.length} art.`;
         }
 
-        function envoyerALaCaisse() {
-            if (panier.length === 0) return;
-            let total = 0;
-            panier.forEach(i => total += (i.prix * i.qte));
-            alert(`✅ VENTE ENREGISTRÉE ! \n\nMontant à encaisser : ${total.toLocaleString('fr-FR')} FCFA.`);
+        // --- NOUVELLE FONCTION : ENVOI SÉCURISÉ DANS SUPABASE ---
+    async function envoyerALaCaisse() {
+        if (panier.length === 0) return;
+        
+        const btn = document.getElementById('btn-envoyer');
+        btn.disabled = true;
+        btn.innerText = "⏳ Envoi en cours...";
+
+        let total = 0;
+        panier.forEach(i => total += (i.prix * i.qte));
+        
+        // Générer un numéro de ticket simple à retenir (ex: 4582)
+        const numTicket = Math.floor(1000 + Math.random() * 9000).toString();
+
+        try {
+            // On pousse la commande dans la table 'commandes'
+            const { error } = await clientSupabase
+                .from('commandes')
+                .insert([
+                    { 
+                        num_panier: numTicket, 
+                        total: total, 
+                        details: panier,
+                        statut: 'en_attente'
+                    }
+                ]);
+
+            if (error) throw error;
+
+            // Affichage du numéro pour le client / l'apprenti
+            alert(`✅ COMMANDE TRANSMISE À LA CAISSE !\n\n🛍️ Total : ${total.toLocaleString('fr-FR')} F\n🎫 Donnez le ticket N° ${numTicket} au client pour payer.`);
+            
+            // On vide le panier pour le client suivant
             panier = [];
             mettreAJourPanier();
-        }
+            btn.innerText = "📥 ENVOYER À LA CAISSE";
 
+        } catch (err) {
+            alert("❌ Erreur de connexion, la commande n'est pas passée. Réessayez.");
+            btn.disabled = false;
+            btn.innerText = "📥 RÉESSAYER L'ENVOI";
+        }
+    }
+        
         chargerBaseDeDonnees();
     </script>
 </body>
