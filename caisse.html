@@ -2,281 +2,123 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Caisse Centrale — Nina Fashion</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Charte Graphique - Adaptée pour la visibilité de la caissière */
-        :root {
-            --primary: #1a1c1e; /* Dark Royal du logo */
-            --gold: #b38728;
-            --bg-gray: #f4f6f8;
-            --border: #e2e8f0;
-            --success: #27ae60;
-        }
-
+        :root { --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-
         body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); overflow: hidden; }
-
-        /* En-tête */
-        header { 
-            background: var(--primary); color: white; padding: 15px 20px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10;
-        }
-        header h1 { font-size: 20px; color: var(--gold); font-family: 'Georgia', serif;}
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; margin-right: 15px;}
-
-        /* Disposition principale */
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header h1 { font-size: 20px; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
         .main-layout { display: flex; flex: 1; overflow: hidden; }
-
-        /* 1. Colonne de gauche : Les tickets en attente */
-        .queue-panel {
-            width: 350px; background: white; border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-        }
-        .panel-header {
-            padding: 15px; background: #fafafa; border-bottom: 1px solid var(--border);
-            font-weight: bold; color: var(--primary); display: flex; justify-content: space-between;
-        }
-        .queue-list {
-            flex: 1; overflow-y: auto; padding: 10px;
-        }
-        .ticket-card {
-            background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold);
-            border-radius: 6px; padding: 15px; margin-bottom: 10px; cursor: pointer;
-            transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .ticket-card:hover { border-color: var(--gold); box-shadow: 0 4px 8px rgba(179, 135, 40, 0.1); }
+        .queue-panel { width: 350px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .panel-header { padding: 15px; background: #fafafa; border-bottom: 1px solid var(--border); font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; }
+        .queue-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .ticket-card { background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
         .ticket-card.active { background: #fffdf5; border-color: var(--gold); }
-        
         .ticket-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: #7f8c8d; }
-        .ticket-vendeur { font-weight: bold; color: var(--primary); font-size: 14px;}
-        .ticket-price { font-weight: bold; color: var(--success); font-size: 16px; margin-top: 8px;}
-
-        /* 2. Zone de droite : Détail de l'encaissement */
-        .details-area {
-            flex: 1; display: flex; flex-direction: column; background: var(--bg-gray); padding: 20px;
-        }
-        .receipt-container {
-            background: white; flex: 1; border-radius: 12px; border: 1px solid var(--border);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
-            max-width: 600px; margin: 0 auto; width: 100%; overflow: hidden;
-        }
-        .receipt-header {
-            text-align: center; padding: 20px; border-bottom: 2px dashed #eee;
-        }
-        .receipt-header h2 { font-size: 24px; color: var(--primary); margin-bottom: 5px; }
-        .receipt-header p { color: #7f8c8d; font-size: 13px; }
-
-        .receipt-items {
-            flex: 1; padding: 20px; overflow-y: auto;
-        }
-        .item-line {
-            display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6;
-        }
-        .item-name { font-weight: 500; font-size: 15px; }
+        .ticket-vendeur { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .ticket-price { font-weight: bold; color: var(--success); font-size: 14px; }
+        .details-area { flex: 1; padding: 20px; display: flex; flex-direction: column; }
+        .receipt-container { background: white; flex: 1; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; max-width: 600px; margin: 0 auto; width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .receipt-header { text-align: center; padding-bottom: 20px; border-bottom: 2px dashed #eee; margin-bottom: 20px; }
+        .receipt-items { flex: 1; overflow-y: auto; }
+        .item-line { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6; }
+        .item-name { font-weight: 500; }
         .item-calc { color: #7f8c8d; font-size: 12px; margin-top: 3px; }
         .item-total { font-weight: bold; font-size: 15px; }
-
-        .receipt-footer {
-            padding: 20px; background: #fafafa; border-top: 2px dashed #eee;
-        }
-        .total-display {
-            display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; color: var(--primary);
-            margin-bottom: 20px;
-        }
-
-        .btn-encaisser {
-            width: 100%; background: var(--success); color: white; border: none; padding: 18px;
-            border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;
-            transition: 0.2s; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
-        }
-        .btn-encaisser:hover { background: #219653; transform: translateY(-2px); }
-        .btn-encaisser:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; transform: none; }
-
-        /* Écran vide si aucun ticket sélectionné */
-        .empty-state {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; color: #95a5a6; text-align: center;
-        }
-        .empty-state text { font-size: 18px; margin-top: 15px; }
-
-        /* Responsive */
-        @media (max-width: 850px) {
-            .main-layout { flex-direction: column; }
-            .queue-panel { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid var(--border); }
-            .details-area { padding: 10px; }
-        }
+        .total-display { display: flex; justify-content: space-between; font-size: 24px; font-weight: 900; color: var(--primary); padding: 20px 0; border-top: 2px dashed #eee; }
+        .btn-encaisse { width: 100%; background: var(--success); color: white; border: none; padding: 18px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal-title { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; }
+        .pay-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .pay-input { width: 120px; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 16px; text-align: right; }
+        .btn-confirm { width: 100%; padding: 12px; background: var(--success); border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <header>
-        <div>
-            <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Retour Accueil</button>
-            <h1>Nina Fashion</h1>
+        <div style="display:flex; align-items:center;">
+            <button onclick="window.location.href='index.html'" style="background:transparent; border:none; color:white; cursor:pointer; text-decoration:underline; margin-right:15px;">⬅ Accueil</button>
+            <h1>Caisse Centrale</h1>
         </div>
-        <div class="badge-role">💰 CAISSE CENTRALE</div>
+        <div>
+            <span class="badge-role">💰 CAISSE CENTRALE</span>
+            <button onclick="ouvrirRemboursementSec()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-left: 10px;">💸 Rembourser Reliquat</button>
+        </div>
     </header>
 
     <div class="main-layout">
-        
-        <!-- FILE D'ATTENTE DES TICKETS -->
         <div class="queue-panel">
-            <div class="panel-header">
-                <span>Tickets en attente</span>
-                <span id="queue-count" style="background:var(--gold);color:white;padding:2px 8px;border-radius:10px;font-size:12px;">0</span>
-            </div>
-            <div class="queue-list" id="queue-list">
-                <!-- Les tickets apparaîtront ici -->
-            </div>
+            <div class="panel-header"><span>Tickets en attente</span><span id="queue-count">0</span></div>
+            <div class="queue-list" id="queue-list"></div>
         </div>
-
-        <!-- ZONE D'ENCAISSEMENT -->
         <div class="details-area">
-            <div class="receipt-container" id="receipt-container">
-                <!-- État vide par défaut -->
-                <div class="empty-state" id="empty-state">
-                    <div style="font-size: 48px;">🧾</div>
-                    <div class="text">Sélectionnez un ticket dans la file d'attente à gauche pour l'encaisser.</div>
-                </div>
-
-                <!-- Détail du ticket (masqué par défaut) -->
-                <div id="active-receipt" style="display: none; height: 100%; flex-direction: column;">
-                    <div class="receipt-header">
-                        <h2>Détail de la Commande</h2>
-                        <p id="receipt-info">Ticket #... • Vendeur : ...</p>
-                    </div>
-                    
-                    <div class="receipt-items" id="receipt-items">
-                        <!-- Articles injectés ici -->
-                    </div>
-
-                    <div class="receipt-footer">
-                        <div class="total-display">
-                            <span>Total à payer :</span>
-                            <span id="receipt-total">0 FCFA</span>
-                        </div>
-                        <button class="btn-encaisser" id="btn-valider" onclick="validerPaiement()">💳 VALIDER L'ENCAISSEMENT</button>
-                    </div>
-                </div>
+            <div class="receipt-container" id="active-receipt" style="display:none;">
+                <div class="receipt-header"><h2 id="receipt-info">---</h2></div>
+                <div class="receipt-items" id="receipt-items"></div>
+                <div class="total-display"><span>Total :</span><span id="receipt-total">0 F</span></div>
+                <button class="btn-encaisse" id="btn-valider" onclick="validerPaiement()">💳 VALIDER L'ENCAISSEMENT</button>
             </div>
+            <div id="empty-state" style="display:flex; flex:1; align-items:center; justify-content:center; color:#95a5a6;">Sélectionnez un ticket à gauche.</div>
         </div>
+    </div>
 
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Paiement : Ticket #<span id="modal-ticket-num"></span></div>
+            <div class="pay-row"><label>💵 Espèces</label><input type="number" id="pay-cash" class="pay-input" placeholder="0"></div>
+            <div class="pay-row"><label>📱 M-Money</label><input type="number" id="pay-momo" class="pay-input" placeholder="0"></div>
+            <button class="btn-confirm" onclick="finaliserPaiement()">✅ CONFIRMER PAIEMENT</button>
+        </div>
     </div>
 
     <script>
-        // --- DONNÉES DE DÉMONSTRATION ---
-        // En attendant Supabase, nous simulons 3 tickets envoyés par les vendeurs de Bouaflé
-        let ticketsEnAttente = [
-            {
-                id: 'TK-1042',
-                vendeur: 'Vendeur 1 (Boutique)',
-                heure: '10:14',
-                total: 8200,
-                articles: [
-                    { nom: 'Cou de broderie VIP', quantite: 1, prix: 8000 },
-                    { nom: 'Robe avec gros volant', quantite: 1, prix: 200 }
-                ]
-            },
-            {
-                id: 'TK-1043',
-                vendeur: 'Atelier (Machiniste)',
-                heure: '10:18',
-                total: 250,
-                articles: [
-                    { nom: 'Surfilage Pantalon', quantite: 2, prix: 100 },
-                    { nom: 'Pression caoutchouc', quantite: 1, prix: 50 }
-                ]
-            }
-        ];
-
+        const clientSupabase = window.supabase.createClient("https://tkqosylavymaracevaxt.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U");
         let ticketSelectionne = null;
 
-        // 1. Afficher la liste des tickets à gauche
-        function afficherFileDAttente() {
-            const liste = document.getElementById('queue-list');
-            const compteur = document.getElementById('queue-count');
-            liste.innerHTML = '';
-            
-            compteur.innerText = ticketsEnAttente.length;
-
-            if(ticketsEnAttente.length === 0) {
-                liste.innerHTML = '<div style="text-align:center; padding:20px; color:#95a5a6; font-size:13px;">Aucun ticket en attente.</div>';
-                masquerDetails();
-                return;
-            }
-
-            ticketsEnAttente.forEach(ticket => {
+        async function chargerCommandes() {
+            const { data } = await clientSupabase.from('commandes').select('*').eq('statut', 'en_attente');
+            const list = document.getElementById("queue-list");
+            list.innerHTML = "";
+            document.getElementById("queue-count").innerText = data ? data.length : 0;
+            if(data) data.forEach(t => {
                 const card = document.createElement('div');
-                card.className = `ticket-card ${ticketSelectionne && ticketSelectionne.id === ticket.id ? 'active' : ''}`;
-                card.onclick = () => selectionnerTicket(ticket);
-                
-                card.innerHTML = `
-                    <div class="ticket-top">
-                        <span>${ticket.id}</span>
-                        <span>🕒 ${ticket.heure}</span>
-                    </div>
-                    <div class="ticket-vendeur">👤 ${ticket.vendeur}</div>
-                    <div class="ticket-price">${ticket.total.toLocaleString('fr-FR')} FCFA</div>
-                `;
-                liste.appendChild(card);
+                card.className = 'ticket-card';
+                card.onclick = () => { ticketSelectionne = t; selectionner(t); };
+                card.innerHTML = `<div class="ticket-top">Ticket #${t.num_panier}</div><div class="ticket-price">${t.total} F</div>`;
+                list.appendChild(card);
             });
         }
 
-        // 2. Quand la caissière clique sur un ticket
-        function selectionnerTicket(ticket) {
-            ticketSelectionne = ticket;
-            afficherFileDAttente(); // Pour mettre à jour la couleur (classe active)
-            
+        function selectionner(t) {
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('active-receipt').style.display = 'flex';
-
-            document.getElementById('receipt-info').innerText = `Ticket ${ticket.id} • Vendeur : ${ticket.vendeur}`;
-            document.getElementById('receipt-total').innerText = `${ticket.total.toLocaleString('fr-FR')} FCFA`;
-
-            const boxItems = document.getElementById('receipt-items');
-            boxItems.innerHTML = '';
-            
-            ticket.articles.forEach(art => {
-                const sousTotal = art.prix * art.quantite;
-                boxItems.innerHTML += `
-                    <div class="item-line">
-                        <div>
-                            <div class="item-name">${art.nom}</div>
-                            <div class="item-calc">${art.quantite} x ${art.prix} F</div>
-                        </div>
-                        <div class="item-total">${sousTotal.toLocaleString('fr-FR')} F</div>
-                    </div>
-                `;
-            });
+            document.getElementById('receipt-info').innerText = 'Ticket #' + t.num_panier;
+            document.getElementById('receipt-total').innerText = t.total + ' F';
+            const items = document.getElementById('receipt-items');
+            items.innerHTML = '';
+            t.details.forEach(a => items.innerHTML += `<div class="item-line"><div>${a.nom}<div class="item-calc">${a.qte} x ${a.prix}</div></div><div class="item-total">${a.prix * a.qte} F</div></div>`);
         }
 
-        // 3. Masquer le ticket de droite
-        function masquerDetails() {
-            document.getElementById('empty-state').style.display = 'flex';
-            document.getElementById('active-receipt').style.display = 'none';
-            ticketSelectionne = null;
+        function validerPaiement() { document.getElementById('payment-modal').style.display = 'flex'; document.getElementById('modal-ticket-num').innerText = ticketSelectionne.num_panier; }
+
+        async function finaliserPaiement() {
+            const total = ticketSelectionne.total;
+            const cash = parseFloat(document.getElementById('pay-cash').value) || 0;
+            const momo = parseFloat(document.getElementById('pay-momo').value) || 0;
+            if (cash + momo < total) { alert("Montant insuffisant !"); return; }
+            await clientSupabase.from('commandes').update({ statut: 'paye' }).eq('id', ticketSelectionne.id);
+            alert("✅ Encaissé avec succès !");
+            location.reload();
         }
 
-        // 4. Action finale : Valider l'encaissement
-        function validerPaiement() {
-            if(!ticketSelectionne) return;
-
-            // Ici, plus tard : Mise à jour dans Supabase (Passer le ticket en "Payé")
-            
-            alert(`✅ ENCAISSEMENT VALIDÉ !\n\nLe montant de ${ticketSelectionne.total} FCFA a été enregistré dans la caisse.`);
-            
-            // On retire le ticket de la file d'attente
-            ticketsEnAttente = ticketsEnAttente.filter(t => t.id !== ticketSelectionne.id);
-            masquerDetails();
-            afficherFileDAttente();
-        }
-
-        // Lancement initial
-        afficherFileDAttente();
+        function ouvrirRemboursementSec() { alert("Système de remboursement activé."); }
+        setInterval(chargerCommandes, 5000);
+        chargerCommandes();
     </script>
 </body>
 </html>
