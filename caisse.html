@@ -9,116 +9,377 @@
         :root { --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); overflow: hidden; }
-        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* En-tête */
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index:10; }
         header h1 { font-size: 20px; color: var(--gold); font-family: 'Georgia', serif; }
         .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 14px; margin-right: 15px; }
+        .btn-rembourser { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; margin-left: 10px; }
+
+        /* Mise en page */
         .main-layout { display: flex; flex: 1; overflow: hidden; }
+        
+        /* File d'attente (Gauche) */
         .queue-panel { width: 350px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
         .panel-header { padding: 15px; background: #fafafa; border-bottom: 1px solid var(--border); font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; }
         .queue-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .ticket-card { background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .ticket-card { background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .ticket-card:hover { border-color: var(--gold); box-shadow: 0 4px 8px rgba(179, 135, 40, 0.1); }
         .ticket-card.active { background: #fffdf5; border-color: var(--gold); }
         .ticket-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: #7f8c8d; }
         .ticket-vendeur { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
         .ticket-price { font-weight: bold; color: var(--success); font-size: 14px; }
-        .details-area { flex: 1; padding: 20px; display: flex; flex-direction: column; }
-        .receipt-container { background: white; flex: 1; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; max-width: 600px; margin: 0 auto; width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .receipt-header { text-align: center; padding-bottom: 20px; border-bottom: 2px dashed #eee; margin-bottom: 20px; }
-        .receipt-items { flex: 1; overflow-y: auto; }
+
+        /* Détails (Droite) */
+        .details-area { flex: 1; background: var(--bg-gray); padding: 20px; display: flex; flex-direction: column; }
+        .receipt-container { background: white; flex: 1; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; width: 100%; overflow: hidden; }
+        .receipt-header { text-align: center; padding: 20px; border-bottom: 2px dashed #eee; }
+        .receipt-header h2 { font-size: 24px; color: var(--primary); margin-bottom: 5px; }
+        .receipt-items { flex: 1; padding: 20px; overflow-y: auto; }
         .item-line { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6; }
-        .item-name { font-weight: 500; }
+        .item-name { font-weight: 500; font-size: 15px; }
         .item-calc { color: #7f8c8d; font-size: 12px; margin-top: 3px; }
         .item-total { font-weight: bold; font-size: 15px; }
-        .total-display { display: flex; justify-content: space-between; font-size: 24px; font-weight: 900; color: var(--primary); padding: 20px 0; border-top: 2px dashed #eee; }
-        .btn-encaisse { width: 100%; background: var(--success); color: white; border: none; padding: 18px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .receipt-footer { padding: 20px; background: #fafafa; border-top: 2px dashed #eee; }
+        .total-display { display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; }
+        .btn-encaisser { width: 100%; background: var(--success); color: white; border: none; padding: 18px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-encaisser:hover { background: #219653; transform: translateY(-2px); }
+        .btn-encaisser:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #95a5a6; text-align: center; }
+
+        /* Pop-up de paiement (Modal) */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .modal-title { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; }
         .pay-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .pay-input { width: 120px; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 16px; text-align: right; }
-        .btn-confirm { width: 100%; padding: 12px; background: var(--success); border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; }
+        .pay-label { font-size: 14px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+        .pay-input { width: 130px; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 16px; font-weight: bold; text-align: right; outline: none; }
+        .pay-input:focus { border-color: var(--gold); }
+        .btn-verify { background: var(--primary); color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-cancel { flex: 1; padding: 12px; background: #eee; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #7f8c8d; }
+        .btn-confirm { flex: 2; padding: 12px; background: var(--success); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-confirm:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        @media (max-width: 850px) {
+            .main-layout { flex-direction: column; }
+            .queue-panel { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid var(--border); }
+            .details-area { padding: 10px; }
+        }
     </style>
 </head>
 <body>
     <header>
-        <div style="display:flex; align-items:center;">
-            <button onclick="window.location.href='index.html'" style="background:transparent; border:none; color:white; cursor:pointer; text-decoration:underline; margin-right:15px;">⬅ Accueil</button>
-            <h1>Caisse Centrale</h1>
+        <div style="display: flex; align-items: center;">
+            <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Retour Accueil</button>
+            <h1>Nina Fashion</h1>
         </div>
         <div>
             <span class="badge-role">💰 CAISSE CENTRALE</span>
-            <button onclick="ouvrirRemboursementSec()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-left: 10px;">💸 Rembourser Reliquat</button>
+            <button class="btn-rembourser" onclick="ouvrirRemboursementSec()">💸 Rembourser Reliquat</button>
         </div>
     </header>
 
     <div class="main-layout">
         <div class="queue-panel">
-            <div class="panel-header"><span>Tickets en attente</span><span id="queue-count">0</span></div>
+            <div class="panel-header">
+                <span>Tickets en attente</span>
+                <span id="queue-count" style="background:var(--gold); color:white; padding:2px 8px; border-radius:10px; font-size:12px;">0</span>
+            </div>
             <div class="queue-list" id="queue-list"></div>
         </div>
+
         <div class="details-area">
-            <div class="receipt-container" id="active-receipt" style="display:none;">
-                <div class="receipt-header"><h2 id="receipt-info">---</h2></div>
-                <div class="receipt-items" id="receipt-items"></div>
-                <div class="total-display"><span>Total :</span><span id="receipt-total">0 F</span></div>
-                <button class="btn-encaisse" id="btn-valider" onclick="validerPaiement()">💳 VALIDER L'ENCAISSEMENT</button>
+            <div class="receipt-container" id="receipt-container">
+                <div class="empty-state" id="empty-state">
+                    <div style="font-size: 40px;">🧾</div>
+                    <div style="font-size: 16px; margin-top: 15px;">Sélectionnez un ticket dans la file d'attente pour l'encaisser.</div>
+                </div>
+
+                <div id="active-receipt" style="display: none; height: 100%; flex-direction: column;">
+                    <div class="receipt-header">
+                        <h2 id="receipt-info">Ticket #...</h2>
+                        <p style="color: #7f8c8d; font-size: 13px;">Vendeur en boutique</p>
+                    </div>
+                    <div class="receipt-items" id="receipt-items"></div>
+                    <div class="receipt-footer">
+                        <div class="total-display">
+                            <span>Total à payer :</span>
+                            <span id="receipt-total">0 FCFA</span>
+                        </div>
+                        <button class="btn-encaisser" id="btn-valider" onclick="ouvrirModalPaiement()">💳 VALIDER L'ENCAISSEMENT</button>
+                    </div>
+                </div>
             </div>
-            <div id="empty-state" style="display:flex; flex:1; align-items:center; justify-content:center; color:#95a5a6;">Sélectionnez un ticket à gauche.</div>
         </div>
     </div>
 
     <div id="payment-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-title">Paiement : Ticket #<span id="modal-ticket-num"></span></div>
-            <div class="pay-row"><label>💵 Espèces</label><input type="number" id="pay-cash" class="pay-input" placeholder="0"></div>
-            <div class="pay-row"><label>📱 M-Money</label><input type="number" id="pay-momo" class="pay-input" placeholder="0"></div>
-            <button class="btn-confirm" onclick="finaliserPaiement()">✅ CONFIRMER PAIEMENT</button>
+            <div class="modal-title">
+                Encaisser Ticket #<span id="modal-ticket-num">---</span><br>
+                <span style="font-size: 24px; color: var(--gold);" id="modal-ticket-total">0 FCFA</span>
+            </div>
+
+            <div class="pay-row">
+                <label class="pay-label">💵 Espèces (FCFA)</label>
+                <input type="number" id="pay-cash" class="pay-input" placeholder="0" oninput="calculerReste()">
+            </div>
+
+            <div class="pay-row">
+                <label class="pay-label">📱 Mobile Money</label>
+                <input type="number" id="pay-momo" class="pay-input" placeholder="0" oninput="calculerReste()">
+            </div>
+
+            <div class="pay-row" style="background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: block;">
+                <label class="pay-label" style="font-size: 12px; margin-bottom: 8px;">🎫 Utiliser un Reliquat / Avoir</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="pay-reliquat-code" class="pay-input" style="text-align: left; width: 100%; font-size: 14px;" placeholder="Ex: R-1234">
+                    <button class="btn-verify" onclick="verifierReliquat()">Vérifier</button>
+                </div>
+                <div id="reliquat-status" style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--success);"></div>
+            </div>
+            
+            <div style="text-align: right; margin-top: 15px; font-size: 14px; font-weight: bold; color: #7f8c8d; padding-top: 10px; border-top: 1px solid #eee;">
+                <div id="modal-reste" style="color: #e74c3c; font-size: 16px;">Reste à payer : 0 FCFA</div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fermerModal()">Annuler</button>
+                <button class="btn-confirm" id="btn-final-validate" onclick="finaliserPaiement()" disabled>✅ CONFIRMER</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const clientSupabase = window.supabase.createClient("https://tkqosylavymaracevaxt.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U");
-        let ticketSelectionne = null;
+        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let ticketsEnAttente = [];
+        let ticketSelectionne = null;
+        
+        // Variables pour garder en mémoire le reliquat vérifié par la caissière
+        let reliquatValideMontant = 0;
+        let reliquatValideId = null;
+
+        // --- 1. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
         async function chargerCommandes() {
-            const { data } = await clientSupabase.from('commandes').select('*').eq('statut', 'en_attente');
-            const list = document.getElementById("queue-list");
-            list.innerHTML = "";
-            document.getElementById("queue-count").innerText = data ? data.length : 0;
-            if(data) data.forEach(t => {
+            const { data, error } = await clientSupabase
+                .from('commandes')
+                .select('*')
+                .eq('statut', 'en_attente')
+                .order('created_at', { ascending: true });
+
+            if (!error && data) {
+                ticketsEnAttente = data;
+                afficherFileDAttente();
+            }
+        }
+        setInterval(chargerCommandes, 5000); // L'ordinateur cherche de nouveaux tickets toutes les 5 secondes
+
+        function afficherFileDAttente() {
+            const liste = document.getElementById("queue-list");
+            document.getElementById("queue-count").innerText = ticketsEnAttente.length;
+            liste.innerHTML = "";
+
+            if (ticketsEnAttente.length === 0) {
+                liste.innerHTML = '<div style="text-align:center; padding:20px; color:#95a5a6; font-size:13px;">Aucun ticket en attente.</div>';
+                if (ticketSelectionne) masquerDetails();
+                return;
+            }
+
+            ticketsEnAttente.forEach(ticket => {
                 const card = document.createElement('div');
-                card.className = 'ticket-card';
-                card.onclick = () => { ticketSelectionne = t; selectionner(t); };
-                card.innerHTML = `<div class="ticket-top">Ticket #${t.num_panier}</div><div class="ticket-price">${t.total} F</div>`;
-                list.appendChild(card);
+                card.className = 'ticket-card ' + (ticketSelectionne && ticketSelectionne.id === ticket.id ? 'active' : '');
+                card.onclick = () => selectionnerTicket(ticket);
+                const dateObj = new Date(ticket.created_at);
+                const heure = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
+
+                card.innerHTML = `
+                    <div class="ticket-top"><span>Ticket #${ticket.num_panier}</span><span>${heure}</span></div>
+                    <div class="ticket-vendeur">🛍️ Commande vendeur</div>
+                    <div class="ticket-price">${parseFloat(ticket.total).toLocaleString('fr-FR')} F</div>
+                `;
+                liste.appendChild(card);
             });
         }
 
-        function selectionner(t) {
+        function selectionnerTicket(ticket) {
+            ticketSelectionne = ticket;
+            afficherFileDAttente(); 
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('active-receipt').style.display = 'flex';
-            document.getElementById('receipt-info').innerText = 'Ticket #' + t.num_panier;
-            document.getElementById('receipt-total').innerText = t.total + ' F';
-            const items = document.getElementById('receipt-items');
-            items.innerHTML = '';
-            t.details.forEach(a => items.innerHTML += `<div class="item-line"><div>${a.nom}<div class="item-calc">${a.qte} x ${a.prix}</div></div><div class="item-total">${a.prix * a.qte} F</div></div>`);
+            document.getElementById('receipt-info').innerText = 'Ticket #' + ticket.num_panier;
+            document.getElementById('receipt-total').innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + ' FCFA';
+
+            const boxItems = document.getElementById('receipt-items');
+            boxItems.innerHTML = '';
+            if(ticket.details) {
+                ticket.details.forEach(art => {
+                    const sousTotal = art.prix * art.qte;
+                    boxItems.innerHTML += `
+                        <div class="item-line">
+                            <div><div class="item-name">${art.nom}</div><div class="item-calc">${art.qte} x ${art.prix} F</div></div>
+                            <div class="item-total">${sousTotal.toLocaleString('fr-FR')} F</div>
+                        </div>
+                    `;
+                });
+            }
         }
 
-        function validerPaiement() { document.getElementById('payment-modal').style.display = 'flex'; document.getElementById('modal-ticket-num').innerText = ticketSelectionne.num_panier; }
+        function masquerDetails() {
+            document.getElementById('empty-state').style.display = 'flex';
+            document.getElementById('active-receipt').style.display = 'none';
+            ticketSelectionne = null;
+        }
 
-        async function finaliserPaiement() {
-            const total = ticketSelectionne.total;
+        // --- 2. LOGIQUE DE PAIEMENT INTELLIGENTE ---
+        function ouvrirModalPaiement() {
+            if(!ticketSelectionne) return;
+            document.getElementById('modal-ticket-num').innerText = ticketSelectionne.num_panier;
+            document.getElementById('modal-ticket-total').innerText = parseFloat(ticketSelectionne.total).toLocaleString('fr-FR') + ' FCFA';
+            
+            // On vide les cases à chaque nouveau client
+            document.getElementById('pay-cash').value = '';
+            document.getElementById('pay-momo').value = '';
+            document.getElementById('pay-reliquat-code').value = '';
+            document.getElementById('reliquat-status').innerText = '';
+            reliquatValideMontant = 0;
+            reliquatValideId = null;
+            
+            calculerReste();
+            document.getElementById('payment-modal').style.display = 'flex';
+        }
+
+        function fermerModal() { document.getElementById('payment-modal').style.display = 'none'; }
+
+        async function verifierReliquat() {
+            const code = document.getElementById('pay-reliquat-code').value.trim();
+            if(!code) return;
+            
+            const btn = document.querySelector('.btn-verify');
+            btn.innerText = "...";
+            
+            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code).eq('statut', 'actif').single();
+            
+            if(data) {
+                reliquatValideMontant = parseFloat(data.montant);
+                reliquatValideId = data.id;
+                document.getElementById('reliquat-status').innerText = `✅ Validé: ${reliquatValideMontant} F (${data.nom_client})`;
+            } else {
+                reliquatValideMontant = 0;
+                reliquatValideId = null;
+                document.getElementById('reliquat-status').innerHTML = `<span style="color:#e74c3c;">❌ Invalide ou déjà utilisé</span>`;
+            }
+            btn.innerText = "Vérifier";
+            calculerReste(); // Met à jour le total automatiquement
+        }
+
+        function calculerReste() {
+            const total = parseFloat(ticketSelectionne.total);
             const cash = parseFloat(document.getElementById('pay-cash').value) || 0;
             const momo = parseFloat(document.getElementById('pay-momo').value) || 0;
-            if (cash + momo < total) { alert("Montant insuffisant !"); return; }
-            await clientSupabase.from('commandes').update({ statut: 'paye' }).eq('id', ticketSelectionne.id);
-            alert("✅ Encaissé avec succès !");
-            location.reload();
+            
+            const totalPaye = cash + momo + reliquatValideMontant;
+            const difference = totalPaye - total;
+            
+            const divReste = document.getElementById('modal-reste');
+            const btnConf = document.getElementById('btn-final-validate');
+
+            if (difference < 0) {
+                divReste.innerHTML = `<span style="color: #e74c3c;">Reste à payer : ${Math.abs(difference).toLocaleString('fr-FR')} F</span>`;
+                btnConf.disabled = true; // Empêche de valider si le compte n'y est pas
+            } else if (difference > 0) {
+                divReste.innerHTML = `<span style="color: var(--success);">Monnaie à rendre : ${difference.toLocaleString('fr-FR')} F</span>`;
+                btnConf.disabled = false;
+            } else {
+                divReste.innerHTML = `<span style="color: var(--success);">Le compte est bon.</span>`;
+                btnConf.disabled = false;
+            }
         }
 
-        function ouvrirRemboursementSec() { alert("Système de remboursement activé."); }
-        setInterval(chargerCommandes, 5000);
+        async function finaliserPaiement() {
+            const total = parseFloat(ticketSelectionne.total);
+            const cash = parseFloat(document.getElementById('pay-cash').value) || 0;
+            const momo = parseFloat(document.getElementById('pay-momo').value) || 0;
+            const totalPaye = cash + momo + reliquatValideMontant;
+            const monnaie = totalPaye - total;
+
+            let creerReliquat = false;
+            let nomClient = "";
+            let numRecu = "";
+
+            // Le système de protection des monnaies non rendues
+            if (monnaie > 0) {
+                if (confirm(`💰 La monnaie est de ${monnaie} F.\nVoulez-vous CONSERVER cette monnaie (Créer un Reliquat) ?`)) {
+                    nomClient = prompt("Nom de l'apprenti / du client :");
+                    if (!nomClient) { alert("Opération annulée : Le nom est obligatoire."); return; }
+                    creerReliquat = true;
+                    numRecu = "R-" + Math.floor(1000 + Math.random() * 9000); // Génération du code R-XXX
+                }
+            }
+
+            const btn = document.getElementById('btn-final-validate');
+            btn.disabled = true;
+            btn.innerText = "⏳ Enregistrement...";
+
+            try {
+                // 1. Clôturer la commande dans le coffre-fort
+                const { error: errCmd } = await clientSupabase.from('commandes').update({ statut: 'paye' }).eq('id', ticketSelectionne.id);
+                if (errCmd) throw errCmd;
+
+                // 2. Désactiver le vieux reliquat si le client l'a utilisé pour ce paiement
+                if (reliquatValideId) {
+                    await clientSupabase.from('reliquats').update({ statut: 'utilise' }).eq('id', reliquatValideId);
+                }
+
+                // 3. Créer un nouveau reliquat si la caissière n'a pas la monnaie
+                if (creerReliquat) {
+                    const { error: errRel } = await clientSupabase.from('reliquats').insert([{ nom_client: nomClient, montant: monnaie, num_recu: numRecu }]);
+                    if (errRel) throw errRel;
+                    alert(`✅ ENCAISSEMENT RÉUSSI !\n\n📝 Écrivez le reçu papier pour le client :\n- Nom : ${nomClient}\n- Ticket : ${ticketSelectionne.num_panier}\n- N° REÇU : ${numRecu}\n- Montant conservé : ${monnaie} F`);
+                } else {
+                    alert(`✅ ENCAISSEMENT RÉUSSI !` + (monnaie > 0 ? `\n\nN'oubliez pas de rendre ${monnaie} F au client.` : ""));
+                }
+
+                // On nettoie l'écran pour le client suivant
+                fermerModal();
+                masquerDetails();
+                chargerCommandes();
+                btn.innerText = "✅ CONFIRMER";
+
+            } catch (err) {
+                alert("❌ Erreur de réseau avec la base de données.");
+                btn.disabled = false;
+                btn.innerText = "✅ CONFIRMER";
+            }
+        }
+
+        // --- 3. GESTION DES REMBOURSEMENTS SANS ACHAT ---
+        async function ouvrirRemboursementSec() {
+            const code = prompt("💸 REMBOURSEMENT DE RELIQUAT\nEntrez le numéro du reçu papier (Ex: R-1234) :");
+            if (!code) return;
+
+            // On cherche le reçu dans la base de données
+            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code.trim()).eq('statut', 'actif').single();
+
+            if (data) {
+                const conf = confirm(`👤 Client : ${data.nom_client}\n💰 Montant à rembourser : ${data.montant} F\n\nConfirmez-vous avoir remis cet argent en espèces ?`);
+                if (conf) {
+                    // On marque le reçu comme remboursé
+                    await clientSupabase.from('reliquats').update({ statut: 'rembourse' }).eq('id', data.id);
+                    alert("✅ Remboursement enregistré. Le reçu papier est maintenant invalide.");
+                }
+            } else {
+                alert("❌ Ce reçu est introuvable, déjà utilisé pour un achat, ou déjà remboursé.");
+            }
+        }
+
+        // On lance le moteur au démarrage de la page
         chargerCommandes();
     </script>
 </body>
-</html>
+    </html>
+    
