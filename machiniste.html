@@ -2,10 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier Machines — Nina Fashion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Atelier Machiniste - Nina Fashion</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Charte Graphique Nina Fashion */
         :root {
             --primary: #1a1c1e;
             --gold: #b38728;
@@ -13,192 +13,340 @@
             --border: #e2e8f0;
             --text-dark: #2c3e50;
             --success: #27ae60;
+            --warning: #e67e22;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); overflow: hidden; }
 
-        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); }
+        /* EN-TÊTE */
+        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 16px; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; }
 
-        header { 
-            background: var(--primary); color: white; padding: 15px 20px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        header h1 { font-size: 18px; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; margin-right: 10px; }
+        /* STRUCTURE PRINCIPALE MOBILE */
+        .main-layout { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 
-        .container { display: flex; flex: 1; padding: 20px; gap: 20px; overflow: hidden; max-width: 1200px; margin: 0 auto; width: 100%; }
-
-        /* Colonne de Saisie */
-        .panel { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
-        .panel-left { flex: 1; max-width: 450px; }
-        .panel-right { flex: 2; overflow-y: auto; }
+        /* CATALOGUE (HAUT) */
+        .catalog-panel { flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden; }
+        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; padding: 10px; gap: 10px; }
+        .category-tabs::-webkit-scrollbar { height: 0px; }
+        .tab-btn { padding: 12px 15px; border: 1px solid var(--border); background: white; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: bold; white-space: nowrap; transition: 0.2s; }
+        .tab-btn.active { color: white; background: var(--gold); border-color: var(--gold); }
         
-        .panel-title { font-size: 16px; font-weight: bold; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+        .services-grid { flex: 1; overflow-y: auto; padding: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start; }
+        .service-card { border: 1px solid var(--border); border-radius: 10px; padding: 15px 10px; background: white; cursor: pointer; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .service-card:active { transform: scale(0.95); border-color: var(--gold); }
+        .service-name { font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; line-height: 1.2; }
+        .service-price { font-size: 14px; font-weight: bold; color: var(--gold); }
 
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #7f8c8d; margin-bottom: 5px; }
-        .form-group select, .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; outline: none; }
-        .form-group select:focus, .form-group input:focus { border-color: var(--gold); }
-
-        .btn-valider { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        .btn-valider:hover { background: #967120; }
-
-        /* Tableau des tâches */
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th { background: #f8f9fa; padding: 12px; font-weight: 600; color: #7f8c8d; border-bottom: 2px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        /* TICKET / PANIER (BAS) */
+        .ticket-panel { background: #fff; border-top: 3px solid var(--primary); display: flex; flex-direction: column; max-height: 50vh; }
+        .ticket-header { padding: 10px 15px; background: #fafafa; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; }
         
-        .total-box { margin-top: 20px; padding: 15px; background: var(--primary); color: white; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .total-box span { font-size: 18px; font-weight: bold; color: var(--gold); }
+        .ticket-items { flex: 1; overflow-y: auto; padding: 0 15px; max-height: 150px; }
+        .ticket-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .item-details { display: flex; flex-direction: column; }
+        .item-calc { color: #7f8c8d; font-size: 11px; }
+        .btn-delete { color: #e74c3c; background: none; border: none; font-size: 16px; padding: 5px; }
 
-        @media (max-width: 768px) {
-            .container { flex-direction: column; overflow-y: auto; }
-            .panel-left { max-width: 100%; }
-        }
+        .ticket-form { padding: 10px 15px; background: #f8f9fa; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+        .input-group { display: flex; align-items: center; justify-content: space-between; }
+        .input-group label { font-size: 13px; font-weight: bold; color: var(--primary); }
+        .custom-input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 60%; text-align: right; }
+        .custom-input:focus { outline: none; border-color: var(--gold); }
+
+        .totals-row { display: flex; justify-content: space-between; padding: 5px 15px; font-size: 15px; font-weight: bold; }
+        .total-rest { color: #e74c3c; font-size: 18px; }
+
+        .action-buttons { display: flex; gap: 10px; padding: 10px 15px 15px 15px; }
+        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-save { background: var(--warning); }
+        .btn-send { background: var(--success); }
+        .btn-action:disabled { background: #bdc3c7; }
+
+        #loader { padding: 20px; text-align: center; color: #7f8c8d; font-weight: bold; grid-column: 1 / -1; }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Accueil</button>
+            <button class="btn-retour" onclick="window.location.href='index.html'">← Accueil</button>
             <h1>Nina Fashion</h1>
         </div>
-        <div class="badge-role">✂️ ATELIER MACHINES</div>
+        <div class="badge-role">✂️ ATELIER</div>
     </header>
 
-    <div class="container">
-        <!-- Zone de saisie d'une nouvelle tâche -->
-        <div class="panel panel-left">
-            <div class="panel-title">Enregistrer une prestation</div>
-            
-            <form id="task-form" onsubmit="ajouterTache(event)">
-                <div class="form-group">
-                    <label for="categorie">Type de service</label>
-                    <select id="categorie" onchange="mettreAJourArticles()" required>
-                        <option value="">-- Choisir --</option>
-                        <option value="surfilage">S1. Surfilage</option>
-                        <option value="boutons">S2. Fabrication de Boutons</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="article">Prestation réalisée</label>
-                    <select id="article" required>
-                        <option value="">-- Sélectionnez d'abord un type --</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="quantite">Quantité (Pièces / Mètres)</label>
-                    <input type="number" id="quantite" min="1" value="1" required>
-                </div>
-
-                <button type="submit" class="btn-valider">Valider la tâche</button>
-            </form>
-        </div>
-
-        <!-- Liste des tâches du jour -->
-        <div class="panel panel-right">
-            <div class="panel-title">Tâches réalisées aujourd'hui</div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Heure</th>
-                        <th>Prestation</th>
-                        <th>Qté</th>
-                        <th>Prix Unitaire</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody id="task-list">
-                    <!-- Rempli par JavaScript -->
-                </tbody>
-            </table>
-
-            <div class="total-box">
-                <div>Total généré par l'atelier :</div>
-                <span id="total-jour">0 F</span>
+    <div class="main-layout">
+        
+        <!-- ZONE HAUTE : CATALOGUE DES PRESTATIONS -->
+        <div class="catalog-panel">
+            <div class="category-tabs" id="category-tabs">
+                <!-- Onglets générés en JS -->
+            </div>
+            <div class="services-grid" id="services-grid">
+                <div id="loader">⏳ Chargement des services...</div>
+                <!-- Boutons générés en JS -->
             </div>
         </div>
+
+        <!-- ZONE BASSE : TICKET EN COURS -->
+        <div class="ticket-panel">
+            <div class="ticket-header">
+                <span>Ticket en cours</span>
+                <span id="ticket-count" style="color: var(--gold);">0 prestation</span>
+            </div>
+            
+            <div class="ticket-items" id="ticket-items">
+                <div style="text-align: center; color: #95a5a6; padding: 20px; font-size: 12px;">Touchez une prestation pour l'ajouter.</div>
+            </div>
+
+            <div class="ticket-form">
+                <div class="input-group">
+                    <label>Nom du Client :</label>
+                    <input type="text" id="input-client" class="custom-input" placeholder="Ex: Apprenti Koffi">
+                </div>
+                <div class="input-group">
+                    <label>Avance versée :</label>
+                    <input type="number" id="input-avance" class="custom-input" placeholder="0" oninput="calculerTicket()">
+                </div>
+            </div>
+
+            <div class="totals-row">
+                <span>Total Prestations :</span>
+                <span id="total-brut">0 F</span>
+            </div>
+            <div class="totals-row">
+                <span>Reste à Payer :</span>
+                <span id="total-reste" class="total-rest">0 F</span>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action btn-save" id="btn-save" onclick="validerTicket('en_atelier')" disabled>
+                    <span>📥 GARDER EN ATELIER</span>
+                    <span style="font-size: 10px; font-weight: normal;">(Dépôt / Sauvegarder)</span>
+                </button>
+                <button class="btn-action btn-send" id="btn-send" onclick="validerTicket('en_attente')" disabled>
+                    <span>💸 ENVOYER CAISSE</span>
+                    <span style="font-size: 10px; font-weight: normal;">(Payer maintenant)</span>
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // Extraits réels du Catalogue (Section Machines S1 et S2)
-        const SERVICES = {
-            surfilage: [
-                { ref: "S1", nom: "Pagne en bande (au mètre)", prix: 50 },
-                { ref: "S2", nom: "Pantalon", prix: 100 },
-                { ref: "S4", nom: "Robe avec gros volant", prix: 200 },
-                { ref: "S5", nom: "Intérieur robe/boubou/habit", prix: 100 }
-            ],
-            boutons: [
-                { ref: "S8", nom: "Boutons simples n°16 à n°24", prix: 25 },
-                { ref: "S9", nom: "Boutons simples n°28", prix: 50 },
-                { ref: "S10", nom: "Boutons simples n°32", prix: 100 }
-            ]
-        };
+        // --- CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co"; // Remplace par ta vraie URL si différente
+        const SUPABASE_ANON_KEY = "eyJh... (Mets ta clé API ici comme dans les autres fichiers)";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let totalAtelier = 0;
+        let SERVICES = [];
+        let ticket = [];
+        let categorieActive = '';
 
-        function mettreAJourArticles() {
-            const categorie = document.getElementById('categorie').value;
-            const selectArticle = document.getElementById('article');
-            
-            selectArticle.innerHTML = '<option value="">-- Choisir la prestation --</option>';
-            
-            if(categorie && SERVICES[categorie]) {
-                SERVICES[categorie].forEach(srv => {
-                    let opt = document.createElement('option');
-                    opt.value = srv.ref;
-                    opt.dataset.prix = srv.prix;
-                    opt.dataset.nom = srv.nom;
-                    opt.innerText = `[${srv.ref}] ${srv.nom} - ${srv.prix}F`;
-                    selectArticle.appendChild(opt);
-                });
+        // 1. CHARGEMENT DES DONNÉES
+        async function chargerServices() {
+            try {
+                const { data, error } = await clientSupabase.from('services_machines').select('*').order('categorie');
+                if (error) throw error;
+                
+                SERVICES = data;
+                document.getElementById('loader').style.display = 'none';
+                
+                // Extraire les catégories uniques
+                const categories = [...new Set(SERVICES.map(s => s.categorie))];
+                if(categories.length > 0) {
+                    categorieActive = categories[0]; // Sélectionner la première par défaut
+                    genererOnglets(categories);
+                    afficherServices();
+                }
+            } catch (err) {
+                document.getElementById('loader').innerHTML = "❌ Erreur de connexion.";
+                console.error(err);
             }
         }
 
-        function ajouterTache(event) {
-            event.preventDefault();
-
-            const selectArticle = document.getElementById('article');
-            if(!selectArticle.value) return;
-
-            const optionSelectionnee = selectArticle.options[selectArticle.selectedIndex];
-            const nom = optionSelectionnee.dataset.nom;
-            const prixUnitaire = parseInt(optionSelectionnee.dataset.prix);
-            const qte = parseInt(document.getElementById('quantite').value);
-            
-            const sousTotal = prixUnitaire * qte;
-            totalAtelier += sousTotal;
-
-            // Heure actuelle
-            const now = new Date();
-            const heureStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-            // Ajouter au tableau
-            const tbody = document.getElementById('task-list');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${heureStr}</td>
-                <td style="font-weight:500;">${nom}</td>
-                <td style="text-align:center;">${qte}</td>
-                <td>${prixUnitaire} F</td>
-                <td style="font-weight:bold; color:var(--success);">${sousTotal} F</td>
-            `;
-            
-            tbody.insertBefore(row, tbody.firstChild);
-
-            // Mettre à jour le total
-            document.getElementById('total-jour').innerText = totalAtelier.toLocaleString('fr-FR') + ' F';
-
-            // Reset partiel du form
-            document.getElementById('quantite').value = 1;
+        // 2. AFFICHAGE DE L'INTERFACE
+        function genererOnglets(categories) {
+            const container = document.getElementById('category-tabs');
+            container.innerHTML = '';
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${cat === categorieActive ? 'active' : ''}`;
+                btn.innerText = cat;
+                btn.onclick = () => {
+                    categorieActive = cat;
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    afficherServices();
+                };
+                container.appendChild(btn);
+            });
         }
+
+        function afficherServices() {
+            const grid = document.getElementById('services-grid');
+            grid.innerHTML = '';
+            
+            const servicesFiltres = SERVICES.filter(s => s.categorie === categorieActive);
+            
+            servicesFiltres.forEach(srv => {
+                const card = document.createElement('div');
+                card.className = 'service-card';
+                card.onclick = () => demanderMesure(srv);
+                
+                let affichagePrix = `${srv.tarif_unitaire} F`;
+                if(srv.type_mesure === 'metre') affichagePrix += ' / m';
+                
+                card.innerHTML = `
+                    <div class="service-name">${srv.nom_service}</div>
+                    <div class="service-price">${affichagePrix}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 3. GESTION DU TICKET (LOGIQUE MÉTIER)
+        function demanderMesure(srv) {
+            let message = srv.type_mesure === 'metre' ? `Combien de mètres pour :\n${srv.nom_service} ?` : `Quelle quantité pour :\n${srv.nom_service} ?`;
+            
+            let saisie = prompt(message, "1");
+            if (saisie === null || saisie.trim() === "") return;
+            
+            let qte = parseFloat(saisie);
+            if (isNaN(qte) || qte <= 0) {
+                alert("Valeur invalide.");
+                return;
+            }
+
+            // Ajouter au ticket
+            ticket.push({
+                id_service: srv.id,
+                nom: srv.nom_service,
+                prix: parseFloat(srv.tarif_unitaire),
+                qte: qte,
+                type: srv.type_mesure
+            });
+            
+            mettreAjourUI();
+        }
+
+        function supprimerDuTicket(index) {
+            ticket.splice(index, 1);
+            mettreAjourUI();
+        }
+
+        function mettreAjourUI() {
+            const container = document.getElementById('ticket-items');
+            
+            if (ticket.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #95a5a6; padding: 20px; font-size: 12px;">Touchez une prestation pour l'ajouter.</div>`;
+                document.getElementById('btn-save').disabled = true;
+                document.getElementById('btn-send').disabled = true;
+            } else {
+                container.innerHTML = '';
+                document.getElementById('btn-save').disabled = false;
+                document.getElementById('btn-send').disabled = false;
+                
+                ticket.forEach((item, index) => {
+                    let sousTotal = item.prix * item.qte;
+                    let labelQte = item.type === 'metre' ? `${item.qte}m` : `x${item.qte}`;
+                    
+                    container.innerHTML += `
+                        <div class="ticket-item">
+                            <div class="item-details">
+                                <span style="font-weight:600; color:var(--primary)">${item.nom}</span>
+                                <span class="item-calc">${labelQte} à ${item.prix} F = ${sousTotal} F</span>
+                            </div>
+                            <button class="btn-delete" onclick="supprimerDuTicket(${index})">🗑️</button>
+                        </div>
+                    `;
+                });
+            }
+            calculerTicket();
+        }
+
+        function calculerTicket() {
+            let totalBrut = ticket.reduce((somme, item) => somme + (item.prix * item.qte), 0);
+            
+            let inputAvance = document.getElementById('input-avance').value;
+            let avance = parseFloat(inputAvance) || 0;
+            
+            // Empêcher une avance supérieure au total
+            if (avance > totalBrut) {
+                avance = totalBrut;
+                document.getElementById('input-avance').value = totalBrut;
+            }
+
+            let reste = totalBrut - avance;
+
+            document.getElementById('ticket-count').innerText = `${ticket.length} prestation(s)`;
+            document.getElementById('total-brut').innerText = `${totalBrut.toLocaleString('fr-FR')} F`;
+            document.getElementById('total-reste').innerText = `${reste.toLocaleString('fr-FR')} F`;
+            
+            return { totalBrut, avance, reste };
+        }
+
+        // 4. ENVOI VERS SUPABASE
+        async function validerTicket(statutChoisi) {
+            if (ticket.length === 0) return;
+            
+            const nomClient = document.getElementById('input-client').value.trim();
+            if (nomClient === "") {
+                alert("⚠️ Veuillez saisir le nom du client ou de l'apprenti.");
+                document.getElementById('input-client').focus();
+                return;
+            }
+
+            const { totalBrut, avance, reste } = calculerTicket();
+            
+            // Si le ticket va en caisse, désactiver les boutons pour éviter les doubles clics
+            document.getElementById('btn-save').disabled = true;
+            document.getElementById('btn-send').disabled = true;
+
+            // Générer numéro de ticket (ex: M-4582)
+            const numTicket = "M-" + Math.floor(1000 + Math.random() * 9000).toString();
+
+            try {
+                const { error } = await clientSupabase.from('commandes').insert([{
+                    num_panier: numTicket,
+                    total: totalBrut,
+                    details: ticket,
+                    statut: statutChoisi, // 'en_atelier' (caché caisse) ou 'en_attente' (visible caisse)
+                    avance: avance,
+                    reste_a_payer: reste,
+                    origine: 'atelier',
+                    nom_client: nomClient,
+                    statut_atelier: 'nouveau'
+                }]);
+
+                if (error) throw error;
+
+                if(statutChoisi === 'en_attente') {
+                    alert(`✅ TRANSMIS À LA CAISSE !\n\nTicket : ${numTicket}\nClient : ${nomClient}\nReste à Payer : ${reste} F`);
+                } else {
+                    alert(`📥 SAUVEGARDÉ EN ATELIER.\nLe ticket ${numTicket} est en attente de traitement.`);
+                }
+
+                // Réinitialiser l'écran
+                ticket = [];
+                document.getElementById('input-client').value = "";
+                document.getElementById('input-avance').value = "";
+                mettreAjourUI();
+
+            } catch (err) {
+                alert("❌ Erreur de réseau. Le ticket n'a pas été enregistré.");
+                console.error(err);
+                document.getElementById('btn-save').disabled = false;
+                document.getElementById('btn-send').disabled = false;
+            }
+        }
+
+        // Démarrer l'application
+        chargerServices();
+
     </script>
 </body>
 </html>
