@@ -209,15 +209,30 @@ const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
         }
 
         // 3. GESTION DU TICKET (LOGIQUE MÉTIER)
-        function demanderMesure(srv) {
-            let message = srv.type_mesure === 'metre' ? `Combien de mètres pour :\n${srv.nom_service} ?` : `Quelle quantité pour :\n${srv.nom_service} ?`;
+                function demanderMesure(srv) {
+            let prixFinal = parseFloat(srv.tarif_unitaire);
+
+            // 1. LA MAGIE DES PRIX À ZÉRO : On demande le prix d'abord
+            if (prixFinal === 0) {
+                let saisiePrix = prompt(`💰 Prix à fixer pour :\n${srv.nom_service}\n\nQuel est le montant unitaire convenu (en FCFA) ?`);
+                if (saisiePrix === null || saisiePrix.trim() === "") return;
+                
+                prixFinal = parseFloat(saisiePrix);
+                if (isNaN(prixFinal) || prixFinal <= 0) {
+                    alert("❌ Le montant saisi est invalide.");
+                    return;
+                }
+            }
+
+            // 2. Ensuite, on demande la quantité (ou le métrage)
+            let messageQte = srv.type_mesure === 'metre' ? `📏 Combien de mètres pour :\n${srv.nom_service} ?` : `🔢 Quelle quantité pour :\n${srv.nom_service} ?`;
+            let saisieQte = prompt(messageQte, "1");
             
-            let saisie = prompt(message, "1");
-            if (saisie === null || saisie.trim() === "") return;
+            if (saisieQte === null || saisieQte.trim() === "") return;
             
-            let qte = parseFloat(saisie);
+            let qte = parseFloat(saisieQte);
             if (isNaN(qte) || qte <= 0) {
-                alert("Valeur invalide.");
+                alert("❌ Valeur invalide.");
                 return;
             }
 
@@ -225,14 +240,14 @@ const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
             ticket.push({
                 id_service: srv.id,
                 nom: srv.nom_service,
-                prix: parseFloat(srv.tarif_unitaire),
+                prix: prixFinal,
                 qte: qte,
                 type: srv.type_mesure
             });
             
             mettreAjourUI();
-        }
-
+                }
+        
         function supprimerDuTicket(index) {
             ticket.splice(index, 1);
             mettreAjourUI();
