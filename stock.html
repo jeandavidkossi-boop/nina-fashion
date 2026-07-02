@@ -6,93 +6,86 @@
     <title>Gestion du Dépôt - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --primary: #1a1c1e;
-            --gold: #b38728;
-            --bg-gray: #f4f6f8;
-            --border: #e2e8f0;
-            --text-dark: #2c3e50;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
+        :root { 
+            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; 
+            --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); overflow-y: auto; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); font-size: 16px; }
 
-        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 16px; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; }
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header h1 { font-size: 1.2rem; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
 
-        .tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; font-size: 13px; color: #7f8c8d; cursor: pointer; text-align: center; }
-        .tab-btn.active { color: var(--gold); border-bottom: 3px solid var(--gold); background: #fff; }
+        .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); }
+        .tab-btn { flex: 1; padding: 15px 10px; border: none; background: none; font-weight: bold; font-size: 0.95rem; color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: #fffcf5; }
 
-        .container { padding: 15px; flex: 1; display: none; flex-direction: column; gap: 15px; }
+        .container { padding: 20px; flex: 1; display: none; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; }
         .container.active { display: flex; }
 
-        .search-box { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
-        
-        /* NOUVEAU DESIGN ACCORDÉON POUR LE STOCK */
-        .category-group { margin-bottom: 10px; }
-        .cat-header { background: var(--primary); color: white; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .cat-body { display: none; padding-left: 8px; border-left: 3px solid var(--gold); margin-top: 8px; }
-        
+        .search-box { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; margin-bottom: 15px; }
+        .search-box:focus { border-color: var(--gold); outline: none; }
+
+        /* DESIGN ACCORDÉON POUR LE STOCK */
+        .category-group { margin-bottom: 12px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .cat-header { background: var(--primary); color: white; padding: 15px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; font-size: 1.05rem; }
+        .cat-body { display: none; padding-left: 10px; border-left: 3px solid var(--gold); margin-top: 5px; }
+
         .article-group { margin-bottom: 8px; }
-        .art-header { background: white; padding: 12px 15px; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .art-header { background: white; padding: 12px 15px; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; color: var(--primary); }
         .art-body { display: none; padding: 5px 0; background: #fafafa; border-radius: 0 0 6px 6px; border: 1px solid var(--border); border-top: none; }
-        
-        .variante-card { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 12px; border-bottom: 1px dashed var(--border); }
+
+        .variante-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; font-size: 0.95rem; border-bottom: 1px solid #eee; }
         .variante-card:last-child { border-bottom: none; }
-        .variante-nom { display: flex; align-items: center; gap: 8px; }
-        .variante-badge { background: #eee; padding: 3px 8px; border-radius: 4px; color: #7f8c8d; }
-        .stock-val { font-size: 14px; font-weight: bold; color: var(--primary); }
+        .variante-badge { background: #eee; padding: 3px 8px; border-radius: 4px; color: #7f8c8d; font-size: 0.85rem; font-weight: bold; }
+        .stock-val { font-size: 1.1rem; font-weight: 900; color: var(--success); }
         .stock-val.alert { color: var(--danger); }
 
-        /* DESIGN DES FORMULAIRES (INCHANGÉ) */
-        .form-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: var(--primary); }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: white; }
+        /* FORMULAIRES ET MOUVEMENTS */
+        .form-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-group label { font-size: 0.95rem; font-weight: bold; color: var(--primary); }
+        .form-control { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 6px; font-size: 1rem; }
+        .form-control:focus { border-color: var(--gold); outline: none; }
 
-        .btn-block { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; text-align: center; font-size: 14px; }
-        .btn-primary { background: var(--primary); border: 1px solid var(--gold); color: var(--gold); }
+        .btn-block { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.05rem; color: white; cursor: pointer; margin-top: 10px; }
+        .btn-primary { background: var(--primary); }
         .btn-success { background: var(--success); }
-        .btn-whatsapp { background: #25D366; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; margin-top: 15px; }
-        .bordereau-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
-        
-        /* Liste des alertes */
-        .alerte-card { background: white; border: 1px solid var(--border); border-left: 4px solid var(--danger); border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .btn-whatsapp { background: #25D366; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-block:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        .bordereau-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .alerte-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--danger); border-radius: 6px; padding: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div>
-            <button class="btn-retour" onclick="window.location.href='index.html'">← Accueil</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-retour" onclick="window.location.href='index.html'">🚪 Accueil</button>
             <h1>Nina Fashion</h1>
         </div>
-        <div class="badge-role">📦 DÉPÔT</div>
+        <div class="badge-role" id="badge-magasinier">📦 DÉPÔT</div>
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('vision')">📋 État du Stock</button>
-        <button class="tab-btn" onclick="switchTab('mouvement')">📥 Mouvements (Colis)</button>
+        <button class="tab-btn active" onclick="switchTab('vision')">📊 État du Stock</button>
+        <button class="tab-btn" onclick="switchTab('mouvement')">🔄 Mouvements (Colis)</button>
         <button class="tab-btn" onclick="switchTab('commande')">🚨 Passer Commande</button>
     </div>
 
-    <!-- ONGLET 1 : ÉTAT DU STOCK (AVEC ACCORDÉON) -->
     <div id="tab-vision" class="container active">
         <input type="text" id="search-stock" class="search-box" placeholder="🔍 Rechercher un article ou une couleur..." oninput="filtrerStock()">
         <div id="grid-stock">
-            <div style="text-align:center; padding:20px; color:#7f8c8d;">⏳ Chargement du stock...</div>
+            <div style="text-align:center; padding:30px; color:#7f8c8d; font-weight:bold;">⏳ Chargement du stock...</div>
         </div>
     </div>
 
-    <!-- ONGLET 2 : ENREGISTRER UN MOUVEMENT (INCHANGÉ) -->
     <div id="tab-mouvement" class="container">
         <div class="form-card">
-            <h3 style="font-size: 14px; color: var(--gold); border-bottom: 1px solid #eee; padding-bottom: 5px;">📦 NOUVELLE OPÉRATION</h3>
+            <h3 style="font-size:1.1rem; color:var(--gold); border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:20px;">📦 NOUVEAU MOUVEMENT PHYSIQUE</h3>
             
             <div class="form-group">
                 <label>Type de mouvement :</label>
@@ -102,7 +95,7 @@
                 </select>
             </div>
 
-            <div class="form-group" id="group-destination" style="display: none;">
+            <div class="form-group" id="group-destination" style="display: none; background:#fffcf5; padding:10px; border-radius:6px; border:1px solid var(--gold);">
                 <label>Destination de la sortie (Obligatoire) :</label>
                 <select id="mvt-destination" class="form-control">
                     <option value="Rayon Boutique">🛒 Vers les Rayons de la Boutique</option>
@@ -113,7 +106,7 @@
             <div class="form-group">
                 <label>Sélectionner l'article :</label>
                 <select id="mvt-article" class="form-control" onchange="verifierBesoinCouleur()">
-                    <!-- Chargé dynamiquement -->
+                    <option value="">⏳ Chargement...</option>
                 </select>
             </div>
 
@@ -122,8 +115,8 @@
                 <input type="text" id="mvt-couleur" class="form-control" placeholder="Ex: Rouge Vif, Bleu Nuit, Doré...">
             </div>
 
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex: 1;">
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>Conditionnement :</label>
                     <select id="mvt-cond" class="form-control">
                         <option value="Carton">Carton</option>
@@ -132,7 +125,7 @@
                         <option value="Pièce">Pièce / Unité unique</option>
                     </select>
                 </div>
-                <div class="form-group" style="flex: 1;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>Contenance (U. par colis) :</label>
                     <input type="number" id="mvt-contenance" class="form-control" value="1" min="1">
                 </div>
@@ -140,82 +133,107 @@
 
             <div class="form-group">
                 <label>Nombre de colis / conditionnements :</label>
-                <input type="number" id="mvt-qte-cond" class="form-control" placeholder="Combien de cartons/paquets ?" min="1">
+                <input type="number" id="mvt-qte-cond" class="form-control" placeholder="Combien de cartons/paquets ?">
             </div>
 
             <button class="btn-block btn-primary" onclick="ajouterAuBordereau()">➕ AJOUTER AU BORDEREAU</button>
         </div>
 
         <div class="form-card" style="margin-top: 10px;">
-            <h3 style="font-size: 13px; color: var(--primary);">📋 BORDEREAU ACTUEL (Panier)</h3>
-            <div id="liste-bordereau" style="min-height: 50px; padding: 5px 0;">
-                <div style="color:#95a5a6; font-size:12px; text-align:center;">Le bordereau est vide.</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="font-size:1.1rem; color:var(--primary);">📋 BORDEREAU ACTUEL</h3>
+                <span id="bordereau-count" style="background:var(--gold); color:white; padding:3px 8px; border-radius:10px; font-size:0.85rem; font-weight:bold;">0</span>
             </div>
-            <button class="btn-block btn-success" id="btn-valider-mvt" onclick="validerBordereau()" disabled>💾 VALIDER ET ENREGISTRER TOUT LE STOCK</button>
+            <div id="liste-bordereau" style="min-height: 50px;">
+                <div style="color:#95a5a6; font-size:0.95rem; text-align:center; padding:20px 0;">Le bordereau est vide.</div>
+            </div>
+            <button class="btn-block btn-success" id="btn-valider-mvt" onclick="validerBordereau()" disabled>✅ ENREGISTRER LE BORDEREAU</button>
         </div>
     </div>
 
-    <!-- ONGLET 3 : PASSER COMMANDE (INCHANGÉ) -->
     <div id="tab-commande" class="container">
         <div class="form-card">
-            <h3 style="font-size: 14px; color: var(--danger);">🚨 ARTICLES SOUS LE SEUIL MINIMUM</h3>
-            <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">Ces articles ont atteint un niveau critique dans le dépôt. Générez la commande pour la Patronne.</p>
+            <h3 style="font-size:1.1rem; color:var(--danger); border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">🚨 ARTICLES SOUS LE SEUIL MINIMUM</h3>
+            <p style="font-size:0.9rem; color:#7f8c8d; margin-bottom:15px;">Ces articles ont atteint un niveau critique dans le dépôt.</p>
             
             <div id="grid-alertes">
-                <!-- Chargé dynamiquement -->
-            </div>
+                </div>
 
-            <button class="btn-block btn-whatsapp" id="btn-whatsapp" onclick="envoyerCommandeWhatsApp()">
-                <span>💬 ENVOYER LA COMMANDE À LA PATRONNE</span>
+            <button class="btn-block btn-whatsapp" id="btn-whatsapp" onclick="envoyerCommandeWhatsApp()" style="display:none;">
+                <span>💬 TRANSMETTRE LA LISTE VIA WHATSAPP</span>
             </button>
         </div>
     </div>
         <script>
+        // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // --- 2. LE BADGE MAGASINIER (Identification silencieuse) ---
+        let nomMagasinier = sessionStorage.getItem('nina_magasinier');
+        if (!nomMagasinier) {
+            nomMagasinier = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom de magasinier ?");
+            if (!nomMagasinier || nomMagasinier.trim() === "") nomMagasinier = "Magasinier Anonyme";
+            sessionStorage.setItem('nina_magasinier', nomMagasinier);
+        }
+        document.getElementById('badge-magasinier').innerText = "📦 " + nomMagasinier;
+
+        // --- 3. LE BORDEREAU INCREVABLE (Mémoire locale) ---
         let STOCK_CENTRAL = [];
-        let bordereau = [];
+        // On récupère le bordereau s'il a été commencé avant une coupure
+        let bordereau = JSON.parse(localStorage.getItem('nina_depot_bordereau')) || [];
 
         async function chargerDonneesDpot() {
             try {
                 const { data, error } = await clientSupabase.from('stock_mercerie').select('*').order('nom_article');
                 if (error) throw error;
+                
                 STOCK_CENTRAL = data;
                 
                 construireInterfaceStock();
                 construireSelectArticles();
                 construireAlertesCommande();
+                afficherBordereau(); // Restaure l'affichage du bordereau mémorisé
             } catch (err) {
-                console.error(err);
-                document.getElementById('grid-stock').innerHTML = '<div style="color:red; text-align:center; padding:20px;">Erreur de connexion à la base de données.</div>';
+                document.getElementById('grid-stock').innerHTML = '<div style="color:red; text-align:center; padding:20px;">❌ Erreur réseau.</div>';
             }
         }
 
-        // NOUVEAU SYSTÈME EN ACCORDÉON (CATÉGORIES > ARTICLES > COULEURS)
+        // --- 4. GESTION DES ONGLETS ET ACCORDÉON ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabId === 'vision') chargerDonneesDpot(); // Rafraîchit à chaque fois qu'on regarde le stock
+        }
+
         function construireInterfaceStock() {
             const grid = document.getElementById('grid-stock');
             grid.innerHTML = '';
-            
-            if(STOCK_CENTRAL.length === 0) {
+
+            if (STOCK_CENTRAL.length === 0) {
                 grid.innerHTML = '<div style="text-align:center; padding:20px; color:#7f8c8d;">Aucun article en stock.</div>';
                 return;
             }
 
-            // 1. Regrouper les données par Famille, puis par Article
+            // 1. Regrouper par Famille, puis par Article
             const parFamille = {};
             STOCK_CENTRAL.forEach(art => {
-                if (!parFamille[art.famille]) parFamille[art.famille] = {};
-                if (!parFamille[art.famille][art.nom_article]) parFamille[art.famille][art.nom_article] = [];
-                parFamille[art.famille][art.nom_article].push(art);
+                let famille = art.famille || 'Autre';
+                if (!parFamille[famille]) parFamille[famille] = {};
+                if (!parFamille[famille][art.nom_article]) parFamille[famille][art.nom_article] = [];
+                parFamille[famille][art.nom_article].push(art);
             });
 
-            // 2. Construire l'affichage visuel
+            // 2. Construire l'affichage HTML
+            let catHtml = '';
             for (const [famille, articles] of Object.entries(parFamille)) {
-                let catHtml = `
+                catHtml += `
                     <div class="category-group">
-                        <div class="cat-header" onclick="toggleAccordeon(this.nextElementSibling)">
+                        <div class="cat-header" onclick="toggleAccordion(this.nextElementSibling)">
                             <span>📁 ${famille}</span>
                             <span>▼</span>
                         </div>
@@ -223,94 +241,83 @@
                 `;
                 
                 for (const [nom, variantes] of Object.entries(articles)) {
-                    // Calculer le total de toutes les couleurs confondues pour ce produit
                     let totalStockArticle = variantes.reduce((somme, v) => somme + parseFloat(v.stock_actuel), 0);
                     
                     catHtml += `
                         <div class="article-group" data-nom="${nom.toLowerCase()}">
-                            <div class="art-header" onclick="toggleAccordeon(this.nextElementSibling)">
-                                <span>${nom} <span style="font-size:11px; color:#95a5a6;">(${variantes.length} var.)</span></span>
-                                <strong>${totalStockArticle}</strong>
+                            <div class="art-header" onclick="toggleAccordion(this.nextElementSibling)">
+                                <span>${nom} <span style="font-size:0.8rem; color:#95a5a6;">(${variantes.length} var.)</span></span>
+                                <strong>∑ ${totalStockArticle}</strong>
                             </div>
                             <div class="art-body">
                     `;
                     
-                    // Lister les couleurs
                     variantes.forEach(v => {
                         const estAlerte = parseFloat(v.stock_actuel) <= parseFloat(v.seuil_alerte);
                         catHtml += `
-                                <div class="variante-card" data-couleur="${(v.couleur_variante || '').toLowerCase()}">
-                                    <div class="variante-nom">
-                                        <span class="variante-badge">🎨 ${v.couleur_variante || 'Standard'}</span>
-                                        <span style="font-size:10px; color:#7f8c8d;">Seuil: ${v.seuil_alerte}</span>
-                                    </div>
-                                    <div class="stock-val ${estAlerte ? 'alert' : ''}">${v.stock_actuel}</div>
+                            <div class="variante-card" data-couleur="${(v.couleur_variante || '').toLowerCase()}">
+                                <div>
+                                    <span class="variante-badge">🎨 ${v.couleur_variante || 'Standard'}</span>
+                                    <span style="font-size:0.8rem; color:#7f8c8d; margin-left:5px;">> Seuil: ${v.seuil_alerte}</span>
                                 </div>
+                                <div class="stock-val ${estAlerte ? 'alert' : ''}">${v.stock_actuel}</div>
+                            </div>
                         `;
                     });
-                    
-                    catHtml += `</div></div>`; // Fermeture de l'article
+                    catHtml += `</div></div>`; // Fermeture article
                 }
-                catHtml += `</div></div>`; // Fermeture de la catégorie
-                
-                grid.innerHTML += catHtml;
+                catHtml += `</div></div>`; // Fermeture catégorie
             }
+            grid.innerHTML = catHtml;
         }
 
-        // Fonction pour ouvrir/fermer les listes
-        function toggleAccordeon(element) {
-            if (element.style.display === "block") {
-                element.style.display = "none";
-            } else {
-                element.style.display = "block";
-            }
+        function toggleAccordion(element) {
+            element.style.display = (element.style.display === "block") ? "none" : "block";
         }
 
-        // Le moteur de recherche intelligent (ouvre les listes si on trouve un résultat)
         function filtrerStock() {
             const texte = document.getElementById('search-stock').value.toLowerCase();
             const isSearching = texte.length > 0;
-            
+
             document.querySelectorAll('.category-group').forEach(catGroup => {
                 let catVisible = false;
-                
+
                 catGroup.querySelectorAll('.article-group').forEach(artGroup => {
                     let artVisible = false;
                     const nomArticle = artGroup.getAttribute('data-nom');
-                    
+
                     artGroup.querySelectorAll('.variante-card').forEach(varCard => {
                         const couleur = varCard.getAttribute('data-couleur');
                         if (nomArticle.includes(texte) || couleur.includes(texte)) {
-                            varCard.style.display = 'flex';
+                            varCard.style.display = "flex";
                             artVisible = true;
                             catVisible = true;
                         } else {
-                            varCard.style.display = 'none';
+                            varCard.style.display = "none";
                         }
                     });
-                    
+
                     if (artVisible) {
-                        artGroup.style.display = 'block';
-                        if(isSearching) artGroup.querySelector('.art-body').style.display = 'block';
+                        artGroup.style.display = "block";
+                        if (isSearching) artGroup.querySelector('.art-body').style.display = "block";
                     } else {
-                        artGroup.style.display = 'none';
+                        artGroup.style.display = "none";
                     }
                 });
-                
+
                 if (catVisible) {
-                    catGroup.style.display = 'block';
-                    if(isSearching) catGroup.querySelector('.cat-body').style.display = 'block';
+                    catGroup.style.display = "block";
+                    if (isSearching) catGroup.querySelector('.cat-body').style.display = "block";
                 } else {
-                    catGroup.style.display = 'none';
+                    catGroup.style.display = "none";
                 }
             });
         }
 
-        // --- RESTE DU CODE (IDENTIQUE ET FONCTIONNEL) ---
-
+        // --- 5. LOGIQUE DES FORMULAIRES DE MOUVEMENT ---
         function construireSelectArticles() {
             const select = document.getElementById('mvt-article');
-            select.innerHTML = '<option value="">-- Choisir un article --</option>';
+            select.innerHTML = '<option value="">--- Choisir un article ---</option>';
             
             const nomsUniques = [...new Set(STOCK_CENTRAL.map(s => s.nom_article))];
             nomsUniques.forEach(nom => {
@@ -319,16 +326,21 @@
             });
         }
 
+        function toggleDestination() {
+            const type = document.getElementById('mvt-type').value;
+            document.getElementById('group-destination').style.display = type === 'SORTIE' ? 'block' : 'none';
+        }
+
         function verifierBesoinCouleur() {
             const select = document.getElementById('mvt-article');
             const option = select.options[select.selectedIndex];
-            if(!option || option.value === "") return;
+            if (!option || option.value === "") return;
 
-            const famille = option.getAttribute('data-famille').toUpperCase();
-            const catCouleurs = ['FILS & CORDES', 'DENTELLES', 'TISSUS & ÉTOFFES', 'TISSUS & ETOFFES', 'FINITIONS & DÉCORS', 'FINITIONS & DECORS'];
+            const famille = (option.getAttribute('data-famille') || "").toUpperCase();
+            const catCouleurs = ['FILS & CORDES', 'DENTELLES', 'TISSUS & ÉTOFFES', 'FINITIONS & DÉCORS'];
             
-            if(catCouleurs.includes(famille)) {
-                document.getElementById('group-couleur').style.display = 'flex';
+            if (catCouleurs.includes(famille)) {
+                document.getElementById('group-couleur').style.display = 'block';
                 document.getElementById('mvt-couleur').value = '';
             } else {
                 document.getElementById('group-couleur').style.display = 'none';
@@ -336,139 +348,171 @@
             }
         }
 
-        function toggleDestination() {
-            const type = document.getElementById('mvt-type').value;
-            document.getElementById('group-destination').style.display = type === 'SORTIE' ? 'flex' : 'none';
-        }
-
         function ajouterAuBordereau() {
             const select = document.getElementById('mvt-article');
             const idArticle = select.value;
-            if(!idArticle) { alert("⚠️ Sélectionnez un article."); return; }
+            if (!idArticle) { alert("⚠️ Sélectionnez un article."); return; }
 
             const nom = select.options[select.selectedIndex].text;
             const typeMvt = document.getElementById('mvt-type').value;
             const destination = typeMvt === 'SORTIE' ? document.getElementById('mvt-destination').value : 'Livraison Fournisseur';
             const couleur = document.getElementById('mvt-couleur').value.trim();
-            const cond = document.getElementById('mvt-cond').value;
+            const conditionnement = document.getElementById('mvt-cond').value;
             const contenance = parseFloat(document.getElementById('mvt-contenance').value) || 1;
             const qteCond = parseFloat(document.getElementById('mvt-qte-cond').value) || 0;
 
-            if(couleur === "") { alert("⚠️ La couleur est obligatoire pour cet article."); return; }
-            if(qteCond <= 0) { alert("⚠️ Saisissez une quantité de colis valide."); return; }
+            if (couleur === "") { alert("⚠️ La couleur est obligatoire pour cet article."); return; }
+            if (qteCond <= 0) { alert("⚠️ Saisissez un nombre de colis valide."); return; }
 
             const qteTotale = qteCond * contenance;
 
-            bordereau.push({ id_article: idArticle, nom_article: nom, type_mouvement: typeMvt, destination: destination, couleur: couleur, conditionnement: cond, contenance: contenance, qte_cond: qteCond, qte_totale: qteTotale });
+            bordereau.push({
+                id_article: idArticle, nom_article: nom, type_mouvement: typeMvt, 
+                destination: destination, couleur: couleur, conditionnement: conditionnement, 
+                contenance: contenance, qte_cond: qteCond, qte_totale: qteTotale
+            });
+
+            // Sauvegarde immédiate dans le coffre-fort local
+            localStorage.setItem('nina_depot_bordereau', JSON.stringify(bordereau));
+
+            document.getElementById('mvt-qte-cond').value = ''; // Nettoyer le champ quantité
             afficherBordereau();
-            document.getElementById('mvt-qte-cond').value = '';
+        }
+
+        function retirerDuBordereau(idx) {
+            bordereau.splice(idx, 1);
+            localStorage.setItem('nina_depot_bordereau', JSON.stringify(bordereau));
+            afficherBordereau();
         }
 
         function afficherBordereau() {
             const container = document.getElementById('liste-bordereau');
-            if(bordereau.length === 0) {
-                container.innerHTML = `<div style="color:#95a5a6; font-size:12px; text-align:center;">Le bordereau est vide.</div>`;
+            document.getElementById('bordereau-count').innerText = bordereau.length;
+
+            if (bordereau.length === 0) {
+                container.innerHTML = '<div style="color:#95a5a6; font-size:0.95rem; text-align:center; padding:20px 0;">Le bordereau est vide.</div>';
                 document.getElementById('btn-valider-mvt').disabled = true;
                 return;
             }
 
             container.innerHTML = '';
             document.getElementById('btn-valider-mvt').disabled = false;
-            
+
             bordereau.forEach((item, idx) => {
                 let icone = item.type_mouvement === 'ENTREE' ? '📥' : '📤';
+                let color = item.type_mouvement === 'ENTREE' ? 'var(--success)' : 'var(--danger)';
+                
                 container.innerHTML += `
                     <div class="bordereau-item">
                         <div>
-                            <strong>${icone} ${item.nom_article} (${item.couleur})</strong><br>
-                            <span style="font-size:11px; color:#7f8c8d;">${item.qte_cond} ${item.conditionnement}(s) de ${item.contenance} unités (Total: ${item.qte_totale})</span>
+                            <strong style="color:${color};">${icone} ${item.nom_article} (${item.couleur})</strong><br>
+                            <span style="font-size:0.85rem; color:#7f8c8d;">
+                                ${item.qte_cond} ${item.conditionnement}(s) de ${item.contenance} = <strong>${item.qte_totale} unités</strong>
+                            </span>
+                            <div style="font-size:0.8rem; color:var(--primary); margin-top:3px;">📍 ${item.destination}</div>
                         </div>
-                        <button onclick="retirerDuBordereau(${idx})" style="background:none; border:none; color:red; cursor:pointer;">🗑️</button>
+                        <button onclick="retirerDuBordereau(${idx})" style="background:transparent; border:none; color:var(--danger); font-size:1.5rem; cursor:pointer;">✖</button>
                     </div>
                 `;
             });
         }
 
-        function retirerDuBordereau(idx) {
-            bordereau.splice(idx, 1);
-            afficherBordereau();
-        }
-
+        // --- 6. VALIDATION ET ENVOI À L'ADMINISTRATEUR (Supabase) ---
         async function validerBordereau() {
-            if(bordereau.length === 0) return;
-            document.getElementById('btn-valider-mvt').disabled = true;
+            if (bordereau.length === 0) return;
+
+            const btn = document.getElementById('btn-valider-mvt');
+            btn.disabled = true;
+            btn.innerText = "⏳ Enregistrement...";
 
             try {
-                for(let item of bordereau) {
-                    let { data: existant, error: fetchErr } = await clientSupabase.from('stock_mercerie').select('*').eq('nom_article', item.nom_article).eq('couleur_variante', item.couleur).maybeSingle();
+                for (let item of bordereau) {
+                    // 1. Chercher si la variante (article + couleur) existe déjà
+                    let { data: existant, error: fetchErr } = await clientSupabase.from('stock_mercerie')
+                        .select('*')
+                        .eq('nom_article', item.nom_article)
+                        .eq('couleur_variante', item.couleur)
+                        .maybeSingle();
+                    
                     let idArticleFinal = null;
 
                     if (existant) {
                         idArticleFinal = existant.id;
                         let nouveauStock = parseFloat(existant.stock_actuel);
-                        if(item.type_mouvement === 'ENTREE') nouveauStock += item.qte_totale;
-                        else nouveauStock -= item.qte_totale;
+                        
+                        if (item.type_mouvement === 'ENTREE') nouveauStock += item.qte_totale;
+                        else nouveauStock -= item.qte_totale; // SORTIE
+                        
                         await clientSupabase.from('stock_mercerie').update({ stock_actuel: nouveauStock }).eq('id', existant.id);
                     } else {
+                        // S'il n'existe pas, on le crée en clonant les propriétés de base (famille, ref, prix)
                         let parent = STOCK_CENTRAL.find(s => s.id === item.id_article);
+                        let stockInitial = item.type_mouvement === 'ENTREE' ? item.qte_totale : -item.qte_totale;
+                        
                         let { data: nouveau, error: insErr } = await clientSupabase.from('stock_mercerie').insert([{
-                            reference: parent ? parent.reference : 'REF-NEW',
+                            reference: (parent.reference || 'REF') + '-NEW',
                             nom_article: item.nom_article,
-                            famille: parent ? parent.famille : 'Autre',
+                            famille: parent.famille || 'Autre',
                             couleur_variante: item.couleur,
-                            stock_actuel: item.type_mouvement === 'ENTREE' ? item.qte_totale : -item.qte_totale,
-                            seuil_alerte: parent ? parent.seuil_alerte : 5,
-                            prix_achat: parent ? parent.prix_achat : 0
+                            stock_actuel: stockInitial,
+                            seuil_alerte: parent.seuil_alerte || 5,
+                            prix_achat: parent.prix_achat || 0
                         }]).select().single();
+                        
                         idArticleFinal = nouveau.id;
                     }
 
+                    // 2. Enregistrer l'historique chirurgical dans la tour de contrôle (L'Œil de Moscou)
                     await clientSupabase.from('mouvements_stock').insert([{
                         id_article: idArticleFinal,
-                        nom_article_archive: `${item.nom_article} (${item.couleur})`,
+                        nom_article: `${item.nom_article} (${item.couleur})`,
                         type_mouvement: item.type_mouvement,
                         quantite_conditionnement: item.qte_cond,
                         type_conditionnement: item.conditionnement,
                         contenance_unitaire: item.contenance,
                         quantite_totale: item.qte_totale,
                         destination: item.destination,
-                        utilisateur: 'Magasinier'
+                        utilisateur: nomMagasinier // <-- LA SIGNATURE DU MAGASINIER !
                     }]);
                 }
 
                 alert("✅ Tout le bordereau a été enregistré avec succès !");
+                
+                // Nettoyage complet
                 bordereau = [];
+                localStorage.removeItem('nina_depot_bordereau');
                 afficherBordereau();
-                chargerDonneesDpot();
+                chargerDonneesDpot(); // Rafraîchit les données du stock
+                btn.innerText = "✅ ENREGISTRER LE BORDEREAU";
                 switchTab('vision');
 
             } catch (err) {
-                alert("❌ Erreur réseau lors de l'enregistrement.");
-                console.error(err);
-                document.getElementById('btn-valider-mvt').disabled = false;
+                alert("❌ Erreur réseau lors de l'enregistrement. Le bordereau n'est pas perdu, réessayez.");
+                btn.disabled = false;
+                btn.innerText = "🔄 RÉESSAYER";
             }
         }
 
+        // --- 7. ALERTES ET COMMANDES (WhatsApp Flexible) ---
         function construireAlertesCommande() {
             const grid = document.getElementById('grid-alertes');
             grid.innerHTML = '';
             
             const enAlerte = STOCK_CENTRAL.filter(art => parseFloat(art.stock_actuel) <= parseFloat(art.seuil_alerte));
-            
-            if(enAlerte.length === 0) {
-                grid.innerHTML = '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold;">✅ Aucun article en rupture de stock !</div>';
+
+            if (enAlerte.length === 0) {
+                grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--success); font-weight:bold;">✅ Aucun article en rupture de stock.</div>';
                 document.getElementById('btn-whatsapp').style.display = 'none';
                 return;
             }
 
             document.getElementById('btn-whatsapp').style.display = 'flex';
+            
             enAlerte.forEach(art => {
                 grid.innerHTML += `
                     <div class="alerte-card">
-                        <div>
-                            <strong>${art.nom_article} (${art.couleur_variante || 'Standard'})</strong><br>
-                            <span style="font-size:11px; color:#7f8c8d;">Reste : ${art.stock_actuel} (Seuil : ${art.seuil_alerte})</span>
-                        </div>
+                        <strong style="color:var(--primary);">${art.nom_article} (${art.couleur_variante || 'Standard'})</strong><br>
+                        <span style="font-size:0.9rem; color:#7f8c8d;">Reste : <span style="color:var(--danger); font-weight:bold;">${art.stock_actuel}</span> (Seuil critique : ${art.seuil_alerte})</span>
                     </div>
                 `;
             });
@@ -476,24 +520,21 @@
 
         function envoyerCommandeWhatsApp() {
             const enAlerte = STOCK_CENTRAL.filter(art => parseFloat(art.stock_actuel) <= parseFloat(art.seuil_alerte));
-            let texte = "Bonjour Patronne, voici la liste des articles en rupture au dépôt à commander d'urgence pour *Nina Fashion* :\n\n";
+            
+            let texte = "🚨 *RUPTURE DE STOCK - DÉPÔT*\nVoici la liste des articles à commander d'urgence :\n\n";
             
             enAlerte.forEach((art, idx) => {
-                texte += `${idx + 1}. *${art.nom_article}* (${art.couleur_variante || 'Standard'}) -> Il reste *${art.stock_actuel}* (Seuil: ${art.seuil_alerte})\n`;
+                texte += `${idx + 1}. *${art.nom_article}* (${art.couleur_variante || 'Standard'}) -> Il ne reste que ${art.stock_actuel}\n`;
             });
             
             texte += "\nMerci de valider la commande dès que possible !";
+            
+            // L'URL magique : elle ouvre WhatsApp et demande AU MAGASINIER de choisir le contact (Patronne ou Grossiste)
             const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texte);
             window.open(url, '_blank');
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            event.target.classList.add('active');
-        }
-
+        // DÉMARRAGE
         chargerDonneesDpot();
     </script>
 </body>
