@@ -2,129 +2,163 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Administration - Nina Fashion</title>
+    <!-- 🔓 ACCESSIBILITÉ : Zoom débloqué pour permettre d'agrandir l'écran à volonté -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour de Contrôle - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root { 
-            --primary: #1a1c1e; 
-            --gold: #b38728; 
-            --bg-gray: #f4f6f8; 
-            --border: #e2e8f0; 
-            --text-dark: #2c3e50; 
-            --success: #27ae60; 
-            --danger: #e74c3c; 
-            --info: #2980b9;
+            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; 
+            --border: #e2e8f0; --text-dark: #2c3e50; 
+            --success: #27ae60; --danger: #e74c3c; --info: #2980b9;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; }
-        body { background-color: var(--bg-gray); color: var(--text-dark); padding-bottom: 50px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        /* Ajustement de la taille de base pour une meilleure lisibilité par défaut */
+        body { background-color: var(--bg-gray); color: var(--text-dark); padding-bottom: 50px; font-size: 16px; }
 
         /* EN-TÊTE */
         header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 18px; color: var(--gold); font-family: 'Georgia', serif; }
-        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 5px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+        header h1 { font-size: 1.2rem; color: var(--gold); font-family: 'Georgia', serif; }
+        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 0.9rem; font-weight: bold; }
 
-        /* NAVIGATION TABS */
-        .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; }
-        .tab-btn { flex: 1; padding: 15px 10px; border: none; background: none; font-size: 13px; font-weight: bold; color: #7f8c8d; cursor: pointer; text-align: center; }
-        .tab-btn.active { color: var(--gold); border-bottom: 3px solid var(--gold); }
+        /* NAVIGATION TABS (Scrollable si l'écran est zoomé) */
+        .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .tab-btn { padding: 15px 20px; border: none; background: none; font-size: 1rem; font-weight: bold; color: #7f8c8d; cursor: pointer; }
+        .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--gold); }
 
         .container { max-width: 1200px; margin: 15px auto; padding: 0 15px; }
         .tab-content { display: none; flex-direction: column; gap: 20px; }
         .tab-content.active { display: flex; }
 
         /* CARTES DE STATISTIQUES */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; border-left: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .stat-card.gold { border-left-color: var(--gold); }
         .stat-card.danger { border-left-color: var(--danger); }
         .stat-card.success { border-left-color: var(--success); }
-        .stat-title { font-size: 11px; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .stat-value { font-size: 18px; font-weight: 900; color: var(--text-dark); }
+        .stat-title { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
+        .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--text-dark); }
 
-        /* SECTIONS & TABLEAUX */
-        .data-section { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .data-section h2 { font-size: 15px; color: var(--primary); margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        /* SECTIONS & TABLEAUX (Optimisés pour le zoom) */
+        .data-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .data-section h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         
-        .table-responsive { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th { background: #f8f9fa; padding: 10px; font-size: 12px; color: #7f8c8d; text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; /* Force un scroll propre si on zoome */ }
+        th { background: #f8f9fa; padding: 12px; font-size: 0.9rem; color: #7f8c8d; text-align: left; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 1rem; vertical-align: middle; }
         
-        /* FORMULAIRES */
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        @media (min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 12px; font-weight: bold; color: var(--primary); }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
-        
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; width: 100%; font-size: 13px; }
+        /* BADGES ET BOUTONS */
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .badge-cash { background: var(--success); }
+        .badge-momo { background: var(--info); }
+        .badge-reliquat { background: var(--gold); }
+        .badge-attente { background: var(--danger); }
+
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; width: 100%; font-size: 1rem; }
         .btn-gold { background: var(--gold); }
-        .btn-danger { background: var(--danger); padding: 6px 10px; font-size: 11px; width: auto; }
-        .btn-small { padding: 6px 10px; font-size: 11px; width: auto; }
+        .btn-action { padding: 8px 12px; font-size: 0.9rem; width: auto; border-radius: 6px; }
 
-        /* ZONE IMPORT CSV */
-        .import-zone { border: 2px dashed var(--gold); border-radius: 8px; padding: 20px; text-align: center; background: #fffcf5; }
-        .import-zone input[type="file"] { display: none; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; color: white; }
+        /* FORMULAIRES */
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 0.95rem; font-weight: bold; color: var(--primary); }
+        .form-control { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; }
+        .form-control:focus { border-color: var(--gold); outline: none; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>👑 Nina Fashion - Admin</h1>
-        <a href="index.html" class="btn-retour">🚪 Quitter</a>
+        <h1>👁️ L'Œil de Moscou</h1>
+        <a href="index.html" class="btn-retour">Déconnexion</a>
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('finances')">💰 Finances</button>
-        <button class="tab-btn" onclick="switchTab('catalogue')">📦 Catalogue</button>
-        <button class="tab-btn" onclick="switchTab('atelier')">✂️ Atelier</button>
-        <button class="tab-btn" onclick="switchTab('equipe')">🛡️ Équipe</button>
+        <button class="tab-btn active" onclick="switchTab('caisse')">💰 Caisse Centrale</button>
+        <button class="tab-btn" onclick="switchTab('atelier')">✂️ Radar Atelier</button>
+        <button class="tab-btn" onclick="switchTab('depot')">📦 Dépôt & Catalogue</button>
+        <button class="tab-btn" onclick="switchTab('securite')">🛡️ Sécurité</button>
     </div>
 
     <div class="container">
         
         <!-- ========================================== -->
-        <!-- ONGLET 1 : FINANCES & TRÉSORERIE           -->
+        <!-- ONGLET 1 : CAISSE CENTRALE & TRÉSORERIE    -->
         <!-- ========================================== -->
-        <div id="tab-finances" class="tab-content active">
+        <div id="tab-caisse" class="tab-content active">
             
             <div class="stats-grid">
                 <div class="stat-card success">
-                    <div class="stat-title">Entrées Caisse (Payé)</div>
-                    <div class="stat-value" id="stat-caisse">0 F</div>
+                    <div class="stat-title">Espèces (Dans le tiroir)</div>
+                    <div class="stat-value" id="stat-cash">0 F</div>
+                </div>
+                <div class="stat-card" style="border-left-color: var(--info);">
+                    <div class="stat-title">Mobile Money (Wave/Orange)</div>
+                    <div class="stat-value" id="stat-momo">0 F</div>
                 </div>
                 <div class="stat-card danger">
-                    <div class="stat-title">Dépenses Boutiques</div>
+                    <div class="stat-title">Dépenses Libres (Sorties)</div>
                     <div class="stat-value" id="stat-depenses">0 F</div>
-                </div>
-                <div class="stat-card gold">
-                    <div class="stat-title">Bénéfice Brut</div>
-                    <div class="stat-value" id="stat-benefice">0 F</div>
                 </div>
             </div>
 
+            <!-- TABLEAU DÉTAILLÉ DES VENTES (AVEC RÉPARTITION DES PAIEMENTS) -->
             <div class="data-section">
-                <h2>✍️ Saisir une Dépense Libre</h2>
+                <h2>🛒 Historique des Encaissements</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Heure</th>
+                                <th>Ticket</th>
+                                <th>Total Facture</th>
+                                <th>Payé en Espèces</th>
+                                <th>Payé en MoMo</th>
+                                <th>Payé par Reliquat</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-ventes-directes">
+                            <tr><td colspan="7" style="text-align:center;">Chargement du flux de caisse...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GESTION DES DETTES CLIENTS (RELIQUATS ACTIFS) -->
+            <div class="data-section">
+                <h2>🧾 Radar des Reliquats (Dettes actives envers les clients)</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Code Reliquat</th><th>Client / Apprenti</th><th>Montant dû</th><th>Date d'émission</th></tr></thead>
+                        <tbody id="table-reliquats">
+                            <tr><td colspan="4" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- JOURNAL DES DÉPENSES -->
+            <div class="data-section">
+                <h2>📉 Enregistrer une Sortie de Caisse (Dépense)</h2>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Motif de la dépense (ex: Facture CIE, Transport...)</label>
-                        <input type="text" id="depense-motif" class="form-control" placeholder="Qu'avez-vous payé ?">
+                        <label>Motif (Facture CIE, Transport, Eau...)</label>
+                        <input type="text" id="depense-motif" class="form-control" placeholder="Ex: Achat Sacherie">
                     </div>
                     <div class="form-group">
                         <label>Montant (FCFA)</label>
                         <input type="number" id="depense-montant" class="form-control" placeholder="0">
                     </div>
                     <div class="form-group" style="justify-content: flex-end;">
-                        <button class="btn btn-gold" onclick="enregistrerDepense()">Enregistrer la dépense</button>
+                        <button class="btn btn-gold" onclick="enregistrerDepense()">Valider la Dépense</button>
                     </div>
                 </div>
-            </div>
-
-            <div class="data-section">
-                <h2>📉 Journal des Dépenses</h2>
+                <br>
                 <div class="table-responsive">
                     <table>
                         <thead><tr><th>Date</th><th>Motif</th><th>Montant</th></tr></thead>
@@ -135,43 +169,70 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- ONGLET 2 : CATALOGUE UNIQUE & IMPORT       -->
+        <!-- ONGLET 2 : RADAR ATELIER                   -->
         <!-- ========================================== -->
-        <div id="tab-catalogue" class="tab-content">
-            
-            <div class="import-zone">
-                <h3 style="margin-bottom: 10px; color: var(--primary);">📥 Importer Liste Articles (CSV)</h3>
-                <p style="font-size: 11px; color: #7f8c8d; margin-bottom: 15px;">Colonnes requises: ref, nom_article, categorie, prix_detail, prix_achat, stock_actuel, seuil_alerte, scope</p>
-                <input type="file" id="csv-file" accept=".csv" onchange="preparerImport()">
-                <button class="btn" onclick="document.getElementById('csv-file').click()">Choisir le fichier CSV</button>
-                <button id="btn-import" class="btn btn-gold" style="display:none; margin-top:10px;" onclick="lancerImport()">Lancer l'injection massive</button>
-            </div>
-
-            <div class="data-section">
-                <h2>➕ Ajouter un Article Manuel</h2>
-                <div class="form-grid">
-                    <div class="form-group"><label>Réf</label><input type="text" id="art-ref" class="form-control"></div>
-                    <div class="form-group"><label>Nom Article</label><input type="text" id="art-nom" class="form-control"></div>
-                    <div class="form-group"><label>Catégorie / Famille</label><input type="text" id="art-cat" class="form-control"></div>
-                    <div class="form-group">
-                        <label>Visibilité (Scope)</label>
-                        <select id="art-scope" class="form-control">
-                            <option value="TOUS">Partout (Vendeur + Dépôt)</option>
-                            <option value="VENDEUR">Boutique Uniquement</option>
-                            <option value="STOCK">Dépôt Uniquement</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>Prix Vente</label><input type="number" id="art-pv" class="form-control" value="0"></div>
-                    <div class="form-group"><label>Prix Achat (Gros)</label><input type="number" id="art-pa" class="form-control" value="0"></div>
+        <div id="tab-atelier" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card gold">
+                    <div class="stat-title">Avances Encaissées (Atelier)</div>
+                    <div class="stat-value" id="stat-avances">0 F</div>
                 </div>
-                <button class="btn btn-gold" style="margin-top:10px;" onclick="ajouterArticleManuel()">Ajouter au Catalogue</button>
+                <div class="stat-card">
+                    <div class="stat-title">Valeur des Travaux en Cours</div>
+                    <div class="stat-value" id="stat-latent">0 F</div>
+                </div>
             </div>
 
             <div class="data-section">
-                <h2>📋 Base de Données Catalogue</h2>
+                <h2>✂️ Carnet de Commandes (En Atelier)</h2>
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>Réf</th><th>Nom</th><th>Scope</th><th>P.Vente</th><th>P.Achat</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Client / Ticket</th><th>Prestations</th><th>Total</th><th>Avance</th><th>Reste à Payer</th></tr></thead>
+                        <tbody id="table-atelier"><tr><td colspan="5" style="text-align:center;">Chargement...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- ONGLET 3 : CATALOGUE & DÉPÔT               -->
+        <!-- ========================================== -->
+        <div id="tab-depot" class="tab-content">
+            <div class="data-section" style="border: 2px dashed var(--gold); background: #fffcf5;">
+                <h2 style="border:none;">📥 Injection Massive (Fichier CSV)</h2>
+                <p style="font-size: 0.95rem; color: #7f8c8d; margin-bottom: 15px;">Mettez à jour tout votre catalogue d'un coup. Colonnes: ref, nom_article, categorie, prix_detail, prix_achat, stock_actuel, seuil_alerte, scope</p>
+                <input type="file" id="csv-file" accept=".csv" onchange="preparerImport()" style="display:none;">
+                <div class="form-grid">
+                    <button class="btn" style="background:var(--text-dark);" onclick="document.getElementById('csv-file').click()">1. Choisir le fichier Excel/CSV</button>
+                    <button id="btn-import" class="btn btn-gold" style="display:none;" onclick="lancerImport()">2. Lancer l'Injection</button>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <h2>➕ Création Manuelle (Nouveau Produit)</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Référence</label><input type="text" id="art-ref" class="form-control"></div>
+                    <div class="form-group"><label>Nom de l'article</label><input type="text" id="art-nom" class="form-control"></div>
+                    <div class="form-group"><label>Famille / Catégorie</label><input type="text" id="art-cat" class="form-control"></div>
+                    <div class="form-group">
+                        <label>Où l'afficher ? (Scope)</label>
+                        <select id="art-scope" class="form-control">
+                            <option value="TOUS">Boutique ET Dépôt</option>
+                            <option value="VENDEUR">Boutique (Vendeur) Uniquement</option>
+                            <option value="STOCK">Dépôt (Magasinier) Uniquement</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Prix de Vente Unitaire</label><input type="number" id="art-pv" class="form-control" value="0"></div>
+                    <div class="form-group"><label>Prix d'Achat (Secret Admin)</label><input type="number" id="art-pa" class="form-control" value="0"></div>
+                </div>
+                <button class="btn btn-gold" style="margin-top:15px;" onclick="ajouterArticleManuel()">Ajouter à la Base de Données</button>
+            </div>
+            
+            <div class="data-section">
+                <h2>📋 Le Catalogue Global</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Réf</th><th>Nom</th><th>Scope</th><th>Prix Vente</th><th>Prix Achat</th><th>Action</th></tr></thead>
                         <tbody id="table-articles"><tr><td colspan="6" style="text-align:center;">Chargement...</td></tr></tbody>
                     </table>
                 </div>
@@ -179,42 +240,15 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- ONGLET 3 : RADAR ATELIER                   -->
+        <!-- ONGLET 4 : SÉCURITÉ & PERSONNEL            -->
         <!-- ========================================== -->
-        <div id="tab-atelier" class="tab-content">
-            <div class="stats-grid">
-                <div class="stat-card gold">
-                    <div class="stat-title">Avances Encaissées Atelier</div>
-                    <div class="stat-value" id="stat-avances">0 F</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">Chiffre d'Affaire Latent (En cours)</div>
-                    <div class="stat-value" id="stat-latent">0 F</div>
-                </div>
-            </div>
-
+        <div id="tab-securite" class="tab-content">
             <div class="data-section">
-                <h2>✂️ Travaux en cours de Couture</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead><tr><th>Client</th><th>Total</th><th>Avance</th><th>Reste</th></tr></thead>
-                        <tbody id="table-atelier"><tr><td colspan="4" style="text-align:center;">Chargement...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- ONGLET 4 : SÉCURITÉ & ÉQUIPE               -->
-        <!-- ========================================== -->
-        <div id="tab-equipe" class="tab-content">
-            
-            <div class="data-section">
-                <h2>👤 Nouvel Accès (Employé)</h2>
+                <h2>👤 Créer un Code d'Accès</h2>
                 <div class="form-grid">
-                    <div class="form-group"><label>Nom Employé</label><input type="text" id="emp-nom" class="form-control"></div>
+                    <div class="form-group"><label>Identifiant (Nom de l'employé)</label><input type="text" id="emp-nom" class="form-control"></div>
                     <div class="form-group">
-                        <label>Rôle (Poste)</label>
+                        <label>Poste assigné</label>
                         <select id="emp-role" class="form-control">
                             <option value="Caissière">Caissière</option>
                             <option value="Vendeur">Vendeur</option>
@@ -225,32 +259,31 @@
                     </div>
                     <div class="form-group"><label>Code PIN (4 chiffres)</label><input type="number" id="emp-pin" class="form-control" maxlength="4"></div>
                     <div class="form-group" style="justify-content: flex-end;">
-                        <button class="btn btn-gold" onclick="ajouterEmploye()">Créer l'accès</button>
+                        <button class="btn btn-gold" onclick="ajouterEmploye()">Créer le profil</button>
                     </div>
                 </div>
             </div>
 
             <div class="data-section">
-                <h2>🛡️ Contrôle des Accès (PIN)</h2>
+                <h2>🛡️ Panneau de Contrôle des Employés</h2>
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>Nom</th><th>Poste</th><th>Code PIN</th><th>Statut</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Nom</th><th>Poste</th><th>Code PIN Actuel</th><th>État</th><th>Verrouillage</th></tr></thead>
                         <tbody id="table-equipe"><tr><td colspan="5" style="text-align:center;">Chargement...</td></tr></tbody>
                     </table>
                 </div>
             </div>
-
         </div>
-
-                                                                                </div>
-                                                                                    <script>
+                                                                    </div>
+        <script>
+        // --- CONNEXION SÉCURISÉE SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let articlesPourImport = [];
 
-        // GESTION DU CHANGEMENT D'ONGLET FINANCIER/STRATÉGIQUE
+        // GESTION DE LA NAVIGATION
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -258,60 +291,108 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             event.target.classList.add('active');
             
-            if(tabId === 'finances') chargerFinances();
-            if(tabId === 'catalogue') chargerCatalogue();
+            if(tabId === 'caisse') chargerCaisse();
             if(tabId === 'atelier') chargerAtelier();
-            if(tabId === 'equipe') chargerEquipe();
+            if(tabId === 'depot') chargerCatalogue();
+            if(tabId === 'securite') chargerEquipe();
         }
 
         // ==============================================================================
-        // 1. RUBRIQUE FINANCES : JOURNAL DE CAISSE ET DEPRÉCIATION DES DÉPENSES
+        // 1. LE COFFRE-FORT : CAISSE & TRÉSORERIE (RADAR TEMPS RÉEL)
         // ==============================================================================
-        async function chargerFinances() {
+        async function chargerCaisse() {
             try {
-                // Charger les commandes d'aujourd'hui validées à la caisse
-                let { data: ventes, error: vErr } = await clientSupabase.from('commandes').select('*').eq('statut', 'paye');
+                // A. CHARGEMENT DES TICKETS DE CAISSE
+                let { data: ventes, error: vErr } = await clientSupabase.from('commandes').select('*').order('created_at', { ascending: false });
                 if (vErr) throw vErr;
                 
-                let totalCaisse = 0;
-                if(ventes) {
-                    totalCaisse = ventes.reduce((sum, v) => sum + (parseFloat(v.total) || 0), 0);
+                let totalCash = 0;
+                let totalMomo = 0;
+                const tbodyVentes = document.getElementById('table-ventes-directes');
+                tbodyVentes.innerHTML = '';
+
+                if(ventes && ventes.length > 0) {
+                    ventes.forEach(v => {
+                        let total = parseFloat(v.total) || 0;
+                        // Si la caisse n'a pas encore la séparation Cash/MoMo, on met tout dans Cash par défaut
+                        let cash = parseFloat(v.montant_cash) || (v.statut === 'paye' ? total : 0);
+                        let momo = parseFloat(v.montant_momo) || 0;
+                        let reliquatUtilise = parseFloat(v.montant_reliquat) || 0;
+
+                        if(v.statut === 'paye') {
+                            totalCash += cash;
+                            totalMomo += momo;
+                        }
+
+                        let dateObj = new Date(v.created_at);
+                        let heure = dateObj.getHours().toString().padStart(2, '0') + 'h' + dateObj.getMinutes().toString().padStart(2, '0');
+                        let badgeStatut = v.statut === 'paye' ? '<span class="badge badge-cash">✅ Payé</span>' : '<span class="badge badge-attente">⏳ En attente</span>';
+                        
+                        tbodyVentes.innerHTML += `
+                            <tr>
+                                <td style="color:#7f8c8d; font-size:0.9rem;">${dateObj.toLocaleDateString('fr-FR')} à ${heure}</td>
+                                <td><strong>${v.num_panier}</strong></td>
+                                <td style="font-weight:bold; color:var(--primary);">${total.toLocaleString('fr-FR')} F</td>
+                                <td style="color:var(--success);">${cash > 0 ? cash.toLocaleString('fr-FR') + ' F' : '-'}</td>
+                                <td style="color:var(--info);">${momo > 0 ? momo.toLocaleString('fr-FR') + ' F' : '-'}</td>
+                                <td style="color:var(--gold);">${reliquatUtilise > 0 ? reliquatUtilise.toLocaleString('fr-FR') + ' F' : '-'}</td>
+                                <td>${badgeStatut}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbodyVentes.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#7f8c8d;">Aucune transaction aujourd\'hui.</td></tr>';
                 }
-                document.getElementById('stat-caisse').innerText = totalCaisse.toLocaleString('fr-FR') + " F";
+                
+                document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
+                document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
 
-                // Charger le journal libre des dépenses
+                // B. CHARGEMENT DES DETTES CLIENTS (RELIQUATS)
+                let { data: reliquats, error: rErr } = await clientSupabase.from('reliquats').select('*').neq('statut', 'utilise').order('created_at', { ascending: false });
+                const tbodyReliquats = document.getElementById('table-reliquats');
+                tbodyReliquats.innerHTML = '';
+
+                if(reliquats && reliquats.length > 0) {
+                    reliquats.forEach(r => {
+                        let dateRel = new Date(r.created_at).toLocaleDateString('fr-FR');
+                        tbodyReliquats.innerHTML += `
+                            <tr>
+                                <td><span class="badge badge-reliquat">${r.num_recu}</span></td>
+                                <td><strong>${r.non_client || 'Client Anonyme'}</strong></td>
+                                <td style="color:var(--danger); font-weight:bold;">${parseFloat(r.montant).toLocaleString('fr-FR')} F</td>
+                                <td style="color:#7f8c8d; font-size:0.9rem;">${dateRel}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbodyReliquats.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--success); font-weight:bold;">Aucune dette en cours, tous les reliquats sont soldés !</td></tr>';
+                }
+
+                // C. CHARGEMENT DU JOURNAL DES DÉPENSES
                 let { data: depenses, error: dErr } = await clientSupabase.from('depenses_boutique').select('*').order('created_at', { ascending: false });
-                if (dErr) throw dErr;
-
                 let totalDepenses = 0;
-                const tbody = document.getElementById('table-depenses');
-                tbody.innerHTML = '';
+                const tbodyDepenses = document.getElementById('table-depenses');
+                tbodyDepenses.innerHTML = '';
 
                 if(depenses && depenses.length > 0) {
                     depenses.forEach(d => {
                         totalDepenses += parseFloat(d.montant) || 0;
                         let dateStr = new Date(d.created_at).toLocaleDateString('fr-FR');
-                        tbody.innerHTML += `
+                        tbodyDepenses.innerHTML += `
                             <tr>
-                                <td>${dateStr}</td>
+                                <td style="color:#7f8c8d;">${dateStr}</td>
                                 <td><strong>${d.motif}</strong></td>
                                 <td style="color:var(--danger); font-weight:bold;">-${parseFloat(d.montant).toLocaleString('fr-FR')} F</td>
                             </tr>
                         `;
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#7f8c8d;">Aucune dépense enregistrée ce mois-ci.</td></tr>';
+                    tbodyDepenses.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#7f8c8d;">Aucune dépense enregistrée.</td></tr>';
                 }
                 document.getElementById('stat-depenses').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
 
-                // Calcul mathématique du Bénéfice Net Réel de Nina Fashion
-                let benefice = totalCaisse - totalDepenses;
-                const statBenef = document.getElementById('stat-benefice');
-                statBenef.innerText = benefice.toLocaleString('fr-FR') + " F";
-                statBenef.style.color = benefice >= 0 ? 'var(--success)' : 'var(--danger)';
-
             } catch (err) {
-                console.error(err);
+                console.error("Erreur dans le module Trésorerie :", err);
             }
         }
 
@@ -320,25 +401,69 @@
             const montant = parseFloat(document.getElementById('depense-montant').value);
 
             if(!motif || isNaN(montant) || montant <= 0) {
-                alert("⚠️ Saisissez une raison de dépense et un montant valide (supérieur à 0).");
+                alert("⚠️ Saisissez un motif et un montant valide.");
                 return;
             }
-
             try {
-                const { error } = await clientSupabase.from('depenses_boutique').insert([{ motif: motif, montant: montant }]);
-                if (error) throw error;
-
-                alert("✅ Charge variable enregistrée dans le journal !");
+                await clientSupabase.from('depenses_boutique').insert([{ motif: motif, montant: montant }]);
                 document.getElementById('depense-motif').value = '';
                 document.getElementById('depense-montant').value = '';
-                chargerFinances();
-            } catch(err) {
-                alert("❌ Erreur réseau lors de la sauvegarde.");
-            }
+                chargerCaisse(); // Rafraîchit le tableau direct
+            } catch(err) { alert("❌ Erreur réseau."); }
         }
 
         // ==============================================================================
-        // 2. RUBRIQUE CATALOGUE : SYNC ET INJECTION DES CATALOGUES DISTINCTS
+        // 2. LE RADAR ATELIER
+        // ==============================================================================
+        async function chargerAtelier() {
+            try {
+                let { data: commandes, error } = await clientSupabase.from('commandes').select('*');
+                if (error) throw error;
+                
+                // Filtrer pour ne garder que l'atelier
+                let ticketsAtelier = commandes.filter(c => c.origine === 'atelier' || (c.statut && c.statut.includes('atelier')));
+
+                let totalAvances = 0;
+                let totalLatent = 0;
+                const tbody = document.getElementById('table-atelier');
+                tbody.innerHTML = '';
+
+                if(ticketsAtelier.length > 0) {
+                    ticketsAtelier.forEach(c => {
+                        let avance = parseFloat(c.avance) || 0;
+                        let reste = parseFloat(c.reste_a_payer) || parseFloat(c.reste) || 0;
+                        let total = parseFloat(c.total) || 0;
+
+                        totalAvances += avance;
+                        if(c.statut !== 'paye') totalLatent += reste;
+
+                        let detailText = "Prestation...";
+                        try {
+                            let detailsArray = typeof c.details === 'string' ? JSON.parse(c.details) : c.details;
+                            if(detailsArray && detailsArray.length > 0) detailText = detailsArray.map(d => d.nom).join(', ');
+                        } catch(e) {}
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${c.non_client || 'Client Atelier'}</strong><br><small style="color:#7f8c8d;">N° ${c.num_panier || 'N/A'}</small></td>
+                                <td style="font-size:0.9rem;">${detailText}</td>
+                                <td style="font-weight:bold;">${total.toLocaleString('fr-FR')} F</td>
+                                <td style="color:var(--success); font-weight:bold;">${avance.toLocaleString('fr-FR')} F</td>
+                                <td style="color:${reste > 0 ? 'var(--danger)' : 'var(--success)'}; font-weight:bold;">${reste.toLocaleString('fr-FR')} F</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucune pièce en cours à l\'atelier.</td></tr>';
+                }
+
+                document.getElementById('stat-avances').innerText = totalAvances.toLocaleString('fr-FR') + " F";
+                document.getElementById('stat-latent').innerText = totalLatent.toLocaleString('fr-FR') + " F";
+            } catch(err) { console.error(err); }
+        }
+
+        // ==============================================================================
+        // 3. CATALOGUE ET DÉPÔT
         // ==============================================================================
         async function chargerCatalogue() {
             try {
@@ -354,31 +479,27 @@
                             <tr>
                                 <td><code>${a.ref}</code></td>
                                 <td><strong>${a.nom_article}</strong><br><small style="color:#7f8c8d;">${a.categorie}</small></td>
-                                <td><span class="badge" style="background:var(--primary); font-size:10px;">${a.scope || 'TOUS'}</span></td>
+                                <td><span class="badge" style="background:var(--primary);">${a.scope || 'TOUS'}</span></td>
                                 <td style="font-weight:bold; color:var(--success);">${(parseFloat(a.prix_detail)||0).toLocaleString('fr-FR')} F</td>
                                 <td style="color:#7f8c8d; font-weight:bold;">${(parseFloat(a.prix_achat)||0).toLocaleString('fr-FR')} F</td>
-                                <td><button class="btn-danger" onclick="supprimerArticle('${a.id}')">🗑️</button></td>
+                                <td><button class="btn btn-action" style="background:var(--danger);" onclick="supprimerArticle('${a.id}')">🗑️</button></td>
                             </tr>
                         `;
                     });
                 } else {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Le catalogue central est vide.</td></tr>';
                 }
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) { console.error(err); }
         }
 
         function preparerImport() {
             const file = document.getElementById('csv-file').files[0];
             if(!file) return;
-
             Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
+                header: true, skipEmptyLines: true,
                 complete: function(results) {
                     articlesPourImport = results.data;
-                    document.getElementById('btn-import').style.display = 'inline-block';
+                    document.getElementById('btn-import').style.display = 'block';
                     document.getElementById('btn-import').innerText = `🚀 Lancer l'injection de ${articlesPourImport.length} articles`;
                 }
             });
@@ -387,7 +508,7 @@
         async function lancerImport() {
             if(articlesPourImport.length === 0) return;
             document.getElementById('btn-import').disabled = true;
-            document.getElementById('btn-import').innerText = "⏳ Injection en cours dans Supabase...";
+            document.getElementById('btn-import').innerText = "⏳ Injection en cours...";
 
             try {
                 const articlesNettoyes = articlesPourImport.map(row => ({
@@ -401,16 +522,13 @@
                     scope: row.scope ? row.scope.toUpperCase() : 'TOUS'
                 })).filter(a => a.ref && a.nom_article);
 
-                const { error } = await clientSupabase.from('articles').upsert(articlesNettoyes, { onConflict: 'ref' });
-                if (error) throw error;
-
-                alert(`🎉 Importation massive validée ! ${articlesNettoyes.length} lignes synchronisées.`);
+                await clientSupabase.from('articles').upsert(articlesNettoyes, { onConflict: 'ref' });
+                alert(`🎉 Importation validée ! ${articlesNettoyes.length} articles ajoutés ou mis à jour.`);
                 document.getElementById('csv-file').value = '';
                 document.getElementById('btn-import').style.display = 'none';
                 chargerCatalogue();
             } catch(err) {
-                alert("❌ Erreur d'analyse. Assurez-vous que vos colonnes Excel correspondent exactement.");
-                console.error(err);
+                alert("❌ Erreur d'analyse CSV.");
                 document.getElementById('btn-import').disabled = false;
             }
         }
@@ -423,88 +541,24 @@
             const pv = parseFloat(document.getElementById('art-pv').value) || 0;
             const pa = parseFloat(document.getElementById('art-pa').value) || 0;
 
-            if(!ref || !nom || !cat) {
-                alert("⚠️ La référence, le nom de l'article et la famille sont obligatoires.");
-                return;
-            }
-
+            if(!ref || !nom || !cat) { alert("⚠️ Référence, nom et catégorie obligatoires."); return; }
             try {
-                const { error } = await clientSupabase.from('articles').upsert([{
-                    ref: ref, nom_article: nom, categorie: cat, scope: scope, prix_detail: pv, prix_achat: pa
-                }], { onConflict: 'ref' });
-                
-                if (error) throw error;
-                alert("✅ Nouvel article synchronisé instantanément partout !");
+                await clientSupabase.from('articles').upsert([{ ref: ref, nom_article: nom, categorie: cat, scope: scope, prix_detail: pv, prix_achat: pa }], { onConflict: 'ref' });
                 document.getElementById('art-ref').value = '';
                 document.getElementById('art-nom').value = '';
                 document.getElementById('art-cat').value = '';
                 chargerCatalogue();
-            } catch(err) {
-                alert("❌ Erreur d'enregistrement.");
-            }
+            } catch(err) { alert("❌ Erreur d'enregistrement."); }
         }
 
         async function supprimerArticle(id) {
-            if(!confirm("Supprimer définitivement cet article de toute la base réseau ?")) return;
-            try {
-                await clientSupabase.from('articles').delete().eq('id', id);
-                chargerCatalogue();
-            } catch(err) { console.error(err); }
+            if(!confirm("Supprimer cet article du système ?")) return;
+            try { await clientSupabase.from('articles').delete().eq('id', id); chargerCatalogue(); } 
+            catch(err) { console.error(err); }
         }
 
         // ==============================================================================
-        // 3. RUBRIQUE ATELIER : LE RADAR DE SURVEILLANCE DES MACHINISTES
-        // ==============================================================================
-        async function chargerAtelier() {
-            try {
-                // On récupère les commandes de l'atelier
-                let { data: commandes, error } = await clientSupabase.from('commandes').select('*').eq('origine', 'atelier');
-                if (error) {
-                    // Repli de secours sur le statut si la colonne origine n'est pas encore lue
-                    let { data: fallback, error: fErr } = await clientSupabase.from('commandes').select('*').ilike('statut', '%atelier%');
-                    if (fErr) throw fErr;
-                    commandes = fallback;
-                }
-
-                let totalAvances = 0;
-                let totalLatent = 0;
-                const tbody = document.getElementById('table-atelier');
-                tbody.innerHTML = '';
-
-                if(commandes && commandes.length > 0) {
-                    commandes.forEach(c => {
-                        let avance = parseFloat(c.avance) || 0;
-                        let reste = parseFloat(c.reste_a_payer) || parseFloat(c.reste) || 0;
-                        let total = parseFloat(c.total) || 0;
-
-                        totalAvances += avance;
-                        if(c.statut !== 'paye') {
-                            totalLatent += reste; // Capital dehors en attente de couture
-                        }
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${c.non_client || 'Client Atelier'}</strong><br><small>N° Ticket: ${c.num_panier || 'N/A'}</small></td>
-                                <td>${total.toLocaleString('fr-FR')} F</td>
-                                <td style="color:var(--success); font-weight:bold;">${avance.toLocaleString('fr-FR')} F</td>
-                                <td style="color:${reste > 0 ? 'var(--danger)' : 'var(--success)'}; font-weight:bold;">${reste.toLocaleString('fr-FR')} F</td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucune pièce en cours à l\'atelier aujourd\'hui.</td></tr>';
-                }
-
-                document.getElementById('stat-avances').innerText = totalAvances.toLocaleString('fr-FR') + " F";
-                document.getElementById('stat-latent').innerText = totalLatent.toLocaleString('fr-FR') + " F";
-
-            } catch(err) {
-                console.error(err);
-            }
-        }
-
-        // ==============================================================================
-        // 4. RUBRIQUE ÉQUIPE : SÉCURITÉ ET CHANGEMENT DES PIN DIRECTS
+        // 4. LA SÉCURITÉ DU PERSONNEL
         // ==============================================================================
         async function chargerEquipe() {
             try {
@@ -520,16 +574,14 @@
                             <tr>
                                 <td><strong>${m.nom_employe}</strong></td>
                                 <td><span class="badge" style="background:#7f8c8d;">${m.role}</span></td>
-                                <td><input type="number" value="${m.code_pin}" class="form-control" style="width:80px; padding:4px; text-align:center; font-weight:bold;" onchange="changerPinEnDirect('${m.id}', this.value)"></td>
-                                <td><span class="badge" style="background:${m.actif ? 'var(--success)' : 'var(--danger)'}">${m.actif ? 'Autorisé' : 'Bloqué'}</span></td>
-                                <td><button class="btn-small btn-gold" onclick="toggleStatutEmploye('${m.id}', ${m.actif})">${m.actif ? 'Bloquer' : 'Activer'}</button></td>
+                                <td><input type="number" value="${m.code_pin}" class="form-control" style="width:100px; padding:6px; font-weight:bold;" onchange="changerPin('${m.id}', this.value)"></td>
+                                <td><span class="badge" style="background:${m.actif ? 'var(--success)' : 'var(--danger)'}">${m.actif ? 'Actif' : 'Bloqué'}</span></td>
+                                <td><button class="btn btn-action" style="background:var(--text-dark);" onclick="toggleEmploye('${m.id}', ${m.actif})">${m.actif ? 'Bloquer' : 'Activer'}</button></td>
                             </tr>
                         `;
                     });
                 }
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) { console.error(err); }
         }
 
         async function ajouterEmploye() {
@@ -537,42 +589,28 @@
             const role = document.getElementById('emp-role').value;
             const pin = document.getElementById('emp-pin').value.trim();
 
-            if(!nom || !pin || pin.length < 4) {
-                alert("⚠️ Saisissez le nom de la personne et un code PIN secret à 4 chiffres.");
-                return;
-            }
-
+            if(!nom || !pin || pin.length < 4) { alert("⚠️ Nom et code PIN à 4 chiffres obligatoires."); return; }
             try {
-                const { error } = await clientSupabase.from('personnel_nina').insert([{ nom_employe: nom, role: role, code_pin: pin }]);
-                if (error) throw error;
-
-                alert(`👤 Nouvel accès réseau créé pour ${nom} (${role}) !`);
+                await clientSupabase.from('personnel_nina').insert([{ nom_employe: nom, role: role, code_pin: pin }]);
                 document.getElementById('emp-nom').value = '';
                 document.getElementById('emp-pin').value = '';
                 chargerEquipe();
-            } catch(err) {
-                alert("❌ Erreur d'enregistrement réseau.");
-            }
+            } catch(err) { alert("❌ Erreur de création."); }
         }
 
-        async function changerPinEnDirect(id, nouveauPin) {
-            if(nouveauPin.length < 4) { alert("Le code secret doit obligatoirement comporter 4 chiffres."); return; }
-            try {
-                await clientSupabase.from('personnel_nina').update({ code_pin: nouveauPin }).eq('id', id);
-                alert("🔒 Verrouillage mis à jour ! L'ancien code PIN est désactivé immédiatement.");
-                chargerEquipe();
-            } catch(err) { console.error(err); }
+        async function changerPin(id, nouveauPin) {
+            if(nouveauPin.length < 4) { alert("Le code doit avoir au moins 4 chiffres."); return; }
+            try { await clientSupabase.from('personnel_nina').update({ code_pin: nouveauPin }).eq('id', id); alert("🔒 Code PIN modifié avec succès !"); chargerEquipe(); } 
+            catch(err) { console.error(err); }
         }
 
-        async function toggleStatutEmploye(id, statutActuel) {
-            try {
-                await clientSupabase.from('personnel_nina').update({ actif: !statutActuel }).eq('id', id);
-                chargerEquipe();
-            } catch(err) { console.error(err); }
+        async function toggleEmploye(id, statut) {
+            try { await clientSupabase.from('personnel_nina').update({ actif: !statut }).eq('id', id); chargerEquipe(); } 
+            catch(err) { console.error(err); }
         }
 
-        // CHARGEMENT DE SÉCURITÉ AU LANCEMENT
-        chargerFinances();
+        // --- DÉMARRAGE AUTOMATIQUE ---
+        chargerCaisse();
     </script>
 </body>
 </html>
