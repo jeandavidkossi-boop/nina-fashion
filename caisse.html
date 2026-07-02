@@ -2,65 +2,73 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Caisse Centrale — Nina Fashion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Caisse - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; }
+        :root { 
+            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; 
+            --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; --danger: #e74c3c; --info: #2980b9;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); overflow: hidden; }
-        
-        /* En-tête */
-        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index:10; }
-        header h1 { font-size: 20px; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 14px; margin-right: 15px; }
-        .btn-rembourser { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; margin-left: 10px; }
+        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); font-size: 16px; }
 
-        /* Mise en page */
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        /* EN-TÊTE */
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header h1 { font-size: 1.2rem; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: bold; }
+        .btn-action-top { background: var(--danger); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; text-decoration: none; }
+
+        /* LOGIQUE DE LAYOUT POUR LE DIRECT */
+        .main-layout { display: flex; flex: 1; overflow: hidden; flex-direction: row; }
         
-        /* File d'attente (Gauche) */
+        /* FIL D'ATTENTE (GAUCHE) */
         .queue-panel { width: 350px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-        .panel-header { padding: 15px; background: #fafafa; border-bottom: 1px solid var(--border); font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; }
-        .queue-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .ticket-card { background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .ticket-card:hover { border-color: var(--gold); box-shadow: 0 4px 8px rgba(179, 135, 40, 0.1); }
-        .ticket-card.active { background: #fffdf5; border-color: var(--gold); }
-        .ticket-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: #7f8c8d; }
-        .ticket-vendeur { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-        .ticket-price { font-weight: bold; color: var(--success); font-size: 14px; }
+        .panel-header { padding: 15px; background: #fafafa; border-bottom: 1px solid var(--border); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .queue-count { background: var(--gold); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .queue-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .ticket-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--gold); padding: 12px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .ticket-card.active { background: #fffcf5; border-color: var(--gold); }
+        .ticket-top { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; color: #7f8c8d; }
+        .ticket-vendeur { font-weight: bold; font-size: 0.95rem; color: var(--primary); margin-bottom: 5px; }
+        .ticket-price { font-weight: 900; color: var(--success); font-size: 1.1rem; }
 
-        /* Détails (Droite) */
-        .details-area { flex: 1; background: var(--bg-gray); padding: 20px; display: flex; flex-direction: column; }
-        .receipt-container { background: white; flex: 1; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; width: 100%; overflow: hidden; }
-        .receipt-header { text-align: center; padding: 20px; border-bottom: 2px dashed #eee; }
-        .receipt-header h2 { font-size: 24px; color: var(--primary); margin-bottom: 5px; }
-        .receipt-items { flex: 1; padding: 20px; overflow-y: auto; }
-        .item-line { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f2f6; }
-        .item-name { font-weight: 500; font-size: 15px; }
-        .item-calc { color: #7f8c8d; font-size: 12px; margin-top: 3px; }
-        .item-total { font-weight: bold; font-size: 15px; }
-        .receipt-footer { padding: 20px; background: #fafafa; border-top: 2px dashed #eee; }
-        .total-display { display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 20px; }
-        .btn-encaisser { width: 100%; background: var(--success); color: white; border: none; padding: 18px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-encaisser:hover { background: #219653; transform: translateY(-2px); }
-        .btn-encaisser:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #95a5a6; text-align: center; }
+        /* ZONE DÉTAILS ET REÇU (DROITE) */
+        .details-area { flex: 1; background: var(--bg-gray); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .receipt-container { background: white; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.04); padding: 20px; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; width: 100%; }
+        .receipt-header { text-align: center; border-bottom: 2px dashed var(--border); padding-bottom: 15px; margin-bottom: 15px; }
+        .receipt-header h2 { font-size: 1.4rem; color: var(--primary); }
+        .receipt-items { flex: 1; margin-bottom: 20px; }
+        
+        .item-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f2f6; }
+        .item-name { font-weight: bold; font-size: 0.95rem; }
+        .item-calc { font-size: 0.85rem; color: #7f8c8d; margin-top: 3px; }
+        .item-total { font-weight: 800; color: var(--primary); }
 
-        /* Pop-up de paiement (Modal) */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .modal-title { font-size: 18px; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; }
-        .pay-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .pay-label { font-size: 14px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
-        .pay-input { width: 130px; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 16px; font-weight: bold; text-align: right; outline: none; }
-        .pay-input:focus { border-color: var(--gold); }
-        .btn-verify { background: var(--primary); color: white; border: none; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .receipt-footer { padding-top: 15px; border-top: 2px dashed var(--border); background: #fafafa; margin-top: auto; }
+        .total-display { display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 900; color: var(--primary); padding: 10px; }
+        .btn-encaisser { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-encaisser:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* POP-UP DE PAIEMENT (MODAL) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-title { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        .pay-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
+        .pay-label { font-size: 0.95rem; font-weight: bold; color: var(--text-dark); display: flex; align-items: center; gap: 5px; }
+        .pay-input { width: 140px; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 1.1rem; font-weight: bold; text-align: right; }
+        .pay-input:focus { border-color: var(--gold); outline: none; }
+        
+        .btn-verify { background: var(--primary); color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-cancel { flex: 1; padding: 12px; background: #eee; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #7f8c8d; }
-        .btn-confirm { flex: 2; padding: 12px; background: var(--success); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-cancel { flex: 1; padding: 12px; border: none; background: #eee; color: #7f8c8d; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-confirm { flex: 2; padding: 12px; border: none; background: var(--success); color: white; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.05rem; }
         .btn-confirm:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* Zone dynamique d'ajustement de la monnaie */
+        .ajustement-box { background: #fffcf0; border: 1px dashed var(--gold); padding: 12px; border-radius: 8px; margin-top: 12px; }
 
         @media (max-width: 850px) {
             .main-layout { flex-direction: column; }
@@ -70,43 +78,46 @@
     </style>
 </head>
 <body>
+
     <header>
-        <div style="display: flex; align-items: center;">
-            <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Retour Accueil</button>
-            <h1>Nina Fashion</h1>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="index.html" class="btn-action-top" style="background:transparent; border:1px solid #fff;">🚪 Accueil</a>
+            <h1>Nina Fashion - Caisse</h1>
         </div>
-        <div>
-            <span class="badge-role">💰 CAISSE CENTRALE</span>
-            <button class="btn-rembourser" onclick="ouvrirRemboursementSec()">💸 Rembourser Reliquat</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn-action-top" onclick="ouvrirRemboursementSec()">💸 Rembourser un Reliquat</button>
+            <div class="badge-role" id="badge-caissiere">Caissière...</div>
         </div>
     </header>
 
     <div class="main-layout">
         <div class="queue-panel">
             <div class="panel-header">
-                <span>Tickets en attente</span>
-                <span id="queue-count" style="background:var(--gold); color:white; padding:2px 8px; border-radius:10px; font-size:12px;">0</span>
+                <span>🛒 Tickets en attente</span>
+                <span class="queue-count" id="queue-count">0</span>
             </div>
-            <div class="queue-list" id="queue-list"></div>
+            <div class="queue-list" id="queue-list">
+                <div style="text-align:center; color:#7f8c8d; padding-top:20px;">Aucun ticket en attente.</div>
+            </div>
         </div>
 
         <div class="details-area">
             <div class="receipt-container" id="receipt-container">
-                <div class="empty-state" id="empty-state">
-                    <div style="font-size: 40px;">🧾</div>
-                    <div style="font-size: 16px; margin-top: 15px;">Sélectionnez un ticket dans la file d'attente pour l'encaisser.</div>
+                <div id="empty-state" style="text-align:center; color:#7f8c8d; padding: 40px 0;">
+                    <span style="font-size:40px;">🧾</span>
+                    <p style="margin-top:10px;">Sélectionnez un ticket dans la file d'attente pour le contrôler et l'encaisser.</p>
                 </div>
 
-                <div id="active-receipt" style="display: none; height: 100%; flex-direction: column;">
+                <div id="active-receipt" style="display: none; flex-direction: column; height: 100%;">
                     <div class="receipt-header">
-                        <h2 id="receipt-info">Ticket #...</h2>
-                        <p style="color: #7f8c8d; font-size: 13px;">Vendeur en boutique</p>
+                        <h2 id="receipt-title">Ticket...</h2>
+                        <p id="receipt-info" style="color:#7f8c8d; font-size:13px;"></p>
                     </div>
                     <div class="receipt-items" id="receipt-items"></div>
                     <div class="receipt-footer">
                         <div class="total-display">
                             <span>Total à payer :</span>
-                            <span id="receipt-total">0 FCFA</span>
+                            <span id="receipt-total">0 F</span>
                         </div>
                         <button class="btn-encaisser" id="btn-valider" onclick="ouvrirModalPaiement()">💳 VALIDER L'ENCAISSEMENT</button>
                     </div>
@@ -117,57 +128,69 @@
 
     <div id="payment-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-title">
-                Encaisser Ticket #<span id="modal-ticket-num">---</span><br>
-                <span style="font-size: 24px; color: var(--gold);" id="modal-ticket-total">0 FCFA</span>
-            </div>
-
+            <div class="modal-title">Mode de Règlement - <span id="modal-ticket-num"></span></div>
+            <div style="text-align:center; font-size:20px; font-weight:900; color:var(--gold); margin-bottom:15px;" id="modal-ticket-total">0 F</div>
+            
             <div class="pay-row">
-                <label class="pay-label">💵 Espèces (FCFA)</label>
+                <div class="pay-label">💵 Espèces reçues (FCFA) :</div>
                 <input type="number" id="pay-cash" class="pay-input" placeholder="0" oninput="calculerReste()">
             </div>
-
+            
             <div class="pay-row">
-                <label class="pay-label">📱 Mobile Money</label>
+                <div class="pay-label">📱 Mobile Money (Wave/Orange) :</div>
                 <input type="number" id="pay-momo" class="pay-input" placeholder="0" oninput="calculerReste()">
             </div>
-
-            <div class="pay-row" style="background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: block;">
-                <label class="pay-label" style="font-size: 12px; margin-bottom: 8px;">🎫 Utiliser un Reliquat / Avoir</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="pay-reliquat-code" class="pay-input" style="text-align: left; width: 100%; font-size: 14px;" placeholder="Ex: R-1234">
-                    <button class="btn-verify" onclick="verifierReliquat()">Vérifier</button>
-                </div>
-                <div id="reliquat-status" style="font-size: 12px; font-weight: bold; margin-top: 5px; color: var(--success);"></div>
-            </div>
             
-            <div style="text-align: right; margin-top: 15px; font-size: 14px; font-weight: bold; color: #7f8c8d; padding-top: 10px; border-top: 1px solid #eee;">
-                <div id="modal-reste" style="color: #e74c3c; font-size: 16px;">Reste à payer : 0 FCFA</div>
+            <div class="pay-row" style="background:#f1f2f6; padding:8px; border-radius:6px;">
+                <div class="pay-label">🎟️ Utiliser un vieux Reliquat :</div>
+                <input type="text" id="pay-reliquat-code" class="pay-input" style="width:110px; text-align:center;" placeholder="R-XXXX">
+                <button class="btn-verify" onclick="verifierReliquat()">Vérifier</button>
+            </div>
+            <div id="reliquat-status" style="font-size:12px; text-align:right; font-weight:bold; margin-bottom:10px;"></div>
+
+            <div style="text-align:right; font-size:15px; font-weight:bold; margin-top:15px; padding:10px; border-top:1px solid #eee;" id="modal-reste">Reste à payer : 0 F</div>
+            
+            <div id="section-ajustement-monnaie" class="ajustement-box" style="display:none;">
+                <div class="pay-row">
+                    <div class="pay-label" style="color:var(--primary);">💰 Espèces RÉELLEMENT rendues :</div>
+                    <input type="number" id="pay-rendu-reel" class="pay-input" style="border-color:var(--gold);" oninput="calculerReliquatPartiel()">
+                </div>
+                <div style="font-size:12px; font-weight:bold; color:var(--danger); text-align:right; margin-top:5px;">
+                    ⚠️ Reste dû au client (Nouveau Reliquat) : <span id="label-reliquat-genere" style="font-size:14px;">0 F</span>
+                </div>
             </div>
 
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="fermerModal()">Annuler</button>
-                <button class="btn-confirm" id="btn-final-validate" onclick="finaliserPaiement()" disabled>✅ CONFIRMER</button>
+                <button class="btn-cancel" onclick="fermerModal('payment-modal')">Annuler</button>
+                <button class="btn-confirm" id="btn-final-validate" disabled onclick="finaliserPaiement()">✅ CONFIRMER LE PAIEMENT</button>
             </div>
         </div>
     </div>
-
-    <script>
+        <script>
+        // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // --- 2. LE BADGE CAISSIÈRE (Identification silencieuse) ---
+        let nomCaissiere = sessionStorage.getItem('nina_caissiere');
+        if (!nomCaissiere) {
+            nomCaissiere = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom de caissière ?");
+            if (!nomCaissiere || nomCaissiere.trim() === "") nomCaissiere = "Caissière Anonyme";
+            sessionStorage.setItem('nina_caissiere', nomCaissiere);
+        }
+        document.getElementById('badge-caissiere').innerText = "👩‍💼 " + nomCaissiere;
+
         let ticketsEnAttente = [];
         let ticketSelectionne = null;
-        
-        // Variables pour garder en mémoire le reliquat vérifié par la caissière
+
+        // Variables pour la mémoire du paiement
         let reliquatValideMontant = 0;
         let reliquatValideId = null;
 
-        // --- 1. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
+        // --- 3. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
         async function chargerCommandes() {
-            const { data, error } = await clientSupabase
-                .from('commandes')
+            const { data, error } = await clientSupabase.from('commandes')
                 .select('*')
                 .eq('statut', 'en_attente')
                 .order('created_at', { ascending: true });
@@ -177,7 +200,7 @@
                 afficherFileDAttente();
             }
         }
-        setInterval(chargerCommandes, 5000); // L'ordinateur cherche de nouveaux tickets toutes les 5 secondes
+        setInterval(chargerCommandes, 3000); // L'ordinateur cherche les nouveaux tickets toutes les 3 secondes
 
         function afficherFileDAttente() {
             const liste = document.getElementById("queue-list");
@@ -185,21 +208,22 @@
             liste.innerHTML = "";
 
             if (ticketsEnAttente.length === 0) {
-                liste.innerHTML = '<div style="text-align:center; padding:20px; color:#95a5a6; font-size:13px;">Aucun ticket en attente.</div>';
+                liste.innerHTML = '<div style="text-align:center; padding:20px; color:#95a5a6; font-size:13px;">Aucun ticket au comptoir.</div>';
                 if (ticketSelectionne) masquerDetails();
                 return;
             }
 
             ticketsEnAttente.forEach(ticket => {
                 const card = document.createElement('div');
-                card.className = 'ticket-card ' + (ticketSelectionne && ticketSelectionne.id === ticket.id ? 'active' : '');
+                card.className = 'ticket-card' + (ticketSelectionne && ticketSelectionne.id === ticket.id ? ' active' : '');
                 card.onclick = () => selectionnerTicket(ticket);
-                const dateObj = new Date(ticket.created_at);
-                const heure = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
+                
+                let dateObj = new Date(ticket.created_at);
+                let heure = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
 
                 card.innerHTML = `
-                    <div class="ticket-top"><span>Ticket #${ticket.num_panier}</span><span>${heure}</span></div>
-                    <div class="ticket-vendeur">🛍️ Commande vendeur</div>
+                    <div class="ticket-top"><span>Ticket N° ${ticket.num_panier}</span><span>🕒 ${heure}</span></div>
+                    <div class="ticket-vendeur">Vendeur: ${ticket.vendeur_nom || 'Anonyme'}</div>
                     <div class="ticket-price">${parseFloat(ticket.total).toLocaleString('fr-FR')} F</div>
                 `;
                 liste.appendChild(card);
@@ -208,178 +232,240 @@
 
         function selectionnerTicket(ticket) {
             ticketSelectionne = ticket;
-            afficherFileDAttente(); 
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('active-receipt').style.display = 'flex';
-            document.getElementById('receipt-info').innerText = 'Ticket #' + ticket.num_panier;
-            document.getElementById('receipt-total').innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + ' FCFA';
+            afficherFileDAttente(); // Pour mettre en surbrillance
 
-            const boxItems = document.getElementById('receipt-items');
-            boxItems.innerHTML = '';
-            if(ticket.details) {
-                ticket.details.forEach(art => {
-                    const sousTotal = art.prix * art.qte;
+            document.getElementById("empty-state").style.display = "none";
+            document.getElementById("active-receipt").style.display = "flex";
+            document.getElementById("receipt-title").innerText = "Ticket N° " + ticket.num_panier;
+            document.getElementById("receipt-info").innerText = "Envoyé par : " + (ticket.vendeur_nom || 'Anonyme');
+            document.getElementById("receipt-total").innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + " F";
+
+            const boxItems = document.getElementById("receipt-items");
+            boxItems.innerHTML = "";
+
+            try {
+                let articles = typeof ticket.details === 'string' ? JSON.parse(ticket.details) : ticket.details;
+                articles.forEach(art => {
+                    const sousTotal = art.prixU * art.qte;
                     boxItems.innerHTML += `
                         <div class="item-line">
-                            <div><div class="item-name">${art.nom}</div><div class="item-calc">${art.qte} x ${art.prix} F</div></div>
-                            <div class="item-total">${sousTotal.toLocaleString('fr-FR')} F</div>
+                            <div>
+                                <div class="item-name">${art.nom}</div>
+                                <div class="item-calc">${art.details} (Qté: ${art.qte} x ${parseFloat(art.prixU).toLocaleString('fr-FR')}F)</div>
+                            </div>
+                            <div class="item-total">${Math.round(sousTotal).toLocaleString('fr-FR')} F</div>
                         </div>
                     `;
                 });
+            } catch (e) {
+                boxItems.innerHTML = '<div style="color:red;">Détails illisibles</div>';
             }
         }
 
         function masquerDetails() {
-            document.getElementById('empty-state').style.display = 'flex';
-            document.getElementById('active-receipt').style.display = 'none';
+            document.getElementById("empty-state").style.display = "block";
+            document.getElementById("active-receipt").style.display = "none";
             ticketSelectionne = null;
         }
 
-        // --- 2. LOGIQUE DE PAIEMENT INTELLIGENTE ---
+        // --- 4. LA LOGIQUE DE PAIEMENT INTELLIGENTE ---
         function ouvrirModalPaiement() {
-            if(!ticketSelectionne) return;
-            document.getElementById('modal-ticket-num').innerText = ticketSelectionne.num_panier;
-            document.getElementById('modal-ticket-total').innerText = parseFloat(ticketSelectionne.total).toLocaleString('fr-FR') + ' FCFA';
-            
-            // On vide les cases à chaque nouveau client
-            document.getElementById('pay-cash').value = '';
-            document.getElementById('pay-momo').value = '';
-            document.getElementById('pay-reliquat-code').value = '';
-            document.getElementById('reliquat-status').innerText = '';
+            if (!ticketSelectionne) return;
+            document.getElementById("modal-ticket-num").innerText = ticketSelectionne.num_panier;
+            document.getElementById("modal-ticket-total").innerText = parseFloat(ticketSelectionne.total).toLocaleString('fr-FR') + " FCFA";
+
+            // Nettoyage des cases
+            document.getElementById("pay-cash").value = "";
+            document.getElementById("pay-momo").value = "";
+            document.getElementById("pay-reliquat-code").value = "";
+            document.getElementById("reliquat-status").innerText = "";
             reliquatValideMontant = 0;
             reliquatValideId = null;
-            
+
             calculerReste();
-            document.getElementById('payment-modal').style.display = 'flex';
+            document.getElementById("payment-modal").style.display = "flex";
         }
 
-        function fermerModal() { document.getElementById('payment-modal').style.display = 'none'; }
+        function fermerModal(id) { document.getElementById(id).style.display = "none"; }
 
         async function verifierReliquat() {
-            const code = document.getElementById('pay-reliquat-code').value.trim();
-            if(!code) return;
-            
-            const btn = document.querySelector('.btn-verify');
+            const code = document.getElementById("pay-reliquat-code").value.trim();
+            if (!code) return;
+
+            const btn = document.querySelector(".btn-verify");
             btn.innerText = "...";
-            
-            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code).eq('statut', 'actif').single();
-            
-            if(data) {
+
+            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code).eq('statut', 'actif').maybeSingle();
+
+            if (data) {
                 reliquatValideMontant = parseFloat(data.montant);
                 reliquatValideId = data.id;
-                document.getElementById('reliquat-status').innerText = `✅ Validé: ${reliquatValideMontant} F (${data.nom_client})`;
+                document.getElementById("reliquat-status").innerHTML = `<span style="color:var(--success);">✅ Valide: ${reliquatValideMontant} F (Client: ${data.non_client})</span>`;
             } else {
                 reliquatValideMontant = 0;
                 reliquatValideId = null;
-                document.getElementById('reliquat-status').innerHTML = `<span style="color:#e74c3c;">❌ Invalide ou déjà utilisé</span>`;
+                document.getElementById("reliquat-status").innerHTML = `<span style="color:var(--danger);">❌ Invalide ou déjà utilisé</span>`;
             }
             btn.innerText = "Vérifier";
-            calculerReste(); // Met à jour le total automatiquement
+            calculerReste();
         }
 
         function calculerReste() {
-            const total = parseFloat(ticketSelectionne.total);
-            const cash = parseFloat(document.getElementById('pay-cash').value) || 0;
-            const momo = parseFloat(document.getElementById('pay-momo').value) || 0;
-            
+            const totalFacture = parseFloat(ticketSelectionne.total);
+            const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
+            const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
             const totalPaye = cash + momo + reliquatValideMontant;
-            const difference = totalPaye - total;
             
-            const divReste = document.getElementById('modal-reste');
-            const btnConf = document.getElementById('btn-final-validate');
+            const difference = totalPaye - totalFacture;
+
+            const divReste = document.getElementById("modal-reste");
+            const btnConf = document.getElementById("btn-final-validate");
+            const boxAjustement = document.getElementById("section-ajustement-monnaie");
+            const inputRenduReel = document.getElementById("pay-rendu-reel");
 
             if (difference < 0) {
-                divReste.innerHTML = `<span style="color: #e74c3c;">Reste à payer : ${Math.abs(difference).toLocaleString('fr-FR')} F</span>`;
-                btnConf.disabled = true; // Empêche de valider si le compte n'y est pas
-            } else if (difference > 0) {
-                divReste.innerHTML = `<span style="color: var(--success);">Monnaie à rendre : ${difference.toLocaleString('fr-FR')} F</span>`;
+                // Le client n'a pas encore donné assez d'argent
+                divReste.innerHTML = `<span style="color: var(--danger);">Reste à payer : ${Math.abs(difference).toLocaleString('fr-FR')} F</span>`;
+                btnConf.disabled = true;
+                boxAjustement.style.display = "none";
+            } 
+            else if (difference > 0) {
+                // Le client a donné trop d'argent, il faut rendre la monnaie
+                divReste.innerHTML = `<span style="color: var(--success);">Monnaie normale à rendre : ${difference.toLocaleString('fr-FR')} F</span>`;
                 btnConf.disabled = false;
-            } else {
+                
+                // On affiche la zone d'ajustement de la caissière et on met la monnaie max par défaut
+                boxAjustement.style.display = "block";
+                if(!inputRenduReel.dataset.modifie) inputRenduReel.value = difference; 
+                calculerReliquatPartiel();
+            } 
+            else {
+                // Le compte est juste parfait (0 franc de différence)
                 divReste.innerHTML = `<span style="color: var(--success);">Le compte est bon.</span>`;
                 btnConf.disabled = false;
+                boxAjustement.style.display = "none";
             }
         }
 
-        async function finaliserPaiement() {
-            const total = parseFloat(ticketSelectionne.total);
-            const cash = parseFloat(document.getElementById('pay-cash').value) || 0;
-            const momo = parseFloat(document.getElementById('pay-momo').value) || 0;
+        // --- LA MAGIE DU RELIQUAT PARTIEL ---
+        function calculerReliquatPartiel() {
+            document.getElementById("pay-rendu-reel").dataset.modifie = "true";
+            
+            const totalFacture = parseFloat(ticketSelectionne.total);
+            const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
+            const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
             const totalPaye = cash + momo + reliquatValideMontant;
-            const monnaie = totalPaye - total;
+            const difference = totalPaye - totalFacture; // Monnaie théorique
 
-            let creerReliquat = false;
-            let nomClient = "";
-            let numRecu = "";
+            let renduReel = parseFloat(document.getElementById("pay-rendu-reel").value) || 0;
+            let reliquatGenere = difference - renduReel;
 
-            // Le système de protection des monnaies non rendues
-            if (monnaie > 0) {
-                if (confirm(`💰 La monnaie est de ${monnaie} F.\nVoulez-vous CONSERVER cette monnaie (Créer un Reliquat) ?`)) {
-                    nomClient = prompt("Nom de l'apprenti / du client :");
-                    if (!nomClient) { alert("Opération annulée : Le nom est obligatoire."); return; }
-                    creerReliquat = true;
-                    numRecu = "R-" + Math.floor(1000 + Math.random() * 9000); // Génération du code R-XXX
-                }
+            // Sécurité : on ne peut pas rendre plus de monnaie qu'on ne doit
+            if (renduReel > difference) {
+                renduReel = difference;
+                document.getElementById("pay-rendu-reel").value = renduReel;
+                reliquatGenere = 0;
             }
 
-            const btn = document.getElementById('btn-final-validate');
+            document.getElementById("label-reliquat-genere").innerText = reliquatGenere > 0 ? reliquatGenere.toLocaleString('fr-FR') + " F" : "0 F";
+        }
+
+        // --- 5. VALIDER ET SAUVEGARDER POUR L'ADMINISTRATEUR ---
+        async function finaliserPaiement() {
+            const btn = document.getElementById("btn-final-validate");
             btn.disabled = true;
             btn.innerText = "⏳ Enregistrement...";
 
+            const totalFacture = parseFloat(ticketSelectionne.total);
+            const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
+            const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
+            const oldReliqMontant = reliquatValideMontant;
+
+            const totalPaye = cash + momo + oldReliqMontant;
+            const difference = totalPaye - totalFacture;
+            let renduReel = parseFloat(document.getElementById("pay-rendu-reel").value) || 0;
+            
+            // Si la case d'ajustement n'était pas affichée, le rendu réel est égal à la différence
+            if(difference <= 0) renduReel = 0;
+
+            let reliquatACreer = difference - renduReel;
+            let nomClient = "";
+            let numRecuNouveau = "";
+
+            // --- GESTION DU NOUVEAU RELIQUAT (Si la caissière garde de la monnaie) ---
+            if (reliquatACreer > 0) {
+                nomClient = prompt(`⚠️ Vous devez conserver ${reliquatACreer} F.\nÉcrivez le NOM DU CLIENT pour créer le reçu :`);
+                if (!nomClient || nomClient.trim() === "") {
+                    alert("❌ L'opération est annulée : Le nom du client est obligatoire pour garder l'argent.");
+                    btn.disabled = false;
+                    btn.innerText = "✅ CONFIRMER LE PAIEMENT";
+                    return;
+                }
+                numRecuNouveau = "R-" + Math.floor(1000 + Math.random() * 9000);
+            }
+
             try {
-                // 1. Clôturer la commande dans le coffre-fort
-                const { error: errCmd } = await clientSupabase.from('commandes').update({ statut: 'paye' }).eq('id', ticketSelectionne.id);
+                // 1. CLÔTURER LA COMMANDE AVEC TOUS LES DÉTAILS FINANCIERS POUR LE RADAR ADMIN
+                const { error: errCmd } = await clientSupabase.from('commandes').update({ 
+                    statut: 'paye',
+                    montant_cash: cash,
+                    montant_momo: momo,
+                    montant_reliquat: oldReliqMontant,
+                    caissiere_nom: nomCaissiere
+                }).eq('id', ticketSelectionne.id);
+
                 if (errCmd) throw errCmd;
 
-                // 2. Désactiver le vieux reliquat si le client l'a utilisé pour ce paiement
+                // 2. INVALIDER L'ANCIEN RELIQUAT S'IL A ÉTÉ UTILISÉ
                 if (reliquatValideId) {
                     await clientSupabase.from('reliquats').update({ statut: 'utilise' }).eq('id', reliquatValideId);
                 }
 
-                // 3. Créer un nouveau reliquat si la caissière n'a pas la monnaie
-                if (creerReliquat) {
-                    const { error: errRel } = await clientSupabase.from('reliquats').insert([{ nom_client: nomClient, montant: monnaie, num_recu: numRecu }]);
-                    if (errRel) throw errRel;
-                    alert(`✅ ENCAISSEMENT RÉUSSI !\n\n📝 Écrivez le reçu papier pour le client :\n- Nom : ${nomClient}\n- Ticket : ${ticketSelectionne.num_panier}\n- N° REÇU : ${numRecu}\n- Montant conservé : ${monnaie} F`);
+                // 3. ENREGISTRER LE NOUVEAU RELIQUAT (S'IL Y EN A UN)
+                if (reliquatACreer > 0) {
+                    await clientSupabase.from('reliquats').insert([{ 
+                        num_recu: numRecuNouveau, 
+                        non_client: nomClient, 
+                        montant: reliquatACreer,
+                        statut: 'actif'
+                    }]);
+                    alert(`✅ ENCAISSEMENT RÉUSSI !\n\n1️⃣ Rendez ${renduReel} F en espèces au client.\n2️⃣ Écrivez le reçu papier pour sa dette :\n➡️ Code: ${numRecuNouveau} | Valeur: ${reliquatACreer} F`);
                 } else {
-                    alert(`✅ ENCAISSEMENT RÉUSSI !` + (monnaie > 0 ? `\n\nN'oubliez pas de rendre ${monnaie} F au client.` : ""));
+                    alert(`✅ ENCAISSEMENT RÉUSSI !\n\nRendez la monnaie : ${renduReel} F`);
                 }
 
-                // On nettoie l'écran pour le client suivant
-                fermerModal();
+                // Nettoyage de l'écran
+                fermerModal('payment-modal');
                 masquerDetails();
                 chargerCommandes();
-                btn.innerText = "✅ CONFIRMER";
+                btn.innerText = "✅ CONFIRMER LE PAIEMENT";
 
             } catch (err) {
-                alert("❌ Erreur de réseau avec la base de données.");
+                alert("❌ Erreur de réseau, impossible de finaliser le paiement.");
                 btn.disabled = false;
-                btn.innerText = "✅ CONFIRMER";
+                btn.innerText = "✅ CONFIRMER LE PAIEMENT";
             }
         }
 
-        // --- 3. GESTION DES REMBOURSEMENTS SANS ACHAT ---
+        // --- 6. REMBOURSEMENT SEC (SANS ACHAT) ---
         async function ouvrirRemboursementSec() {
-            const code = prompt("💸 REMBOURSEMENT DE RELIQUAT\nEntrez le numéro du reçu papier (Ex: R-1234) :");
+            const code = prompt("💸 REMBOURSEMENT D'UN RELIQUAT\nEntrez le code du reçu papier apporté par le client (Ex: R-1234) :");
             if (!code) return;
 
-            // On cherche le reçu dans la base de données
-            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code.trim()).eq('statut', 'actif').single();
+            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code.trim()).eq('statut', 'actif').maybeSingle();
 
             if (data) {
-                const conf = confirm(`👤 Client : ${data.nom_client}\n💰 Montant à rembourser : ${data.montant} F\n\nConfirmez-vous avoir remis cet argent en espèces ?`);
+                const conf = confirm(`👤 Client : ${data.non_client}\n💰 Montant à rembourser physiquement : ${data.montant} F\n\nConfirmez-vous avoir sorti cet argent de la caisse ?`);
                 if (conf) {
-                    // On marque le reçu comme remboursé
                     await clientSupabase.from('reliquats').update({ statut: 'rembourse' }).eq('id', data.id);
-                    alert("✅ Remboursement enregistré. Le reçu papier est maintenant invalide.");
+                    alert("✅ Remboursement enregistré. Ce reçu est maintenant désactivé.");
                 }
             } else {
-                alert("❌ Ce reçu est introuvable, déjà utilisé pour un achat, ou déjà remboursé.");
+                alert("❌ Ce reçu est introuvable, déjà utilisé, ou déjà remboursé.");
             }
         }
 
-        // On lance le moteur au démarrage de la page
         chargerCommandes();
     </script>
 </body>
-    </html>
-    
+</html>
