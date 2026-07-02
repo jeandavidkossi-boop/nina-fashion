@@ -3,69 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Caisse — Nina Fashion</title>
+    <title>Comptoir Vendeur - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); overflow: hidden; }
+        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); }
 
         /* EN-TÊTE */
-        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); z-index: 20; }
+        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 16px; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 10px; border-radius: 15px; font-weight: bold; font-size: 11px; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 13px; margin-right: 10px; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 14px; }
 
         /* STRUCTURE PRINCIPALE */
         .main-layout { display: flex; flex: 1; overflow: hidden; flex-direction: row; }
 
         /* CATALOGUE (GAUCHE) */
-        .catalog-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--border); overflow: hidden; }
+        .catalog-panel { flex: 1; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--border); }
         .search-box { padding: 10px; border-bottom: 1px solid var(--border); background: #fafafa; }
-        .search-input { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; }
+        .search-input { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
         .search-input:focus { border-color: var(--gold); }
-        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; padding: 5px 10px; }
-        .category-tabs::-webkit-scrollbar { height: 0px; } 
-        .tab-btn { padding: 10px 15px; border: 1px solid var(--border); background: white; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: #7f8c8d; margin-right: 8px; transition: 0.2s; }
+        .category-tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; padding: 10px; gap: 10px; }
+        .tab-btn { padding: 8px 15px; border: 1px solid var(--border); background: white; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; color: #7f8c8d; }
         .tab-btn.active { color: white; background: var(--gold); border-color: var(--gold); }
-        .products-grid { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; align-content: start; }
         
-        .product-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 90px; }
+        .products-grid { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; align-content: start; }
+        .product-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: white; cursor: pointer; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .product-card:active { transform: scale(0.97); border-color: var(--gold); }
-        .product-ref { font-size: 11px; color: white; background: var(--primary); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; font-weight: bold; }
+        .product-ref { font-size: 10px; color: white; background: var(--primary); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
         .product-name { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 5px; line-height: 1.2; }
         .product-price { font-size: 12px; font-weight: bold; color: var(--gold); }
 
-        /* PANIER (DROITE OU BAS) */
-        .cart-panel { width: 380px; background: #fff; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); z-index: 10; }
-        .cart-header { padding: 12px 15px; background: var(--bg-gray); border-bottom: 1px solid var(--border); font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+        /* PANIER (DROITE) */
+        .cart-panel { width: 350px; background: #fff; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); z-index: 10; }
+        .cart-header { padding: 12px 15px; background: var(--bg-gray); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .cart-count { background: var(--primary); color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
         .cart-items { flex: 1; overflow-y: auto; padding: 0; background: #fafafa; }
+        
         .cart-item { display: flex; flex-direction: column; padding: 10px 15px; border-bottom: 1px solid #e1e8ed; background: white; }
         .cart-item-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
         .cart-item-title { font-size: 13px; font-weight: 700; color: var(--primary); }
         .cart-item-subtotal { font-size: 14px; font-weight: bold; color: var(--gold); }
+        .cart-item-details { font-size: 11px; color: #7f8c8d; margin-bottom: 5px; }
         
-        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--bg-gray); border-radius: 6px; padding: 4px; }
-        .qty-btn { height: 32px; width: 35px; border-radius: 4px; border: 1px solid var(--border); background: white; font-weight: bold; font-size: 16px; cursor: pointer; color: var(--primary); }
+        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: var(--bg-gray); border-radius: 6px; padding: 2px; }
+        .qty-btn { height: 32px; width: 35px; border-radius: 4px; border: 1px solid var(--border); background: white; font-size: 16px; font-weight: bold; cursor: pointer; color: var(--primary); }
         .half-btn { color: var(--gold); font-size: 13px; font-weight: 800; }
-        .qty-input { width: 50px; text-align: center; border: 1px solid var(--border); border-radius: 4px; height: 32px; font-weight: bold; font-size: 15px; outline: none; }
-        .btn-delete { color: #e74c3c; background: transparent; border: none; font-size: 18px; cursor: pointer; }
+        .qty-input { width: 50px; text-align: center; border: 1px solid var(--border); border-radius: 4px; height: 32px; font-weight: bold; }
+        .btn-delete { color: #e74c3c; background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 0 10px; }
 
         .cart-footer { padding: 15px; background: white; border-top: 2px solid var(--border); }
         .total-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
         .total-label { font-size: 14px; color: #7f8c8d; font-weight: 600; text-transform: uppercase; }
         .total-amount { font-size: 22px; font-weight: 900; color: var(--primary); }
-        .btn-send { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-send { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-send:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        #loader { padding: 40px; text-align: center; font-size: 15px; color: #7f8c8d; font-weight: bold; grid-column: 1 / -1; }
+        /* FENÊTRES MODALES (Pop-up) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 12px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-header { font-size: 16px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-group { margin-bottom: 15px; }
+        .modal-group label { display: block; font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 5px; }
+        .modal-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 6px; font-size: 16px; font-weight: bold; }
+        .modal-select { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; }
+        .quick-btns { display: flex; gap: 5px; margin-top: 5px; }
+        .quick-btn { flex: 1; padding: 8px; border: 1px solid var(--gold); background: #fff; color: var(--gold); border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .quick-btn:active { background: var(--gold); color: #fff; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-cancel { flex: 1; padding: 12px; border: none; background: #e2e8f0; color: #7f8c8d; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-confirm { flex: 1; padding: 12px; border: none; background: var(--gold); color: white; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-        /* OPTIMISATION MOBILE */
         @media (max-width: 768px) {
             .main-layout { flex-direction: column; }
             .catalog-panel { flex: 1; }
-            .cart-panel { width: 100%; height: 38vh; min-height: 250px; border-top: 3px solid var(--primary); }
+            .cart-panel { width: 100%; height: 40vh; min-height: 250px; border-top: 3px solid var(--primary); }
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
         }
     </style>
@@ -73,34 +86,34 @@
 <body>
 
     <header>
-        <div style="display: flex; align-items: center;">
-            <button class="btn-retour" onclick="window.location.href='index.html'">⬅ Accueil</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-retour" onclick="window.location.href='index.html'">🚪 Quitter</button>
             <h1>Nina Fashion</h1>
         </div>
-        <div class="badge-role">🛍️ CAISSE</div>
+        <div class="badge-role" id="badge-vendeur">🕵️ Vendeur Inconnu</div>
     </header>
 
     <div class="main-layout">
-        <!-- CATALOGUE -->
+        <!-- ZONE CATALOGUE -->
         <div class="catalog-panel">
             <div class="search-box">
                 <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher un article..." oninput="filtrerArticles()">
             </div>
             <div class="category-tabs" id="category-tabs"></div>
             <div class="products-grid" id="products-grid">
-                <div id="loader">⏳ Chargement des articles...</div>
+                <div style="padding: 20px; text-align: center; color: #7f8c8d; grid-column: 1 / -1;">⏳ Chargement du catalogue...</div>
             </div>
         </div>
 
-        <!-- PANIER -->
+        <!-- ZONE PANIER -->
         <div class="cart-panel">
             <div class="cart-header">
-                <span>Panier en cours</span>
+                <span>🛒 Panier en cours</span>
                 <span class="cart-count" id="cart-count">0 art.</span>
             </div>
             <div class="cart-items" id="cart-items">
                 <div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 30px 10px; font-size: 13px;">
-                    🛒 Le panier est vide.<br>Touchez un article pour l'ajouter.
+                    Le panier est vide.<br>Touchez un article pour l'ajouter.
                 </div>
             </div>
             <div class="cart-footer">
@@ -108,75 +121,127 @@
                     <span class="total-label">Net à Payer :</span>
                     <span class="total-amount" id="cart-total">0 F</span>
                 </div>
-                <button class="btn-send" id="btn-envoyer" disabled onclick="envoyerALaCaisse()">💳 VALIDER LA VENTE</button>
+                <button class="btn-send" id="btn-envoyer" disabled onclick="envoyerALaCaisse()">✅ VALIDER LA VENTE</button>
             </div>
         </div>
     </div>
 
-    <script>
+    <!-- MODAL 1 : PRIX LIBRE & DÉCOUPE (Pour Tissus, Dentelles...) -->
+    <div class="modal" id="modal-decoupe">
+        <div class="modal-content">
+            <div class="modal-header" id="md-title">Détails de l'article</div>
+            <div class="modal-group">
+                <label>Vendu par :</label>
+                <select id="md-conditionnement" class="modal-select">
+                    <option value="Mètre">Mètre</option>
+                    <option value="Rouleau">Rouleau</option>
+                    <option value="Paquet">Paquet</option>
+                    <option value="Pièce">Pièce</option>
+                </select>
+            </div>
+            <div class="modal-group">
+                <label>Quantité / Fraction :</label>
+                <input type="number" id="md-qte" class="modal-input" step="0.25" value="1">
+                <div class="quick-btns">
+                    <button class="quick-btn" onclick="document.getElementById('md-qte').value='0.25'">1/4</button>
+                    <button class="quick-btn" onclick="document.getElementById('md-qte').value='0.5'">1/2</button>
+                    <button class="quick-btn" onclick="document.getElementById('md-qte').value='1'">1</button>
+                </div>
+            </div>
+            <div class="modal-group">
+                <label>Prix total payé par le client (FCFA) :</label>
+                <input type="number" id="md-prix" class="modal-input" placeholder="Ex: 1500">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fermerModal('modal-decoupe')">Annuler</button>
+                <button class="btn-confirm" onclick="validerDecoupe()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2 : GESTION DES BOUTONS ET LOTS (3 à 25, 5 à 25, etc.) -->
+    <div class="modal" id="modal-lots">
+        <div class="modal-content">
+            <div class="modal-header" id="ml-title">Vente de Boutons / Accessoires</div>
+            <div class="modal-group">
+                <label>Règle de vente :</label>
+                <select id="ml-regle" class="modal-select" onchange="calculerLot()">
+                    <option value="3-25">Lot : 3 pour 25 F</option>
+                    <option value="5-25">Lot : 5 pour 25 F</option>
+                    <option value="1-25">Unitaire : 25 F / pièce</option>
+                    <option value="1-50">Unitaire : 50 F / pièce</option>
+                    <option value="1-100">Unitaire : 100 F / pièce</option>
+                    <option value="1-300">Unitaire : 300 F / pièce</option>
+                </select>
+            </div>
+            <div class="modal-group" style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                <label style="color:var(--primary);">Le client demande pour (Montant en FCFA) :</label>
+                <input type="number" id="ml-montant" class="modal-input" placeholder="Ex: 100" oninput="calculerLot('montant')">
+            </div>
+            <div style="text-align:center; font-weight:bold; color:#7f8c8d; margin:5px 0;">OU</div>
+            <div class="modal-group" style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                <label style="color:var(--primary);">Le client a compté (Nombre de pièces) :</label>
+                <input type="number" id="ml-pieces" class="modal-input" placeholder="Ex: 12" oninput="calculerLot('pieces')">
+            </div>
+            <div id="ml-alerte" style="color:var(--danger); font-size:11px; text-align:center; height:15px; font-weight:bold;"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fermerModal('modal-lots')">Annuler</button>
+                <button class="btn-confirm" onclick="validerLot()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+        <script>
+        // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let CATALOGUE = [];
-        let panier = [];
-        let categorieActive = 'Tous';
+        // --- 2. LE BADGE VENDEUR (Identification silencieuse) ---
+        let nomVendeur = sessionStorage.getItem('nina_vendeur');
+        if (!nomVendeur) {
+            nomVendeur = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom (ou pseudo) de vendeur ?");
+            if (!nomVendeur || nomVendeur.trim() === "") {
+                nomVendeur = "Vendeur Anonyme";
+            }
+            sessionStorage.setItem('nina_vendeur', nomVendeur);
+        }
+        document.getElementById('badge-vendeur').innerText = "👤 " + nomVendeur;
 
+        // --- 3. LE PANIER INCREVABLE (Mémoire locale) ---
+        let CATALOGUE = [];
+        let categorieActive = 'Tous';
+        // Le panier se recharge depuis la mémoire du téléphone au cas où l'écran s'est éteint
+        let panier = JSON.parse(localStorage.getItem('nina_panier_memoire')) || [];
+        
+        let articleEnCours = null; // Variable temporaire pour les pop-ups
+
+        // --- 4. CHARGEMENT DU CATALOGUE ---
         async function chargerBaseDeDonnees() {
             try {
-                const { data, error } = await clientSupabase.from('articles').select('*').order('ref', { ascending: true });
+                // On ne charge que les articles autorisés pour la boutique
+                const { data, error } = await clientSupabase.from('articles')
+                    .select('*')
+                    .in('scope', ['TOUS', 'VENDEUR'])
+                    .order('nom_article', { ascending: true });
+                
                 if (error) throw error;
-
-                CATALOGUE = data.map(item => ({
-                    id: item.ref,
-                    ref: item.ref,
-                    nom: item.designation,
-                    prix: item.prix_detail || 0,
-                    cat: item.categorie || 'Autre'
-                }));
-
-                document.getElementById('loader').style.display = 'none';
+                CATALOGUE = data;
+                document.getElementById('products-grid').innerHTML = ''; 
                 genererOngletsCategories();
                 afficherCatalogue();
+                mettreAJourPanier(); // On redessine le panier mémorisé
             } catch (err) {
-                document.getElementById('loader').innerHTML = "❌ Erreur de connexion.";
+                document.getElementById('products-grid').innerHTML = '<div style="color:red; text-align:center; padding:20px;">❌ Erreur de connexion au catalogue.</div>';
             }
         }
 
         function genererOngletsCategories() {
             const tabsContainer = document.getElementById('category-tabs');
-            tabsContainer.innerHTML = '<button class="tab-btn active" onclick="filtrerCategorie(\'Tous\', this)">Tous</button>';
-            const categoriesUniques = [...new Set(CATALOGUE.map(art => art.cat))].filter(Boolean).sort();
-            categoriesUniques.forEach(cat => {
-                let nomAffiche = cat.includes(".") ? cat.split(".")[1].trim() : cat;
-                tabsContainer.innerHTML += `<button class="tab-btn" onclick="filtrerCategorie('${cat}', this)">${nomAffiche}</button>`;
-            });
-        }
-
-        function afficherCatalogue() {
-            const grid = document.getElementById('products-grid');
-            if(CATALOGUE.length > 0) grid.innerHTML = '';
-            const recherche = document.getElementById('search-input').value.toLowerCase();
-
-            CATALOGUE.forEach(art => {
-                if (categorieActive !== 'Tous' && art.cat !== categorieActive) return;
-                if (recherche && !art.nom.toLowerCase().includes(recherche) && !art.ref.toLowerCase().includes(recherche)) return;
-
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.onclick = () => ajouterAuPanier(art);
-                // Si le prix est à 0, on affiche "Prix à saisir"
-                let affichagePrix = art.prix === 0 ? '📝 Prix à saisir' : art.prix.toLocaleString('fr-FR') + ' F';
-                
-                card.innerHTML = `
-                    <div>
-                        <span class="product-ref">${art.ref}</span>
-                        <div class="product-name">${art.nom}</div>
-                    </div>
-                    <div class="product-price">${affichagePrix}</div>
-                `;
-                grid.appendChild(card);
-            });
+            let categories = ['Tous', ...new Set(CATALOGUE.map(art => art.categorie || 'Autre'))].sort();
+            
+            tabsContainer.innerHTML = categories.map(cat => 
+                `<button class="tab-btn ${cat === 'Tous' ? 'active' : ''}" onclick="filtrerCategorie('${cat}', this)">${cat}</button>`
+            ).join('');
         }
 
         function filtrerCategorie(cat, btnElement) {
@@ -188,62 +253,166 @@
 
         function filtrerArticles() { afficherCatalogue(); }
 
-        // --- LA MAGIE EST ICI : GESTION DES PRIX A ZERO ---
-        function ajouterAuPanier(article) {
-            let prixFinal = article.prix;
+        function afficherCatalogue() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            const recherche = document.getElementById('search-input').value.toLowerCase();
 
-            if (prixFinal === 0) {
-                let saisie = prompt(`💲 Vente : ${article.nom}\n\nQuel est le PRIX UNITAIRE de cet article ?\n(Saisissez uniquement des chiffres, ex: 1500)`);
-                if (saisie === null || saisie.trim() === "") return; // Le vendeur a annulé
-                
-                prixFinal = parseFloat(saisie);
-                if (isNaN(prixFinal) || prixFinal < 0) {
-                    alert("❌ Le montant saisi est invalide.");
-                    return;
-                }
+            let articlesFiltres = CATALOGUE.filter(art => {
+                let matchCat = (categorieActive === 'Tous' || art.categorie === categorieActive);
+                let matchRech = art.nom_article.toLowerCase().includes(recherche) || art.ref.toLowerCase().includes(recherche);
+                return matchCat && matchRech;
+            });
+
+            if (articlesFiltres.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#7f8c8d;">Aucun article trouvé.</div>';
+                return;
             }
 
-            // On crée un identifiant unique dans le panier (ref + prix) pour séparer les différents tarifs si besoin
-            let cartId = article.id + '_' + prixFinal;
-            const existant = panier.find(item => item.cartId === cartId);
+            articlesFiltres.forEach(art => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                let prixAffiche = parseFloat(art.prix_detail) > 0 ? parseFloat(art.prix_detail).toLocaleString('fr-FR') + ' F' : '⚙️ Sur Mesure';
+                let isBouton = (art.categorie && art.categorie.toLowerCase().includes('bouton')) || art.nom_article.toLowerCase().includes('bouton');
+
+                // Logique de clic : Boutons -> Modal Lots | Prix 0 -> Modal Découpe | Reste -> Panier direct
+                card.onclick = () => {
+                    if (isBouton) ouvrirModalLots(art);
+                    else if (parseFloat(art.prix_detail) === 0) ouvrirModalDecoupe(art);
+                    else ajouterAuPanierDirect(art);
+                };
+
+                card.innerHTML = `
+                    <span class="product-ref">${art.ref}</span>
+                    <div class="product-name">${art.nom_article}</div>
+                    <div class="product-price">${prixAffiche}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- 5. GESTION DES FENÊTRES MODALES (POP-UPS) ---
+        function fermerModal(id) {
+            document.getElementById(id).style.display = 'none';
+            articleEnCours = null;
+        }
+
+        // A. Modal Découpe (Tissus, Rubans sur mesure...)
+        function ouvrirModalDecoupe(art) {
+            articleEnCours = art;
+            document.getElementById('md-title').innerText = art.nom_article;
+            document.getElementById('md-qte').value = "1";
+            document.getElementById('md-prix').value = "";
+            document.getElementById('modal-decoupe').style.display = 'flex';
+        }
+
+        function validerDecoupe() {
+            let condi = document.getElementById('md-conditionnement').value;
+            let qte = parseFloat(document.getElementById('md-qte').value);
+            let prixTotal = parseFloat(document.getElementById('md-prix').value);
+
+            if (isNaN(qte) || qte <= 0 || isNaN(prixTotal) || prixTotal < 0) {
+                alert("⚠️ Saisissez une quantité et un prix valides.");
+                return;
+            }
+
+            // Pour la découpe, le prix unitaire est calculé pour que le total soit juste
+            let prixUnitaire = prixTotal / qte;
+            let precision = `Vendu par: ${condi} | Découpe: ${qte}`;
             
+            insererDansPanier(articleEnCours, qte, prixUnitaire, precision);
+            fermerModal('modal-decoupe');
+        }
+
+        // B. Modal Lots (Boutons : 3 à 25F, etc.)
+        function ouvrirModalLots(art) {
+            articleEnCours = art;
+            document.getElementById('ml-title').innerText = art.nom_article;
+            document.getElementById('ml-montant').value = "";
+            document.getElementById('ml-pieces').value = "";
+            document.getElementById('ml-alerte').innerText = "";
+            document.getElementById('modal-lots').style.display = 'flex';
+        }
+
+        function calculerLot(source) {
+            let regle = document.getElementById('ml-regle').value.split('-');
+            let qteBase = parseInt(regle[0]); // ex: 3
+            let prixBase = parseInt(regle[1]); // ex: 25
+            
+            let champMontant = document.getElementById('ml-montant');
+            let champPieces = document.getElementById('ml-pieces');
+            let alerte = document.getElementById('ml-alerte');
+            alerte.innerText = "";
+
+            if (source === 'montant' && champMontant.value !== "") {
+                let m = parseFloat(champMontant.value);
+                let p = (m / prixBase) * qteBase;
+                champPieces.value = p % 1 === 0 ? p : p.toFixed(1);
+                if (m % prixBase !== 0) alerte.innerText = `⚠️ ${m}F ne tombe pas juste avec la règle ${qteBase} à ${prixBase}F.`;
+            } 
+            else if (source === 'pieces' && champPieces.value !== "") {
+                let p = parseFloat(champPieces.value);
+                let m = (p / qteBase) * prixBase;
+                champMontant.value = m % 1 === 0 ? m : Math.ceil(m);
+                if (p % qteBase !== 0) alerte.innerText = `⚠️ La quantité doit idéalement être un multiple de ${qteBase}.`;
+            }
+        }
+
+        function validerLot() {
+            let regle = document.getElementById('ml-regle').options[document.getElementById('ml-regle').selectedIndex].text;
+            let pieces = parseFloat(document.getElementById('ml-pieces').value);
+            let montantTotal = parseFloat(document.getElementById('ml-montant').value);
+
+            if (isNaN(pieces) || pieces <= 0 || isNaN(montantTotal) || montantTotal <= 0) {
+                alert("⚠️ Les champs doivent être remplis correctement.");
+                return;
+            }
+
+            let prixUnitaire = montantTotal / pieces;
+            let precision = `Règle: ${regle}`;
+            
+            insererDansPanier(articleEnCours, pieces, prixUnitaire, precision);
+            fermerModal('modal-lots');
+        }
+
+        // --- 6. GESTION DU PANIER ---
+        function ajouterAuPanierDirect(art) {
+            insererDansPanier(art, 1, parseFloat(art.prix_detail), "Unité standard");
+        }
+
+        function insererDansPanier(art, quantite, prixUnitaire, infoSupp) {
+            // Création d'un identifiant unique (ref + prix) pour séparer les différents tarifs d'un même article
+            let cartId = art.ref + '_' + prixUnitaire.toFixed(2);
+            let existant = panier.find(item => item.cartId === cartId);
+
             if (existant) {
-                existant.qte += 1;
+                existant.qte += quantite;
             } else {
-                panier.push({ ...article, cartId: cartId, prix: prixFinal, qte: 1 });
+                panier.push({
+                    cartId: cartId,
+                    ref: art.ref,
+                    nom: art.nom_article,
+                    prixU: prixUnitaire,
+                    qte: quantite,
+                    details: infoSupp
+                });
             }
             mettreAJourPanier();
         }
 
-        function modifierQuantite(cartId, delta) {
-            const item = panier.find(i => i.cartId === cartId);
-            if (item) {
-                item.qte += delta;
-                if (item.qte <= 0) supprimerDuPanier(cartId);
-                else mettreAJourPanier();
-            }
-        }
-
-        function definirQuantiteExacte(cartId, valeur) {
-            const item = panier.find(i => i.cartId === cartId);
-            if (item) {
-                let val = parseFloat(valeur);
-                if (isNaN(val) || val <= 0) supprimerDuPanier(cartId);
-                else { item.qte = val; mettreAJourPanier(); }
-            }
-        }
-
         function supprimerDuPanier(cartId) {
-            panier = panier.filter(i => i.cartId !== cartId);
+            panier = panier.filter(item => item.cartId !== cartId);
             mettreAJourPanier();
         }
 
         function mettreAJourPanier() {
+            // SAUVEGARDE SECRÈTE (Le coffre-fort local)
+            localStorage.setItem('nina_panier_memoire', JSON.stringify(panier));
+
             const conteneur = document.getElementById('cart-items');
-            conteneur.innerHTML = '';
-            
             if (panier.length === 0) {
-                conteneur.innerHTML = '<div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 30px 10px; font-size: 13px;">🛒 Le panier est vide.<br>Touchez un article pour l\'ajouter.</div>';
+                conteneur.innerHTML = '<div id="cart-empty" style="text-align: center; color: #95a5a6; padding: 30px 10px; font-size: 13px;">Le panier est vide.<br>Touchez un article pour l\'ajouter.</div>';
                 document.getElementById('cart-total').innerText = "0 F";
                 document.getElementById('cart-count').innerText = "0 art.";
                 document.getElementById('btn-envoyer').disabled = true;
@@ -252,79 +421,72 @@
 
             document.getElementById('btn-envoyer').disabled = false;
             let totalGeneral = 0;
+            conteneur.innerHTML = '';
 
             panier.forEach(item => {
-                const sousTotal = item.prix * item.qte;
+                let sousTotal = item.prixU * item.qte;
                 totalGeneral += sousTotal;
 
                 conteneur.innerHTML += `
                     <div class="cart-item">
                         <div class="cart-item-header">
-                            <div class="cart-item-title">${item.nom} <span style="color:#7f8c8d; font-size:11px; font-weight:normal;">(${item.prix}F/u)</span></div>
-                            <div class="cart-item-subtotal">${sousTotal.toLocaleString('fr-FR')} F</div>
+                            <span class="cart-item-title">${item.nom}</span>
+                            <span class="cart-item-subtotal">${Math.round(sousTotal).toLocaleString('fr-FR')} F</span>
                         </div>
+                        <div class="cart-item-details">${item.details}</div>
                         <div class="qty-controls">
+                            <div style="font-size:12px; font-weight:bold; padding-left:5px;">Qté: ${item.qte}</div>
                             <button class="btn-delete" onclick="supprimerDuPanier('${item.cartId}')">🗑️</button>
-                            <div style="display: flex; align-items: center; gap: 4px;">
-                                <button class="qty-btn" onclick="modifierQuantite('${item.cartId}', -1)">-1</button>
-                                <button class="qty-btn half-btn" onclick="modifierQuantite('${item.cartId}', -0.5)">-½</button>
-                                <input type="number" step="0.5" class="qty-input" value="${item.qte}" onchange="definirQuantiteExacte('${item.cartId}', this.value)">
-                                <button class="qty-btn half-btn" onclick="modifierQuantite('${item.cartId}', 0.5)">+½</button>
-                                <button class="qty-btn" onclick="modifierQuantite('${item.cartId}', 1)">+1</button>
-                            </div>
                         </div>
                     </div>
                 `;
             });
 
-            document.getElementById('cart-total').innerText = `${totalGeneral.toLocaleString('fr-FR')} FCFA`;
-            document.getElementById('cart-count').innerText = `${panier.length} art.`;
+            document.getElementById('cart-total').innerText = Math.round(totalGeneral).toLocaleString('fr-FR') + ' F';
+            document.getElementById('cart-count').innerText = panier.length + ' art.';
         }
 
-        // --- NOUVELLE FONCTION : ENVOI SÉCURISÉ DANS SUPABASE ---
-    async function envoyerALaCaisse() {
-        if (panier.length === 0) return;
-        
-        const btn = document.getElementById('btn-envoyer');
-        btn.disabled = true;
-        btn.innerText = "⏳ Envoi en cours...";
+        // --- 7. ENVOI À LA CAISSE (L'Œil de Moscou actif) ---
+        async function envoyerALaCaisse() {
+            if (panier.length === 0) return;
 
-        let total = 0;
-        panier.forEach(i => total += (i.prix * i.qte));
-        
-        // Générer un numéro de ticket simple à retenir (ex: 4582)
-        const numTicket = Math.floor(1000 + Math.random() * 9000).toString();
+            const btn = document.getElementById('btn-envoyer');
+            btn.disabled = true;
+            btn.innerText = "⏳ Transmission en cours...";
 
-        try {
-            // On pousse la commande dans la table 'commandes'
-            const { error } = await clientSupabase
-                .from('commandes')
-                .insert([
-                    { 
-                        num_panier: numTicket, 
-                        total: total, 
-                        details: panier,
-                        statut: 'en_attente'
-                    }
-                ]);
-
-            if (error) throw error;
-
-            // Affichage du numéro pour le client / l'apprenti
-            alert(`✅ COMMANDE TRANSMISE À LA CAISSE !\n\n🛍️ Total : ${total.toLocaleString('fr-FR')} F\n🎫 Donnez le ticket N° ${numTicket} au client pour payer.`);
+            let total = panier.reduce((sum, item) => sum + (item.prixU * item.qte), 0);
             
-            // On vide le panier pour le client suivant
-            panier = [];
-            mettreAJourPanier();
-            btn.innerText = "📥 ENVOYER À LA CAISSE";
+            // Nouveau format de ticket (Date + Heure + Numéro) pour éviter les doublons
+            let dateObj = new Date();
+            let numTicket = "T-" + dateObj.getHours().toString().padStart(2,'0') + dateObj.getMinutes().toString().padStart(2,'0') + "-" + Math.floor(100 + Math.random() * 900);
 
-        } catch (err) {
-            alert("❌ Erreur de connexion, la commande n'est pas passée. Réessayez.");
-            btn.disabled = false;
-            btn.innerText = "📥 RÉESSAYER L'ENVOI";
+            try {
+                const { error } = await clientSupabase.from('commandes').insert([{
+                    num_panier: numTicket,
+                    total: Math.round(total),
+                    details: JSON.stringify(panier),
+                    statut: 'en_attente',
+                    vendeur_nom: nomVendeur // <-- LA SIGNATURE DU VENDEUR !
+                }]);
+
+                if (error) throw error;
+
+                alert(`✅ TICKET VALIDÉ !\n\nNuméro à donner au client : ${numTicket}\nTotal : ${Math.round(total).toLocaleString('fr-FR')} F`);
+                
+                // On vide la mémoire et le panier
+                panier = [];
+                localStorage.removeItem('nina_panier_memoire');
+                mettreAJourPanier();
+                
+                btn.innerText = "✅ VALIDER LA VENTE";
+            } catch (err) {
+                alert("❌ Erreur réseau. Le ticket n'est pas parti à la caisse.");
+                btn.disabled = false;
+                btn.innerText = "🔄 RÉESSAYER";
+            }
         }
-    }
-        
+
+        // DÉMARRAGE
         chargerBaseDeDonnees();
     </script>
 </body>
