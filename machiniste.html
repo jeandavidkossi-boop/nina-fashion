@@ -505,7 +505,7 @@
                 mettreAJourUI();
 
             } catch (err) {
-                alert("❌ Erreur réseau. Le ticket n'a pas été enregistré.");
+                alert("🚨 ERREUR SUPABASE : " + JSON.stringify(err));
                 document.getElementById('btn-save').disabled = false;
                 document.getElementById('btn-send').disabled = false;
             }
