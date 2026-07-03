@@ -291,7 +291,7 @@
             
             <input type="password" id="input-code" class="code-input" placeholder="••••" maxlength="6" inputmode="numeric">
             
-            <button class="btn-submit" id="btn-valider-code" onclick="verifierCodeAccès()">S'authentifier</button>
+            <button class="btn-submit" id="btn-valider-code" onclick="verifierCodeAcces()">S'authentifier</button>
             <button class="btn-cancel" onclick="fermerSecurite()">Annuler</button>
         </div>
     </div>
@@ -390,7 +390,7 @@ const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
         // Permettre de valider en appuyant sur la touche "Entrée" du téléphone
         document.getElementById('input-code').addEventListener('keypress', function (e) {
             if (e.key === 'Entrée' || e.keyCode === 13) {
-                verifierCodeAccès();
+                verifierCodeAcces();
             }
         });
     </script>
