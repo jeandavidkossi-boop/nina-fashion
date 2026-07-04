@@ -190,15 +190,21 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. LE BADGE MACHINISTE (Identification silencieuse) ---
-        let nomMachiniste = sessionStorage.getItem('nina_machiniste');
-        if (!nomMachiniste) {
-            nomMachiniste = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom de machiniste ?");
-            if (!nomMachiniste || nomMachiniste.trim() === "") nomMachiniste = "Machiniste Anonyme";
-            sessionStorage.setItem('nina_machiniste', nomMachiniste);
-        }
-        document.getElementById('badge-machiniste').innerText = "👨‍🔧 " + nomMachiniste;
+        // --- 2. SÉCURITÉ : VÉRIFICATION DU BADGE D'ENTRÉE ---
+const sessionActive = localStorage.getItem('sessionActive');
+const roleActuel = localStorage.getItem('roleUtilisateur');
 
+// Si la personne n'a pas de badge, ou n'est ni Machiniste ni Admin -> Dehors !
+if (sessionActive !== 'true' || (roleActuel !== 'Machiniste' && roleActuel !== 'Administrateur')) {
+    window.location.replace('index.html'); // Retour forcé à l'accueil
+}
+
+// On affiche le rôle validé en haut de l'écran :
+document.getElementById('badge-machiniste').innerText = "🧵 " + roleActuel;
+
+// CRUCIAL : On crée la variable pour éviter l'erreur réseau lors de la validation
+let nomMachiniste = roleActuel;
+            
         // --- 3. LE PANIER INCREVABLE (Mémoire locale de l'atelier) ---
         let SERVICES = [];
         let categorieActive = '';
