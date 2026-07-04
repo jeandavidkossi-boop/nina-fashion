@@ -170,14 +170,21 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. LE BADGE MAGASINIER (Identification silencieuse) ---
-        let nomMagasinier = sessionStorage.getItem('nina_magasinier');
-        if (!nomMagasinier) {
-            nomMagasinier = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom de magasinier ?");
-            if (!nomMagasinier || nomMagasinier.trim() === "") nomMagasinier = "Magasinier Anonyme";
-            sessionStorage.setItem('nina_magasinier', nomMagasinier);
-        }
-        document.getElementById('badge-magasinier').innerText = "📦 " + nomMagasinier;
+            // --- 2. SÉCURITÉ : VÉRIFICATION DU BADGE D'ENTRÉE ---
+const sessionActive = localStorage.getItem('sessionActive');
+const roleActuel = localStorage.getItem('roleUtilisateur');
+
+// Si la personne n'a pas de badge, ou n'est ni Magasinier ni Admin -> Dehors !
+if (sessionActive !== 'true' || (roleActuel !== 'Magasinier' && roleActuel !== 'Administrateur')) {
+    window.location.replace('index.html'); // Retour forcé à l'accueil
+}
+
+// On affiche le rôle validé en haut de l'écran :
+document.getElementById('badge-magasinier').innerText = "📦 " + roleActuel;
+
+// CRUCIAL : On crée la variable pour signer les mouvements de stock et éviter l'erreur réseau
+let nomMagasinier = roleActuel;
+            
 
         // --- 3. LE BORDEREAU INCREVABLE (Mémoire locale) ---
         let STOCK_CENTRAL = [];
