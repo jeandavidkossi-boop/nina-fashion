@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comptoir Vendeur - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -76,11 +76,28 @@
         .btn-confirm { flex: 1; padding: 12px; border: none; background: var(--gold); color: white; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
         @media (max-width: 768px) {
-            .main-layout { flex-direction: column; }
-            .catalog-panel { flex: 1; min-height: 0; }
-            .cart-panel { width: 100%; height: 40vh; min-height: 250px; border-top: 3px solid var(--primary); }
-            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
-        }
+    .main-layout { 
+        flex-direction: column; 
+        overflow-y: auto; /* Permet à toute la page de défiler */
+    }
+    .catalog-panel { 
+        flex: none; 
+        height: 55vh; /* Le catalogue prend 55% de l'écran */
+    }
+    .cart-panel { 
+        width: 100%; 
+        flex: none;
+        height: auto; 
+        border-top: 3px solid var(--primary); 
+    }
+    .products-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 8px; 
+        padding: 8px; 
+        overflow-y: auto; /* Permet aux articles de défiler */
+    }
+                      }
+        
     </style>
 </head>
 <body>
@@ -196,17 +213,19 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. LE BADGE VENDEUR (Identification silencieuse) ---
-        let nomVendeur = sessionStorage.getItem('nina_vendeur');
-        if (!nomVendeur) {
-            nomVendeur = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom (ou pseudo) de vendeur ?");
-            if (!nomVendeur || nomVendeur.trim() === "") {
-                nomVendeur = "Vendeur Anonyme";
-            }
-            sessionStorage.setItem('nina_vendeur', nomVendeur);
-        }
-        document.getElementById('badge-vendeur').innerText = "👤 " + nomVendeur;
+        // --- 2. SÉCURITÉ : VÉRIFICATION DU BADGE D'ENTRÉE ---
+const sessionActive = localStorage.getItem('sessionActive');
+const roleActuel = localStorage.getItem('roleUtilisateur');
 
+// Si la personne n'a pas de badge, ou n'est ni Vendeur ni Admin -> Dehors !
+if (sessionActive !== 'true' || (roleActuel !== 'Vendeur' && roleActuel !== 'Administrateur')) {
+    window.location.replace('index.html'); // Retour forcé à l'accueil
+}
+
+// On récupère le nom de l'employé depuis la base de données (si on veut l'afficher plus tard)
+// Pour l'instant, on affiche le rôle validé :
+document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
+            
         // --- 3. LE PANIER INCREVABLE (Mémoire locale) ---
         let CATALOGUE = [];
         let categorieActive = 'Tous';
