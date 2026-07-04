@@ -210,6 +210,7 @@ if (sessionActive !== 'true' || (roleActuel !== 'Vendeur' && roleActuel !== 'Adm
 // On récupère le nom de l'employé depuis la base de données (si on veut l'afficher plus tard)
 // Pour l'instant, on affiche le rôle validé :
 document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
+ let nomVendeur = roleActuel;
             
         // --- 3. LE PANIER INCREVABLE (Mémoire locale) ---
         let CATALOGUE = [];
