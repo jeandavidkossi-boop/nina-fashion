@@ -290,8 +290,11 @@
             <div class="modal-desc">Veuillez entrer votre code d'accès secret pour continuer.</div>
             
             <input type="password" id="input-code" class="code-input" placeholder="••••" maxlength="6" inputmode="numeric">
+
+<div id="message-erreur" style="color: red; font-size: 14px; margin-bottom: 15px; font-weight: bold; min-height: 20px;"></div>
+
+<button class="btn-submit" id="btn-valider-code" onclick="verifierCodeAcces()">S'authentifier</button>
             
-            <button class="btn-submit" id="btn-valider-code" onclick="verifierCodeAcces()">S'authentifier</button>
             <button class="btn-cancel" onclick="fermerSecurite()">Annuler</button>
         </div>
     </div>
@@ -336,57 +339,63 @@ const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
         function fermerSecurite() {
             document.getElementById('login-modal').style.display = 'none';
         }
-
-                // Procédure de vérification et Pointage des employés
-        async function verifierCodeAcces() {
-            const codeSaisi = document.getElementById('input-code').value.trim();
-            
-            if (!codeSaisi) {
-                alert("⚠️ Veuillez entrer un code secret.");
-                return;
-            }
-
-            // On affiche un petit message d'attente sur le bouton
-            const btnSubmit = document.getElementById('btn-valider-code');
-            btnSubmit.innerText = "Vérification...";
-            btnSubmit.disabled = true;
-
-            try {
-                // 1. VÉRIFICATION SÉCURISÉE DIRECTEMENT DANS LE COFFRE SUPABASE
-                let { data: employe, error } = await clientSupabase
-                    .from('personnel_nina')
-                    .select('*')
-                    .eq('role', roleSelectionne)
-                    .eq('code_pin', codeSaisi)
-                    .eq('actif', true) // <-- Vérifie si tu n'as pas bloqué cet employé
-                    .maybeSingle();
-
-                if (error) throw error;
-
-                if (employe) {
-                    // 2. LE POINTAGE (Enregistrement de l'heure exacte d'arrivée)
-                    await clientSupabase.from('logs_connexion').insert([{
-                        nom_employe: employe.nom_employe,
-                        role: employe.role
-                    }]);
-
-                    // 3. SUCCÈS : Ouverture de la porte vers le fichier de travail
-                    window.location.href = fichierCible;
-                } else {
-                    // ÉCHEC : Mauvais code ou employé bloqué
-                    alert("❌ Code d'accès incorrect ou compte désactivé par l'Administrateur.");
-                    document.getElementById('input-code').value = '';
-                    btnSubmit.innerText = "S'authentifier";
-                    btnSubmit.disabled = false;
-                    document.getElementById('input-code').focus();
-                }
-            } catch (err) {
-                alert("❌ Erreur de réseau. Impossible de contacter la base de données.");
+    // Procédure de vérification et Pointage des employés
+    async function verifierCodeAcces() {
+        const codeSaisi = document.getElementById('input-code').value.trim();
+        
+        // On vide l'ancien message d'erreur
+        document.getElementById('message-erreur').innerText = "";
+    
+        if (!codeSaisi) {
+            document.getElementById('message-erreur').innerText = "⚠️ Veuillez entrer un code secret.";
+            return;
+        }
+    
+        const btnSubmit = document.getElementById('btn-valider-code');
+        btnSubmit.innerText = "Vérification...";
+        btnSubmit.disabled = true;
+    
+        try {
+            // 1. VÉRIFICATION DANS LA TABLE personnel_nina
+            let { data: employe, error } = await clientSupabase
+                .from('personnel_nina')
+                .select('*')
+                .eq('role', roleSelectionne)
+                .eq('code_pin', codeSaisi)
+                .eq('actif', true)
+                .maybeSingle();
+    
+            if (error) throw error;
+    
+            if (employe) {
+                // 2. POINTAGE DANS LA TABLE logs_connexion (avec la colonne 'action')
+                await clientSupabase.from('logs_connexion').insert([{
+                    nom_employe: employe.nom_employe,
+                    role: employe.role,
+                    action: 'Connexion'
+                }]);
+    
+                // 3. CRÉATION DU BADGE DE SÉCURITÉ
+                localStorage.setItem('sessionActive', 'true');
+                localStorage.setItem('roleUtilisateur', roleSelectionne);
+    
+                // 4. OUVERTURE DE LA PAGE
+                window.location.href = fichierCible;
+            } else {
+                document.getElementById('message-erreur').innerText = "❌ Code incorrect ou compte désactivé.";
+                document.getElementById('input-code').value = '';
                 btnSubmit.innerText = "S'authentifier";
                 btnSubmit.disabled = false;
+                document.getElementById('input-code').focus();
             }
+    
+        } catch (err) {
+            document.getElementById('message-erreur').innerText = "❌ Erreur réseau. Impossible de contacter la base.";
+            btnSubmit.innerText = "S'authentifier";
+            btnSubmit.disabled = false;
         }
-
+                }
+        
         // Permettre de valider en appuyant sur la touche "Entrée" du téléphone
         document.getElementById('input-code').addEventListener('keypress', function (e) {
             if (e.key === 'Entrée' || e.keyCode === 13) {
