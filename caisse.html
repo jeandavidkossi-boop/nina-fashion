@@ -172,14 +172,20 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. LE BADGE CAISSIÈRE (Identification silencieuse) ---
-        let nomCaissiere = sessionStorage.getItem('nina_caissiere');
-        if (!nomCaissiere) {
-            nomCaissiere = prompt("🔒 IDENTIFICATION REQUISE\nQuel est votre nom de caissière ?");
-            if (!nomCaissiere || nomCaissiere.trim() === "") nomCaissiere = "Caissière Anonyme";
-            sessionStorage.setItem('nina_caissiere', nomCaissiere);
-        }
-        document.getElementById('badge-caissiere').innerText = "👩‍💼 " + nomCaissiere;
+        // --- 2. SÉCURITÉ : VÉRIFICATION DU BADGE D'ENTRÉE ---
+const sessionActive = localStorage.getItem('sessionActive');
+const roleActuel = localStorage.getItem('roleUtilisateur');
+
+// Si la personne n'a pas de badge, ou n'est ni Caissière ni Admin -> Dehors !
+if (sessionActive !== 'true' || (roleActuel !== 'Caissière' && roleActuel !== 'Administrateur')) {
+    window.location.replace('index.html'); // Éjection immédiate
+}
+
+// On affiche le rôle validé sur le badge en haut de l'écran
+document.getElementById('badge-caissiere').innerText = "👩‍💻 " + roleActuel;
+
+// On garde le rôle pour l'enregistrer dans les commandes validées
+let nomCaissiere = roleActuel; 
 
         let ticketsEnAttente = [];
         let ticketSelectionne = null;
@@ -421,14 +427,14 @@
                     await clientSupabase.from('reliquats').update({ statut: 'utilise' }).eq('id', reliquatValideId);
                 }
 
-                // 3. ENREGISTRER LE NOUVEAU RELIQUAT (S'IL Y EN A UN)
-                if (reliquatACreer > 0) {
-                    await clientSupabase.from('reliquats').insert([{ 
-                        num_recu: numRecuNouveau, 
-                        non_client: nomClient, 
-                        montant: reliquatACreer,
-                        statut: 'actif'
-                    }]);
+                        // 3. ENREGISTRER LE NOUVEAU RELIQUAT (S'IL Y EN A UN)
+        if (reliquatACreer > 0) {
+            await clientSupabase.from('reliquats').insert([{
+                num_recu: numRecuNouveau,
+                nom_client: nomClient, // <-- LA CORRECTION EST ICI (nom_client avec un M)
+                montant: reliquatACreer,
+                statut: 'actif'
+            }]);
                     alert(`✅ ENCAISSEMENT RÉUSSI !\n\n1️⃣ Rendez ${renduReel} F en espèces au client.\n2️⃣ Écrivez le reçu papier pour sa dette :\n➡️ Code: ${numRecuNouveau} | Valeur: ${reliquatACreer} F`);
                 } else {
                     alert(`✅ ENCAISSEMENT RÉUSSI !\n\nRendez la monnaie : ${renduReel} F`);
