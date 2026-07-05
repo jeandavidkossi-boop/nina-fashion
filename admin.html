@@ -95,11 +95,14 @@
         <!-- ONGLET 1 : CAISSE CENTRALE & TRÉSORERIE -->
         <div id="tab-caisse" class="tab-content active">
             
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="color:var(--primary);">Bilan du Jour</h2>
-                <button class="btn btn-primary" onclick="cloturerJournee()">📊 Clôturer la Caisse (Archiver)</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
+    <h2 style="color:var(--primary);">📊 Bilan du Jour</h2>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-gold" onclick="afficherArchives()">📁 Voir Historique</button>
+        <button class="btn btn-primary" onclick="cloturerJournee()">🗄️ Clôturer la Caisse</button>
+    </div>
             </div>
-
+            
             <!-- Ajout du Calcul de la Marge dans les Stats -->
             <div class="stats-grid">
                 <div class="stat-card success">
@@ -196,6 +199,27 @@
             </div>
         </div>
 
+        <!-- Historique des Clôtures (Caché par défaut) -->
+<div id="section-archives" class="data-section" style="display: none; margin-top: 20px; border: 2px dashed var(--gold);">
+    <h2>📁 Archives des Caisses Clôturées</h2>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Espèces (Prévu)</th>
+                    <th>Mobile Money (Prévu)</th>
+                    <th>Dépenses</th>
+                    <th>Bénéfice Net</th>
+                </tr>
+            </thead>
+            <tbody id="table-archives">
+                <tr><td colspan="5" style="text-align:center;">Chargement des archives...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+        
         <!-- ONGLET 2 : RADAR ATELIER -->
         <div id="tab-atelier" class="tab-content">
             <div class="stats-grid">
@@ -382,8 +406,12 @@
                 const tbodyVentes = document.getElementById('table-ventes-directes');
                 tbodyVentes.innerHTML = '';
 
-                // Données pour le graphique (Ventes par heure)
-                let ventesParHeure = { "08h":0, "09h":0, "10h":0, "11h":0, "12h":0, "13h":0, "14h":0, "15h":0, "16h":0, "17h":0, "18h":0 };
+                // Données pour le graphique (Ventes générées automatiquement sur 24 heures)
+let ventesParHeure = {};
+for (let i = 0; i < 24; i++) {
+    let heureChaine = i.toString().padStart(2, '0') + "h";
+    ventesParHeure[heureChaine] = 0;
+}
 
                 if (ventes && ventes.length > 0) {
                     ventes.forEach(v => {
@@ -739,7 +767,53 @@
                 chargerEquipe();
             } catch(err) { alert("❌ Erreur."); }
         }
+          
+async function afficherArchives() {
+    const section = document.getElementById('section-archives');
+    const tbody = document.getElementById('table-archives');
+    
+    // Si la section est cachée, on l'affiche et on charge les données
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">⏳ Chargement en cours...</td></tr>';
+        
+        try {
+            const { data, error } = await clientSupabase
+                .from('clotures_caisse')
+                .select('*')
+                .order('date_cloture', { ascending: false }); // Du plus récent au plus ancien
 
+            if (error) throw error;
+
+            tbody.innerHTML = ""; // On vide le chargement
+            
+            if (data && data.length > 0) {
+                data.forEach(c => {
+                    // Nettoyage de la date (ex: 2026-07-04 devient 04/07/2026)
+                    let dateFormatee = new Date(c.date_cloture).toLocaleDateString('fr-FR');
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${dateFormatee}</strong></td>
+                            <td>${parseFloat(c.total_especes_attendu).toLocaleString('fr-FR')} F</td>
+                            <td>${parseFloat(c.total_momo_attendu).toLocaleString('fr-FR')} F</td>
+                            <td style="color:var(--danger)">${parseFloat(c.total_depenses).toLocaleString('fr-FR')} F</td>
+                            <td style="color:var(--success); font-weight:bold;">${parseFloat(c.benefice_net_estime).toLocaleString('fr-FR')} F</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Aucune archive trouvée pour le moment.</td></tr>';
+            }
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger);">❌ Erreur lors du chargement des archives.</td></tr>';
+        }
+    } else {
+        // Si elle est déjà affichée, on la cache pour faire de la place
+        section.style.display = 'none';
+    }
+                        }
+          
         async function toggleEmploye(id, statut) {
             try { await clientSupabase.from('personnel_nina').update({ actif: statut }).eq('id', id); chargerEquipe(); } catch(err) {}
         }
