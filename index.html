@@ -375,10 +375,16 @@ const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                     action: 'Connexion'
                 }]);
     
-                // 3. CRÉATION DU BADGE DE SÉCURITÉ
-                localStorage.setItem('sessionActive', 'true');
-                localStorage.setItem('roleUtilisateur', roleSelectionne);
-    
+                // 3. CRÉATION DU BADGE DE SÉCURITÉ COMPLET
+localStorage.setItem('sessionActive', 'true');
+localStorage.setItem('roleUtilisateur', employe.role); // On utilise le rôle officiel de la BDD
+localStorage.setItem('nomEmploye', employe.nom_employe); // INDISPENSABLE pour les tickets
+localStorage.setItem('idEmploye', employe.id); // Utile pour des statistiques précises
+
+// Petit bonus de sécurité : on affiche un message de bienvenue
+document.getElementById('message-erreur').style.color = "green";
+document.getElementById('message-erreur').innerText = "Bienvenue " + employe.nom_employe + " ! Connexion...";
+                
                 // 4. OUVERTURE DE LA PAGE
                 window.location.href = fichierCible;
             } else {
