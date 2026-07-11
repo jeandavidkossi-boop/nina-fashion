@@ -122,6 +122,11 @@
                     <label>Client / Apprenti :</label>
                     <input type="text" id="input-client" class="custom-input" placeholder="Ex: Apprenti Koffi" oninput="sauvegarderTicketLocal()">
                 </div>
+                        <div class="input-group">
+            <label>Téléphone :</label>
+            <input type="tel" id="input-tel" class="custom-input" placeholder="Ex: 0102030405" oninput="mettreAjourUI()">
+                        </div>
+                
                 <div class="input-group">
                     <label style="color:var(--success);">Avance (Cash perçu) :</label>
                     <input type="number" id="input-avance" class="custom-input" placeholder="0 F" style="border-color:var(--success); color:var(--success);" oninput="calculerTicket()">
@@ -340,12 +345,13 @@ let nomMachiniste = roleActuel;
             mettreAJourUI();
         }
 
-        function sauvegarderTicketLocal() {
-            localStorage.setItem('nina_atelier_ticket', JSON.stringify(ticket));
-            localStorage.setItem('nina_atelier_client', document.getElementById('input-client').value);
-            localStorage.setItem('nina_atelier_avance', document.getElementById('input-avance').value);
-        }
-
+            function sauvegarderTicketLocal() {
+        localStorage.setItem('nina_atelier_ticket', JSON.stringify(ticket));
+        localStorage.setItem('nina_atelier_client', document.getElementById('input-client').value);
+        localStorage.setItem('nina_atelier_tel', document.getElementById('input-tel') ? document.getElementById('input-tel').value : "");
+        localStorage.setItem('nina_atelier_avance', document.getElementById('input-avance').value);
+            }
+            
         function mettreAJourUI() {
             sauvegarderTicketLocal();
 
@@ -399,124 +405,162 @@ let nomMachiniste = roleActuel;
             return { totalBrut, avance, reste };
         }
 
-        // --- 7. GESTION DU CARNET D'ATELIER (Tickets en pause) ---
-        async function ouvrirCarnet() {
-            document.getElementById('modal-carnet').style.display = 'flex';
-            document.getElementById('liste-carnet').innerHTML = '<div style="text-align:center; padding:20px;">⏳ Recherche...</div>';
-            
-            try {
-                const { data, error } = await clientSupabase.from('commandes')
-                    .select('*')
-                    .eq('statut', 'en_atelier')
-                    .order('created_at', { ascending: false });
+            // --- 7. GESTION DU CARNET D'ATELIER (Tickets en pause) ---
+    async function ouvrirCarnet() {
+        document.getElementById('modal-carnet').style.display = 'flex';
+        document.getElementById('liste-carnet').innerHTML = "<div style='text-align:center; padding:20px;'>⏳ Recherche...</div>";
 
-                if (error) throw error;
+        try {
+            const { data, error } = await clientSupabase.from('commandes').select('*').eq('statut', 'en_atelier').order('created_at', { ascending: false });
+            if (error) throw error;
 
-                if (data.length === 0) {
-                    document.getElementById('liste-carnet').innerHTML = '<div style="text-align:center; padding:20px; color:#7f8c8d;">Aucun ticket en pause.</div>';
-                    return;
-                }
-
-                let html = "";
-                data.forEach(cmd => {
-                    const cmdData = encodeURIComponent(JSON.stringify(cmd));
-                    html += `
-                        <div class="saved-ticket">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                <strong style="color:var(--primary);">${cmd.non_client || 'Client Anonyme'}</strong>
-                                <span style="font-size:0.8rem; color:#7f8c8d;">${cmd.num_panier}</span>
-                            </div>
-                            <div style="font-size:0.85rem; margin-bottom:10px;">
-                                Total: <strong>${cmd.total} F</strong> | Reste: <strong style="color:var(--danger);">${cmd.reste_a_payer} F</strong>
-                            </div>
-                            <button class="btn-reprendre" onclick="reprendreTicket('${cmdData}')">REPRENDRE CE TICKET</button>
-                        </div>
-                    `;
-                });
-                document.getElementById('liste-carnet').innerHTML = html;
-            } catch(err) {
-                document.getElementById('liste-carnet').innerHTML = '<div style="text-align:center; color:red;">Erreur.</div>';
-            }
-        }
-
-        function reprendreTicket(cmdDataString) {
-            const cmd = JSON.parse(decodeURIComponent(cmdDataString));
-            
-            ticketOuvertId = cmd.id; // Crucial pour faire un UPDATE plus tard
-            ticket = typeof cmd.details === 'string' ? JSON.parse(cmd.details) : cmd.details;
-            
-            document.getElementById('input-client').value = cmd.non_client || '';
-            document.getElementById('input-avance').value = cmd.avance || 0;
-            
-            fermerModal('modal-carnet');
-            mettreAJourUI();
-        }
-
-        // --- 8. ENVOI À SUPABASE (L'Œil de Moscou actif) ---
-        async function validerTicket(statutChoisi) {
-            if (ticket.length === 0) return;
-
-            const nomClient = document.getElementById('input-client').value.trim();
-            if (nomClient === "") {
-                alert("⚠️ Veuillez saisir le nom du client ou de l'apprenti.");
-                document.getElementById('input-client').focus();
+            if (data.length === 0) {
+                document.getElementById('liste-carnet').innerHTML = "<div style='text-align:center; padding:20px;'>Aucun ticket en pause.</div>";
                 return;
             }
 
-            const { totalBrut, avance, reste } = calculerTicket();
+            let html = "";
+            data.forEach(cmd => {
+                // On utilise les nouveaux noms de colonnes : client_nom et client_numero
+                let nomAffiche = cmd.client_nom || 'Client Anonyme';
+                let telAffiche = cmd.client_numero ? ` (${cmd.client_numero})` : '';
+                
+                let dataString = encodeURIComponent(JSON.stringify(cmd));
 
-            document.getElementById('btn-save').disabled = true;
-            document.getElementById('btn-send').disabled = true;
+                html += `
+                    <div class="saved-ticket" style="display:flex; justify-content:space-between; margin-bottom:8px; border:1px solid #ddd; padding:10px;">
+                        <div>
+                            <strong style="color:var(--primary);">${nomAffiche}${telAffiche}</strong><br>
+                            <span style="font-size:0.85rem; color:#7f8c8d;">${cmd.num_panier}</span><br>
+                            <span style="font-size:0.85rem;">Total: <strong>${cmd.total} F</strong> | Avance: <strong style="color:var(--danger);">${cmd.avance || 0} F</strong></span>
+                        </div>
+                        <button class="btn-reprendre" onclick="reprendreTicket('${dataString}')" style="background:var(--warning); color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">REPRENDRE</button>
+                    </div>
+                `;
+            });
+            document.getElementById('liste-carnet').innerHTML = html;
 
-            try {
-                let payload = {
-                    total: totalBrut,
-                    details: JSON.stringify(ticket),
-                    statut: statutChoisi,
-                    avance: avance,
-                    reste_a_payer: reste,
-                    origine: 'atelier',
-                    nom_client: nomClient,
-                    statut_atelier: statutChoisi === 'en_atelier' ? 'en_cours' : 'termine',
-                    machiniste_nom: nomMachiniste // <-- LA SIGNATURE DU MACHINISTE
-                };
-
-                let messageSucces = "";
-
-                // SI C'EST UN VIEUX TICKET QU'ON MET À JOUR (UPDATE)
-                if (ticketOuvertId) {
-                    const { error } = await clientSupabase.from('commandes').update(payload).eq('id', ticketOuvertId);
-                    if (error) throw error;
-                    messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET ENVOYÉ À LA CAISSE !" : "💾 TICKET SAUVEGARDÉ EN ATELIER.";
-                } 
-                // SI C'EST UN NOUVEAU TICKET (INSERT)
-                else {
-                    const numTicket = "M-" + Math.floor(1000 + Math.random() * 9000).toString();
-                    payload.num_panier = numTicket;
-                    const { error } = await clientSupabase.from('commandes').insert([payload]);
-                    if (error) throw error;
-                    messageSucces = statutChoisi === 'en_attente' ? `✅ NOUVEAU TICKET ENVOYÉ À LA CAISSE !\nNuméro : ${numTicket}` : "💾 TICKET SAUVEGARDÉ EN ATELIER.";
-                }
-
-                alert(messageSucces);
-
-                // Réinitialisation complète
-                ticket = [];
-                ticketOuvertId = null;
-                document.getElementById('input-client').value = "";
-                document.getElementById('input-avance').value = "";
-                localStorage.removeItem('nina_atelier_ticket');
-                localStorage.removeItem('nina_atelier_client');
-                localStorage.removeItem('nina_atelier_avance');
-                mettreAJourUI();
-
-            } catch (err) {
-                alert("🚨 ERREUR SUPABASE : " + JSON.stringify(err));
-                document.getElementById('btn-save').disabled = false;
-                document.getElementById('btn-send').disabled = false;
-            }
+        } catch (err) {
+            document.getElementById('liste-carnet').innerHTML = "<div style='text-align:center; color:red;'>Erreur réseau.</div>";
         }
+    }
 
+    async function reprendreTicket(cmdDataString) {
+        const cmd = JSON.parse(decodeURIComponent(cmdDataString));
+        ticketOuvertId = cmd.id; // Crucial pour faire l'UPDATE plus tard
+        
+        try {
+            // On récupère les lignes détaillées de la commande
+            const { data: lignes } = await clientSupabase.from('lignes_commandes').select('*').eq('commande_id', cmd.id);
+            
+            if (lignes && lignes.length > 0) {
+                ticket = lignes.map(l => ({
+                    ref: l.article_ref,
+                    nom: l.nom_article,
+                    prix: l.prix_unitaire_vente,
+                    qte: l.quantite,
+                    type: l.quantite % 1 === 0 ? 'piece' : 'metre'
+                }));
+            } else {
+                // Sécurité pour charger les très vieux tickets (JSON) s'ils existent encore
+                ticket = typeof cmd.details === 'string' ? JSON.parse(cmd.details) : (cmd.details || []);
+            }
+
+            document.getElementById('input-client').value = cmd.client_nom || "";
+            if (document.getElementById('input-tel')) document.getElementById('input-tel').value = cmd.client_numero || "";
+            document.getElementById('input-avance').value = cmd.avance || 0;
+
+            fermerModal('modal-carnet');
+            mettreAjourUI();
+        } catch(err) {
+            alert("Erreur lors de la récupération des articles.");
+        }
+    }
+
+    // --- 8. ENVOI À SUPABASE (L'Œil de Moscou actif) ---
+    async function validerTicket(statutChoisi) {
+        if (ticket.length === 0) return;
+
+        // Le client n'est plus obligatoire, on ne bloque plus !
+        let nomClient = document.getElementById('input-client').value.trim();
+        let telClient = document.getElementById('input-tel') ? document.getElementById('input-tel').value.trim() : "";
+
+        const { totalBrut, avance, reste } = calculerTicket();
+
+        document.getElementById('btn-save').disabled = true;
+        document.getElementById('btn-send').disabled = true;
+
+        try {
+            let payload = {
+                total: Math.round(totalBrut),
+                details: JSON.stringify(ticket), // Conservé temporairement par sécurité
+                statut: statutChoisi === 'en_atelier' ? 'en_atelier' : 'en_attente',
+                avance: avance,
+                reste_a_payer: reste,
+                origine: 'atelier',
+                client_nom: nomClient,
+                client_numero: telClient,
+                vendeur_nom: nomMachiniste // Signature du machiniste
+            };
+
+            let commandeIdToUse = ticketOuvertId;
+            let messageSucces = "";
+
+            if (ticketOuvertId) {
+                // 1. MISE À JOUR (ANTI-DOUBLON)
+                const { error } = await clientSupabase.from('commandes').update(payload).eq('id', ticketOuvertId);
+                if (error) throw error;
+                
+                // On efface les anciennes lignes pour mettre les nouvelles
+                await clientSupabase.from('lignes_commandes').delete().eq('commande_id', ticketOuvertId);
+                messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET TERMINÉ ET ENVOYÉ À LA CAISSE !" : "✅ TICKET SAUVEGARDÉ EN ATELIER !";
+            } else {
+                // 2. NOUVEAU TICKET
+                let dateObj = new Date();
+                let numTicket = "M-" + dateObj.getHours().toString().padStart(2, '0') + dateObj.getMinutes().toString().padStart(2, '0') + dateObj.getSeconds().toString().padStart(2, '0');
+                payload.num_panier = numTicket;
+
+                const { data, error } = await clientSupabase.from('commandes').insert([payload]).select();
+                if (error) throw error;
+                commandeIdToUse = data[0].id;
+                messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET ENVOYÉ À LA CAISSE ! \nNuméro : " + numTicket : "✅ NOUVEAU TICKET SAUVEGARDÉ !";
+            }
+
+            // 3. INSERTION DES LIGNES DÉTAILLÉES
+            const lignesAInserer = ticket.map(item => ({
+                commande_id: commandeIdToUse,
+                article_ref: item.ref || 'SRV',
+                nom_article: item.nom,
+                quantite: item.qte,
+                prix_unitaire_vente: item.prix
+            }));
+            await clientSupabase.from('lignes_commandes').insert(lignesAInserer);
+
+            alert(messageSucces);
+
+            // 4. RÉINITIALISATION
+            ticket = [];
+            ticketOuvertId = null;
+            document.getElementById('input-client').value = "";
+            if (document.getElementById('input-tel')) document.getElementById('input-tel').value = "";
+            document.getElementById('input-avance').value = "";
+            
+            localStorage.removeItem('nina_atelier_ticket');
+            localStorage.removeItem('nina_atelier_client');
+            localStorage.removeItem('nina_atelier_tel');
+            localStorage.removeItem('nina_atelier_avance');
+            
+            mettreAjourUI();
+
+        } catch (err) {
+            alert("❌ ERREUR SUPABASE : " + err.message);
+            console.error(err);
+        } finally {
+            document.getElementById('btn-save').disabled = false;
+            document.getElementById('btn-send').disabled = false;
+        }
+                         }
+                    
         // Lancement initial
         chargerServices();
     </script>
