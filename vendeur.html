@@ -119,6 +119,10 @@
                 </div>
             </div>
             <div class="cart-footer">
+                        <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; padding: 0 15px;">
+            <input type="text" id="client-nom" placeholder="👤 Nom du client (Facultatif)" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
+            <input type="tel" id="client-tel" placeholder="📞 Numéro (Facultatif)" style="padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
+                        </div>
                 <div class="total-row">
                     <span class="total-label">Net à Payer :</span>
                     <span class="total-amount" id="cart-total">0 F</span>
@@ -224,7 +228,7 @@ document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
         async function chargerBaseDeDonnees() {
             try {
                 // On ne charge que les articles autorisés pour la boutique
-                const { data, error } = await clientSupabase.from('articles')
+                        const { data, error } = await clientSupabase.from('articles_v2')
                     .select('*')
                     .in('scope', ['TOUS', 'VENDEUR'])
                     .order('nom_article', { ascending: true });
@@ -277,23 +281,21 @@ document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
             articlesFiltres.forEach(art => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
+                        // Le prix affiché est un texte standard, le vendeur décidera
+        let prixAffiche = "Prix à saisir";
+
+        // TOUT clic ouvre la modale de découpe libre
+        card.onclick = () => {
+            ouvrirModalDecoupe(art); 
+        };
+
+        card.innerHTML = `
+            <span class="product-ref">${art.reference || art.ref}</span>
+            <div class="product-name">${art.nom_article} <br><small style="color:#95a5a6">${art.variante || ''}</small></div>
+            <div class="product-price" style="font-size: 12px; color: var(--gold); font-style: italic;">${prixAffiche}</div>
+        `;
                 
-                let prixAffiche = parseFloat(art.prix_detail) > 0 ? parseFloat(art.prix_detail).toLocaleString('fr-FR') + ' F' : '⚙️ Sur Mesure';
-                let isBouton = (art.categorie && art.categorie.toLowerCase().includes('bouton')) || art.nom_article.toLowerCase().includes('bouton');
-
-                // Logique de clic : Boutons -> Modal Lots | Prix 0 -> Modal Découpe | Reste -> Panier direct
-                card.onclick = () => {
-                    if (isBouton) ouvrirModalLots(art);
-                    else if (parseFloat(art.prix_detail) === 0) ouvrirModalDecoupe(art);
-                    else ajouterAuPanierDirect(art);
-                };
-
-                card.innerHTML = `
-                    <span class="product-ref">${art.ref}</span>
-                    <div class="product-name">${art.nom_article}</div>
-                    <div class="product-price">${prixAffiche}</div>
-                `;
-                grid.appendChild(card);
+                
             });
         }
 
@@ -453,44 +455,71 @@ document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
 
         // --- 7. ENVOI À LA CAISSE (L'Œil de Moscou actif) ---
         async function envoyerALaCaisse() {
-            if (panier.length === 0) return;
+    if (panier.length === 0) return;
 
-            const btn = document.getElementById('btn-envoyer');
-            btn.disabled = true;
-            btn.innerText = "⏳ Transmission en cours...";
+    const btn = document.getElementById('btn-envoyer');
+    btn.disabled = true;
+    btn.innerText = "⏳ Transmission en cours...";
 
-            let total = panier.reduce((sum, item) => sum + (item.prixU * item.qte), 0);
+    // On récupère les infos du client (ou vide si non renseigné)
+    let nomClient = document.getElementById('client-nom').value.trim();
+    let telClient = document.getElementById('client-tel').value.trim();
+    
+    let total = panier.reduce((sum, item) => sum + (item.prixU * item.qte), 0);
+    
+    let dateObj = new Date();
+    let numTicket = "T-" + dateObj.getHours().toString().padStart(2, '0') + dateObj.getMinutes().toString().padStart(2, '0') + dateObj.getSeconds().toString().padStart(2, '0');
+
+    try {
+        // 1. Création du ticket général
+        const { data: commandeData, error: commandeError } = await clientSupabase
+            .from('commandes')
+            .insert([{
+                num_panier: numTicket,
+                total: Math.round(total),
+                statut: 'en_attente',
+                vendeur_nom: nomVendeur,
+                client_nom: nomClient,
+                client_numero: telClient
+            }])
+            .select();
+
+        if (commandeError) throw commandeError;
+        const commandeId = commandeData[0].id;
+
+        // 2. Découpage du panier ligne par ligne
+        const lignesAInserer = panier.map(item => ({
+            commande_id: commandeId,
+            article_ref: item.ref, 
+            nom_article: item.nom,
+            quantite: item.qte,
+            prix_unitaire_vente: item.prixU
+        }));
+
+        const { error: lignesError } = await clientSupabase
+            .from('lignes_commandes')
+            .insert(lignesAInserer);
+
+        if (lignesError) throw lignesError;
+
+        alert(`✅ TICKET VALIDÉ !\nNuméro à donner à la caisse : ${numTicket}\nTotal : ${Math.round(total).toLocaleString('fr-FR')} F`);
+
+        // 3. Remise à zéro
+        panier = [];
+        localStorage.removeItem('nina_panier_memoire');
+        document.getElementById('client-nom').value = ""; // On vide le champ client
+        document.getElementById('client-tel').value = ""; // On vide le champ numéro
+        mettreAJourPanier();
+        btn.innerText = "✅ VALIDER LA VENTE";
+
+    } catch (err) {
+        alert("❌ Erreur réseau. Le ticket n'est pas parti à la caisse.");
+        console.error("Détail :", err);
+        btn.disabled = false;
+        btn.innerText = "🔄 RÉESSAYER";
+    }
+                                }
             
-            // Nouveau format de ticket (Date + Heure + Numéro) pour éviter les doublons
-            let dateObj = new Date();
-            let numTicket = "T-" + dateObj.getHours().toString().padStart(2,'0') + dateObj.getMinutes().toString().padStart(2,'0') + "-" + Math.floor(100 + Math.random() * 900);
-
-            try {
-                const { error } = await clientSupabase.from('commandes').insert([{
-                    num_panier: numTicket,
-                    total: Math.round(total),
-                    details: JSON.stringify(panier),
-                    statut: 'en_attente',
-                    vendeur_nom: nomVendeur // <-- LA SIGNATURE DU VENDEUR !
-                }]);
-
-                if (error) throw error;
-
-                alert(`✅ TICKET VALIDÉ !\n\nNuméro à donner au client : ${numTicket}\nTotal : ${Math.round(total).toLocaleString('fr-FR')} F`);
-                
-                // On vide la mémoire et le panier
-                panier = [];
-                localStorage.removeItem('nina_panier_memoire');
-                mettreAJourPanier();
-                
-                btn.innerText = "✅ VALIDER LA VENTE";
-            } catch (err) {
-                alert("❌ Erreur réseau. Le ticket n'est pas parti à la caisse.");
-                btn.disabled = false;
-                btn.innerText = "🔄 RÉESSAYER";
-            }
-        }
-
         // DÉMARRAGE
         chargerBaseDeDonnees();
     </script>
