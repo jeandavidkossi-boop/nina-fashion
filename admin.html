@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Œil de Moscou - Nina Fashion</title>
-    <!-- Les librairies indispensables : Supabase (Base de données), PapaParse (Fichiers CSV), et Chart.js (Graphiques) -->
+    <!-- Les librairies indispensables -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,12 +17,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-gray); color: var(--text-dark); padding-bottom: 50px; font-size: 16px; }
 
-        /* EN-TÊTE */
-        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 1.4rem; color: var(--gold); font-family: 'Georgia', serif; }
-        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
 
-        /* NAVIGATION TABS */
         .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; }
         .tab-btn { padding: 15px 20px; border: none; background: none; font-size: 1rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 4px solid transparent; }
         .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--gold); background: #fffcf5; }
@@ -31,7 +29,6 @@
         .tab-content { display: none; flex-direction: column; gap: 20px; }
         .tab-content.active { display: flex; }
 
-        /* CARTES DE STATISTIQUES */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .stat-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .stat-card.gold { border-left-color: var(--gold); }
@@ -40,24 +37,20 @@
         .stat-title { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
         .stat-value { font-size: 1.6rem; font-weight: 900; color: var(--text-dark); }
 
-        /* SECTIONS & TABLEAUX */
         .data-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .data-section h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        
+        .data-section h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
         .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #f8f9fa; padding: 12px; font-size: 0.9rem; color: #7f8c8d; text-align: left; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95rem; vertical-align: middle; }
 
-        /* BADGES */
         .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-block; }
         .badge-cash { background: var(--success); }
         .badge-momo { background: var(--info); }
         .badge-reliquat { background: var(--gold); }
-        .badge-attente { background: var(--danger); }
         .badge-vendeur { background: #ecf0f1; color: var(--text-dark); border: 1px solid #bdc3c7; }
 
-        /* BOUTONS ET FORMULAIRES */
         .btn { border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
         .btn-primary { background: var(--primary); }
         .btn-gold { background: var(--gold); }
@@ -70,178 +63,65 @@
         .form-group label { font-size: 0.95rem; font-weight: bold; color: var(--primary); }
         .form-control { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 1rem; }
         .form-control:focus { border-color: var(--gold); outline: none; }
-
-        /* GRAPHIQUE */
+        
         .chart-container { position: relative; height: 300px; width: 100%; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>👁️ L'Œil de Moscou</h1>
+        <h1>L'Œil de Moscou</h1>
         <a href="index.html" class="btn-retour">Déconnexion</a>
     </header>
 
-    <!-- LES ONGLETS (Totalement préservés) -->
+    <!-- MENU DE NAVIGATION -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('caisse')">💰 Caisse Centrale</button>
-        <button class="tab-btn" onclick="switchTab('atelier')">✂️ Radar Atelier</button>
-        <button class="tab-btn" onclick="switchTab('depot')">📦 Dépôt & Catalogue</button>
-        <button class="tab-btn" onclick="switchTab('securite')">🛡️ Sécurité</button>
+        <button class="tab-btn active" onclick="switchTab('caisse')">💰 Caisse (Aujourd'hui)</button>
+        <button class="tab-btn" onclick="switchTab('compta')">📈 Comptabilité & Bilan</button>
+        <button class="tab-btn" onclick="switchTab('catalogue')">📦 Fiches Articles</button>
+        <button class="tab-btn" onclick="switchTab('audit')">👁️ Audit Dépôt</button>
+        <button class="tab-btn" onclick="switchTab('securite')">🛡️ Équipe</button>
     </div>
 
     <div class="container">
 
-        <!-- ONGLET 1 : CAISSE CENTRALE & TRÉSORERIE -->
+        <!-- 1. ONGLET CAISSE (Trésorerie du Jour J) -->
         <div id="tab-caisse" class="tab-content active">
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
-    <h2 style="color:var(--primary);">📊 Bilan du Jour</h2>
-    <div style="display: flex; gap: 10px;">
-        <button class="btn btn-gold" onclick="afficherArchives()">📁 Voir Historique</button>
-        <button class="btn btn-primary" onclick="cloturerJournee()">🗄️ Clôturer la Caisse</button>
-    </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <h2>💵 Équilibre du Jour (Recette brute)</h2>
+                <button class="btn btn-primary" onclick="cloturerJournee()">🔒 Clôturer la Caisse</button>
             </div>
-            
-            <!-- Ajout du Calcul de la Marge dans les Stats -->
+
             <div class="stats-grid">
                 <div class="stat-card success">
-                    <div class="stat-title">Espèces (Tiroir)</div>
+                    <div class="stat-title">💰 Espèces Attendues (Tiroir)</div>
                     <div class="stat-value" id="stat-cash">0 F</div>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--info);">
-                    <div class="stat-title">Mobile Money</div>
+                    <div class="stat-title">📱 Mobile Money Encaissé</div>
                     <div class="stat-value" id="stat-momo">0 F</div>
                 </div>
                 <div class="stat-card danger">
-                    <div class="stat-title">Dépenses Libres</div>
+                    <div class="stat-title">📉 Petites Dépenses du Jour</div>
                     <div class="stat-value" id="stat-depenses">0 F</div>
                 </div>
-                <div class="stat-card gold" style="background:#fffcf5;">
-                    <div class="stat-title">Bénéfice Net Estimé (Marge)</div>
-                    <div class="stat-value" id="stat-benefice" style="color:var(--gold);">0 F</div>
-                </div>
             </div>
 
-            <!-- Espace Graphique Chart.js -->
             <div class="data-section">
-                <h2>📈 Courbe des Encaissements</h2>
-                <div class="chart-container">
-                    <canvas id="caisseChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Historique des ventes amélioré avec le "Qui a fait quoi ?" -->
-            <div class="data-section">
-                <h2>🛒 Historique des Transactions (Caisse)</h2>
+                <h2>🧾 Historique des Transactions de la Caisse</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>Heure / Date</th>
+                                <th>Heure</th>
                                 <th>Ticket</th>
-                                <th>Total Facturé</th>
+                                <th>Source</th>
+                                <th>Encaissé par</th>
                                 <th>Paiement</th>
-                                <th>Vendeur (Comptoir)</th>
-                                <th>Caissière (Encaissement)</th>
                                 <th>Statut</th>
                             </tr>
                         </thead>
                         <tbody id="table-ventes-directes">
-                            <tr><td colspan="7" style="text-align:center;">Chargement...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Radar des Reliquats préservé -->
-            <div class="data-section">
-                <h2>🎟️ Radar des Reliquats (Dettes actives)</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>Code Reliquat</th><th>Client / Apprenti</th><th>Montant dû</th><th>Date d'émission</th></tr>
-                        </thead>
-                        <tbody id="table-reliquats">
-                            <tr><td colspan="4" style="text-align:center;">Chargement...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Journal des dépenses préservé -->
-            <div class="data-section">
-                <h2>💸 Enregistrer une Dépense</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Motif (Facture CIE, Transport, Achat...)</label>
-                        <input type="text" id="depense-motif" class="form-control" placeholder="Ex: Sacherie">
-                    </div>
-                    <div class="form-group">
-                        <label>Montant (FCFA)</label>
-                        <input type="number" id="depense-montant" class="form-control" placeholder="0">
-                    </div>
-                    <div class="form-group" style="justify-content: flex-end;">
-                        <button class="btn btn-gold" onclick="enregistrerDepense()">Valider la Dépense</button>
-                    </div>
-                </div>
-                <br>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>Date</th><th>Motif</th><th>Montant</th></tr>
-                        </thead>
-                        <tbody id="table-depenses">
-                            <tr><td colspan="3" style="text-align:center;">Chargement...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Historique des Clôtures (Caché par défaut) -->
-<div id="section-archives" class="data-section" style="display: none; margin-top: 20px; border: 2px dashed var(--gold);">
-    <h2>📁 Archives des Caisses Clôturées</h2>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Espèces (Prévu)</th>
-                    <th>Mobile Money (Prévu)</th>
-                    <th>Dépenses</th>
-                    <th>Bénéfice Net</th>
-                </tr>
-            </thead>
-            <tbody id="table-archives">
-                <tr><td colspan="5" style="text-align:center;">Chargement des archives...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-        
-        <!-- ONGLET 2 : RADAR ATELIER -->
-        <div id="tab-atelier" class="tab-content">
-            <div class="stats-grid">
-                <div class="stat-card gold">
-                    <div class="stat-title">Avances Encaissées (Atelier)</div>
-                    <div class="stat-value" id="stat-avances">0 F</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">Valeur des Travaux en Cours</div>
-                    <div class="stat-value" id="stat-latent">0 F</div>
-                </div>
-            </div>
-
-            <!-- Carnet de commandes amélioré avec Machiniste -->
-            <div class="data-section">
-                <h2>✂️ Carnet de Commandes (En Atelier)</h2>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>Client / Ticket</th><th>Prestations</th><th>Total</th><th>Avance</th><th>Reste à Payer</th><th>Machiniste</th></tr>
-                        </thead>
-                        <tbody id="table-atelier">
                             <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
                         </tbody>
                     </table>
@@ -249,57 +129,112 @@
             </div>
         </div>
 
-        <!-- ONGLET 3 : CATALOGUE & DÉPÔT -->
-        <div id="tab-depot" class="tab-content">
+        <!-- 2. ONGLET COMPTABILITÉ & BILAN -->
+        <div id="tab-compta" class="tab-content">
+            <h2>📈 Analyse et Santé Financière globale</h2>
             
-            <!-- NOUVEAU : Le vrai radar logistique -->
+            <div class="stats-grid">
+                <div class="stat-card gold">
+                    <div class="stat-title">📦 Valeur du Stock Réserve</div>
+                    <div class="stat-value" id="stat-valeur-stock">0 F</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-title">💎 Bénéfice Brut (Mois en cours)</div>
+                    <div class="stat-value" id="stat-benefice">0 F</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-title">💸 Reliquats Actifs</div>
+                    <div class="stat-value" id="stat-reliquats-total">0 F</div>
+                </div>
+            </div>
+
             <div class="data-section">
-                <h2>📦 Historique des Mouvements de Stock</h2>
+                <h2>📑 Enregistrer une Dépense Comptable Structurelle</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Motif / Libellé :</label>
+                        <input type="text" id="compta-motif" class="form-control" placeholder="Ex: Loyer, CIE, Salaire...">
+                    </div>
+                    <div class="form-group">
+                        <label>Catégorie :</label>
+                        <select id="compta-cat" class="form-control">
+                            <option value="MARCHANDISE">🛒 Achat Marchandise</option>
+                            <option value="TRANSPORT">🚚 Transport</option>
+                            <option value="SALAIRE">👥 Salaires</option>
+                            <option value="FACTURE">🔌 Charges Fixes (Loyer, CIE)</option>
+                            <option value="MAINTENANCE">🔧 Entretien Machines</option>
+                            <option value="AUTRE">📦 Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Montant (FCFA) :</label>
+                        <input type="number" id="compta-montant" class="form-control" placeholder="0">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button class="btn btn-gold" onclick="enregistrerDepenseComptable()">💾 Valider la Dépense</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <h2>📋 Registre des Dépenses</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Article</th><th>Type</th><th>Quantité</th><th>Destination</th><th>Manutentionnaire</th></tr>
+                            <tr>
+                                <th>Date</th>
+                                <th>Catégorie</th>
+                                <th>Motif</th>
+                                <th>Montant</th>
+                            </tr>
                         </thead>
-                        <tbody id="table-mouvements">
-                            <tr><td colspan="6" style="text-align:center;">Chargement des mouvements...</td></tr>
+                        <tbody id="table-depenses-compta">
+                            <tr><td colspan="4" style="text-align:center;">Chargement...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Le reste de l'onglet dépôt est préservé à 100% -->
-            <div class="data-section" style="border: 2px dashed var(--gold); background: #fffcf5;">
-                <h2 style="border:none;">Injection Massive (Fichier CSV)</h2>
-                <input type="file" id="csv-file" accept=".csv" class="form-control" onchange="preparerImport()" style="margin-bottom: 10px;">
-                <button id="btn-import" class="btn btn-gold" style="display:none;" onclick="lancerImport()">Lancer l'injection</button>
+    </div>
+              <!-- 3. ONGLET CATALOGUE (Fiches Mères) -->
+        <div id="tab-catalogue" class="tab-content">
+            <div class="data-section" style="background: #fffcf5;">
+                <h2>📥 Injection Massive (CSV)</h2>
+                <input type="file" id="csv-file" accept=".csv" onchange="preparerImport()">
+                <button id="btn-import" class="btn btn-gold" style="display:none;" onclick="lancerImport()">🚀 Lancer l'injection</button>
             </div>
 
             <div class="data-section">
-                <h2>➕ Création Manuelle d'Article</h2>
+                <h2>➕ Création Manuelle d'un Article Mère</h2>
                 <div class="form-grid">
-                    <div class="form-group"><label>Référence</label><input type="text" id="art-ref" class="form-control"></div>
-                    <div class="form-group"><label>Nom de l'article</label><input type="text" id="art-nom" class="form-control"></div>
-                    <div class="form-group"><label>Famille / Catégorie</label><input type="text" id="art-cat" class="form-control"></div>
+                    <div class="form-group"><label>Référence :</label><input type="text" id="art-ref" class="form-control"></div>
+                    <div class="form-group"><label>Nom de l'article :</label><input type="text" id="art-nom" class="form-control" placeholder="Ex: Popeline faible"></div>
+                    <div class="form-group"><label>Famille / Catégorie :</label><input type="text" id="art-cat" class="form-control" placeholder="Ex: Tissus"></div>
                     <div class="form-group">
-                        <label>Scope d'affichage</label>
+                        <label>Cible (Scope d'affichage) :</label>
                         <select id="art-scope" class="form-control">
-                            <option value="TOUS">Boutique ET Dépôt</option>
-                            <option value="VENDEUR">Boutique (Vendeur) Uniquement</option>
-                            <option value="STOCK">Dépôt (Magasinier) Uniquement</option>
+                            <option value="VENTE_PUBLIQUE">🛒 Boutique (Visible vendeurs)</option>
+                            <option value="CONSOMMATION_INTERNE">🛠️ Atelier (Invisible vendeurs)</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Prix Vente</label><input type="number" id="art-pv" class="form-control" value="0"></div>
-                    <div class="form-group"><label>Prix Achat (Gros)</label><input type="number" id="art-pa" class="form-control" value="0"></div>
+                    <div class="form-group"><label>Prix Vente conseillé :</label><input type="number" id="art-pv" class="form-control"></div>
+                    <div class="form-group"><label>Prix Achat (Gros) :</label><input type="number" id="art-pa" class="form-control"></div>
                 </div>
-                <button class="btn btn-gold" onclick="ajouterArticleManuel()">Ajouter à la Base</button>
+                <button class="btn btn-gold" onclick="ajouterArticleManuel()">✨ Ajouter au Catalogue</button>
             </div>
 
             <div class="data-section">
-                <h2>📚 Le Catalogue Global</h2>
+                <h2>📋 Le Catalogue Global (Fiches Mères)</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Réf</th><th>Nom / Famille</th><th>Scope</th><th>Prix Vente</th><th>Prix Achat</th><th>Action</th></tr>
+                            <tr>
+                                <th>Réf</th>
+                                <th>Nom de l'article / Famille</th>
+                                <th>Cible</th>
+                                <th>Prix Vente</th>
+                                <th>Prix Achat</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
                         <tbody id="table-articles">
                             <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
@@ -309,14 +244,39 @@
             </div>
         </div>
 
-        <!-- ONGLET 4 : SÉCURITÉ & PERSONNEL (Préservé) -->
+        <!-- 4. ONGLET AUDIT DÉPÔT -->
+        <div id="tab-audit" class="tab-content">
+            <h2>👁️ Surveillance Logistique de la Réserve</h2>
+            <div class="data-section">
+                <h2>🔄 Historique des Mouvements Magasinier</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date / Heure</th>
+                                <th>Article</th>
+                                <th>Couleur / Numéro</th>
+                                <th>Mouvement</th>
+                                <th>Quantité</th>
+                                <th>Auteur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-mouvements-audit">
+                            <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. ONGLET ÉQUIPE & SÉCURITÉ -->
         <div id="tab-securite" class="tab-content">
             <div class="data-section">
-                <h2>🔐 Créer un Employé</h2>
+                <h2>👤 Créer un Profil Employé</h2>
                 <div class="form-grid">
-                    <div class="form-group"><label>Nom / Identifiant</label><input type="text" id="emp-nom" class="form-control"></div>
+                    <div class="form-group"><label>Nom :</label><input type="text" id="emp-nom" class="form-control"></div>
                     <div class="form-group">
-                        <label>Rôle</label>
+                        <label>Rôle :</label>
                         <select id="emp-role" class="form-control">
                             <option value="Caissière">Caissière</option>
                             <option value="Vendeur">Vendeur</option>
@@ -325,19 +285,17 @@
                             <option value="Administrateur">Administrateur</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Code PIN (4 chiffres)</label><input type="number" id="emp-pin" class="form-control"></div>
-                    <div class="form-group" style="justify-content: flex-end;">
-                        <button class="btn btn-gold" onclick="ajouterEmploye()">Créer le profil</button>
-                    </div>
+                    <div class="form-group"><label>Code PIN (4 chiffres) :</label><input type="number" id="emp-pin" class="form-control"></div>
                 </div>
+                <button class="btn btn-gold" onclick="ajouterEmploye()">🔑 Créer le profil</button>
             </div>
 
             <div class="data-section">
-                <h2>👥 Panneau de Contrôle de l'Équipe</h2>
+                <h2>🔒 Contrôle des Accès</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Nom</th><th>Poste</th><th>PIN</th><th>Statut</th><th>Action</th></tr>
+                            <tr><th>Nom</th><th>Poste</th><th>Code PIN</th><th>Statut</th><th>Action</th></tr>
                         </thead>
                         <tbody id="table-equipe">
                             <tr><td colspan="5" style="text-align:center;">Chargement...</td></tr>
@@ -347,15 +305,13 @@
             </div>
         </div>
 
-                                                                            </div>
-      <script>
-        // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </div> <!-- Fin Container -->
 
-        let chartInstance = null; // Variable pour stocker le graphique
-        let cataloguePrixAchat = {}; // Pour stocker les prix de gros et calculer la marge
+    <script>
+        // --- 1. CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://tkqosylwvymaracevamt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWx3dm1hcmFjZXZhbXQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODIxOTQzNSwiZXhwIjoyMDUzNzk1NDM1fQ.XQ1p5i3D9l1e48jQYw_rK7YJ-QW5s4tq-vH0Z6T7Vxw";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- 2. GESTION DE LA NAVIGATION ---
         function switchTab(tabId) {
@@ -364,462 +320,198 @@
             
             document.getElementById('tab-' + tabId).classList.add('active');
             event.target.classList.add('active');
-            
-            // Chargement dynamique selon l'onglet
-            if(tabId === 'caisse') chargerCaisse();
-            if(tabId === 'atelier') chargerAtelier();
-            if(tabId === 'depot') { chargerMouvementsStock(); chargerCatalogue(); }
-            if(tabId === 'securite') chargerEquipe();
-        }
 
-        // ============================================================================
-        // 3. LE COFFRE-FORT : CAISSE & TRÉSORERIE (RADAR TEMPS RÉEL)
-        // ============================================================================
-        
+            if(tabId === 'caisse') { chargerCaisse(); }
+            if(tabId === 'compta') { chargerComptabilite(); }
+            if(tabId === 'catalogue') { chargerCatalogue(); }
+            if(tabId === 'audit') { chargerAuditDepot(); }
+            if(tabId === 'securite') { chargerEquipe(); }
+        }
+            // --- 3. LOGIQUE CAISSE (Aujourd'hui) ---
         async function chargerCaisse() {
             try {
-                // Obtenir la date du jour à minuit
                 const debutJournee = new Date();
                 debutJournee.setHours(0, 0, 0, 0);
 
-                // 1. Charger les prix d'achat pour la marge
-                const { data: arts } = await clientSupabase.from('articles').select('ref, prix_achat');
-                if (arts) arts.forEach(a => cataloguePrixAchat[a.ref] = parseFloat(a.prix_achat) || 0);
-
-                // 2. Charger UNIQUEMENT les commandes et dépenses du jour
-                const { data: ventes, error: vErr } = await clientSupabase.from('commandes')
+                const { data: ventes, error } = await clientSupabase
+                    .from('commandes')
                     .select('*')
                     .gte('created_at', debutJournee.toISOString())
+                    .eq('statut', 'paye')
                     .order('created_at', { ascending: false });
-                
-                const { data: depenses } = await clientSupabase.from('depenses_boutique')
+
+                if (error) throw error;
+
+                const { data: depenses } = await clientSupabase
+                    .from('depenses_boutique')
                     .select('*')
                     .gte('created_at', debutJournee.toISOString());
 
-                if (vErr) throw vErr;
-
-                let totalCash = 0;
-                let totalMomo = 0;
-                let coutMarchandiseVendue = 0;
+                let totalCash = 0, totalMomo = 0;
                 let totalDepenses = depenses ? depenses.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
-
-                const tbodyVentes = document.getElementById('table-ventes-directes');
-                tbodyVentes.innerHTML = '';
-
-                // Données pour le graphique (Ventes générées automatiquement sur 24 heures)
-let ventesParHeure = {};
-for (let i = 0; i < 24; i++) {
-    let heureChaine = i.toString().padStart(2, '0') + "h";
-    ventesParHeure[heureChaine] = 0;
-}
+                
+                const tbody = document.getElementById('table-ventes-directes');
+                tbody.innerHTML = '';
 
                 if (ventes && ventes.length > 0) {
                     ventes.forEach(v => {
-                        let cash = parseFloat(v.montant_cash) || (v.statut === 'paye' && !v.montant_cash && !v.montant_momo ? parseFloat(v.total) : 0);
+                        let cash = parseFloat(v.montant_cash) || 0;
                         let momo = parseFloat(v.montant_momo) || 0;
-                        let reliquatUtilise = parseFloat(v.montant_reliquat) || 0;
+                        totalCash += cash; totalMomo += momo;
 
-                        if (v.statut === 'paye') {
-                            totalCash += cash;
-                            totalMomo += momo;
-                            
-                            // Répartition pour le graphique
-                            let heure = new Date(v.created_at).getHours().toString().padStart(2, '0') + "h";
-                            if(ventesParHeure[heure] !== undefined) ventesParHeure[heure] += parseFloat(v.total);
-
-                            // Calcul du coût d'achat de la marchandise vendue (Pour la marge)
-                            try {
-                                let details = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
-                                details.forEach(item => {
-                                    let prixGros = cataloguePrixAchat[item.ref] || 0;
-                                    coutMarchandiseVendue += (prixGros * item.qte);
-                                });
-                            } catch(e) {}
-                        }
-                       // Affichage dans le tableau avec les RESPONSABLES
                         let dateObj = new Date(v.created_at);
                         let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
-                        let badgeStatut = v.statut === 'paye' ? '<span class="badge badge-cash">Payé</span>' : '<span class="badge badge-attente">En attente</span>';
-                        
-                        let txtPaiement = "";
-                        if (v.statut === 'paye') {
-                            if (cash > 0) txtPaiement += `<span style="color:var(--success); font-weight:bold;">${cash}F (Espèces)</span><br>`;
-                            if (momo > 0) txtPaiement += `<span style="color:var(--info); font-weight:bold;">${momo}F (MoMo)</span><br>`;
-                            if (reliquatUtilise > 0) txtPaiement += `<span style="color:var(--gold); font-weight:bold;">${reliquatUtilise}F (Reliquat)</span>`;
-                        } else {
-                            txtPaiement = "-";
-                        }
+                        let badgeSource = v.origine === 'atelier' ? '🟣 Atelier' : '🔵 Boutique';
+                        let paiement = cash > 0 && momo > 0 ? "Cash+MoMo" : (cash > 0 ? "Espèces" : "MoMo");
 
-                        tbodyVentes.innerHTML += `
-                            <tr>
-                                <td>${heureStr}</td>
-                                <td><strong>${v.num_panier}</strong></td>
-                                <td style="font-weight:900; color:var(--primary);">${parseFloat(v.total).toLocaleString('fr-FR')} F</td>
-                                <td>${txtPaiement}</td>
-                                <td><span class="badge badge-vendeur">🛍️ ${v.vendeur_nom || 'Anonyme'}</span></td>
-                                <td>${v.statut === 'paye' ? `<span class="badge badge-vendeur" style="background:#e8f4f8;">👩‍💼 ${v.caissiere_nom || 'Anonyme'}</span>` : '-'}</td>
-                                <td>${badgeStatut}</td>
-                            </tr>
-                        `;
+                        tbody.innerHTML += `<tr>
+                            <td>${heureStr}</td>
+                            <td><strong>#${v.num_panier}</strong></td>
+                            <td>${badgeSource}</td>
+                            <td>👤 ${v.caissiere_nom || 'Inconnue'}</td>
+                            <td>${paiement}</td>
+                            <td>✅ Payé</td>
+                        </tr>`;
                     });
                 } else {
-                    tbodyVentes.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#7f8c8d;">Aucune transaction aujourd\'hui.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucune vente aujourd\'hui.</td></tr>';
                 }
-
-                // Affichage des statistiques vitales
-                let beneficeNet = (totalCash + totalMomo) - coutMarchandiseVendue - totalDepenses;
 
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-depenses').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
-                document.getElementById('stat-benefice').innerText = beneficeNet.toLocaleString('fr-FR') + " F";
-
-                // Mise à jour du graphique
-                dessinerGraphique(Object.keys(ventesParHeure), Object.values(ventesParHeure));
-
-                // 3. Charger les dettes (Reliquats)
-                chargerReliquats();
-                // 4. Afficher le tableau des dépenses
-                afficherTableauDepenses(depenses);
-
-            } catch (err) { console.error("Erreur Caisse:", err); }
+            } catch (e) { console.error(e); }
         }
 
-        // --- GRAPHIQUE DES VENTES ---
-        function dessinerGraphique(labels, data) {
-            const ctx = document.getElementById('caisseChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy(); // Détruire l'ancien graphique avant de redessiner
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Chiffre d\'affaires par heure (FCFA)',
-                        data: data,
-                        borderColor: '#b38728',
-                        backgroundColor: 'rgba(179, 135, 40, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        async function chargerReliquats() {
-            const { data } = await clientSupabase.from('reliquats').select('*').eq('statut', 'actif').order('created_at', { ascending: false });
-            const tbody = document.getElementById('table-reliquats');
-            tbody.innerHTML = '';
-            if (data && data.length > 0) {
-                data.forEach(r => {
-                    let dateRel = new Date(r.created_at).toLocaleDateString('fr-FR');
-                    tbody.innerHTML += `<tr><td><span class="badge badge-reliquat">${r.num_recu}</span></td><td><strong>${r.non_client || 'Client Anonyme'}</strong></td><td style="color:var(--danger); font-weight:bold;">${parseFloat(r.montant).toLocaleString('fr-FR')} F</td><td style="color:#7f8c8d; font-size:0.9rem;">${dateRel}</td></tr>`;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--success);">Aucune dette client active.</td></tr>';
-            }
-        }
-
-        function afficherTableauDepenses(depenses) {
-            const tbody = document.getElementById('table-depenses');
-            tbody.innerHTML = '';
-            if (depenses && depenses.length > 0) {
-                depenses.forEach(d => {
-                    let dateStr = new Date(d.created_at).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                    tbody.innerHTML += `<tr><td style="color:#7f8c8d;">${dateStr}</td><td><strong>${d.motif}</strong></td><td style="color:var(--danger); font-weight:bold;">-${parseFloat(d.montant).toLocaleString('fr-FR')} F</td></tr>`;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Aucune dépense aujourd\'hui.</td></tr>';
-            }
-        }
-
-        async function enregistrerDepense() {
-            const motif = document.getElementById('depense-motif').value.trim();
-            const montant = parseFloat(document.getElementById('depense-montant').value);
-            if (!motif || isNaN(montant) || montant <= 0) { alert("⚠️ Saisissez un motif et un montant valide."); return; }
+        // --- 4. LOGIQUE COMPTABILITÉ & BILAN ---
+        async function chargerComptabilite() {
             try {
-                await clientSupabase.from('depenses_boutique').insert([{ motif: motif, montant: montant }]);
-                document.getElementById('depense-motif').value = "";
-                document.getElementById('depense-montant').value = "";
-                chargerCaisse(); // Rafraîchit tout l'onglet
-            } catch(err) { alert("❌ Erreur réseau."); }
-        }
-
-        async function cloturerJournee() {
-            if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ?")) return;
-            
-            let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g,''));
-            let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g,''));
-            let depenses = parseInt(document.getElementById('stat-depenses').innerText.replace(/\D/g,''));
-            let benefice = parseInt(document.getElementById('stat-benefice').innerText.replace(/\D/g,''));
-
-            try {
-                await clientSupabase.from('clotures_caisse').insert([{
-                    date_cloture: new Date().toISOString().split('T')[0],
-                    total_especes_attendu: cashAttendu,
-                    total_momo_attendu: momoAttendu,
-                    total_depenses: depenses,
-                    benefice_net_estime: benefice
-                }]);
-                alert("✅ La journée est clôturée et archivée dans le registre de sécurité.");
-            } catch(err) { alert("❌ Erreur lors de la clôture."); }
-          } 
-
-           // ============================================================================
-        // 4. LE RADAR ATELIER
-        // ============================================================================
-        
-        async function chargerAtelier() {
-            try {
-                const { data: tickets } = await clientSupabase.from('commandes')
-                    .select('*')
-                    .in('origine', ['atelier'])
-                    .in('statut_atelier', ['en_cours', 'en_atelier'])
-                    .order('created_at', { ascending: false });
-
-                let totalAvances = 0;
-                let totalLatent = 0;
-                const tbody = document.getElementById('table-atelier');
-                tbody.innerHTML = '';
-
-                if (tickets && tickets.length > 0) {
-                    tickets.forEach(t => {
-                        let avance = parseFloat(t.avance) || 0;
-                        let reste = parseFloat(t.reste_a_payer) || 0;
-                        let total = parseFloat(t.total) || 0;
-
-                        totalAvances += avance;
-                        totalLatent += reste;
-
-                        let detailText = "Prestation...";
-                        try {
-                            let dArray = typeof t.details === 'string' ? JSON.parse(t.details) : t.details;
-                            if (dArray.length > 0) detailText = dArray.map(item => item.nom).join(', ');
-                        } catch(e) {}
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${t.non_client || 'Client Atelier'}</strong><br><small style="color:#7f8c8d;">${t.num_panier}</small></td>
-                                <td style="font-size:0.9rem;">${detailText}</td>
-                                <td style="font-weight:bold;">${total.toLocaleString('fr-FR')} F</td>
-                                <td style="color:var(--success); font-weight:bold;">${avance > 0 ? avance.toLocaleString('fr-FR')+' F' : '-'}</td>
-                                <td style="color:${reste > 0 ? 'var(--danger)' : 'var(--success)'}; font-weight:bold;">${reste.toLocaleString('fr-FR')} F</td>
-                                <td><span class="badge badge-vendeur">👨‍🔧 ${t.machiniste_nom || 'Anonyme'}</span></td>
-                            </tr>
-                        `;
+                // Valeur du stock
+                const { data: stock } = await clientSupabase.from('stock_depot').select('quantite, article_id');
+                const { data: articles } = await clientSupabase.from('articles_v2').select('id, prix_achat');
+                
+                let valeurStock = 0;
+                if(stock && articles) {
+                    stock.forEach(s => {
+                        let art = articles.find(a => a.id === s.article_id);
+                        if(art) valeurStock += (parseFloat(s.quantite) * parseFloat(art.prix_achat || 0));
                     });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucun vêtement en cours à l\'atelier.</td></tr>';
                 }
+                document.getElementById('stat-valeur-stock').innerText = valeurStock.toLocaleString('fr-FR') + " F";
 
-                document.getElementById('stat-avances').innerText = totalAvances.toLocaleString('fr-FR') + " F";
-                document.getElementById('stat-latent').innerText = totalLatent.toLocaleString('fr-FR') + " F";
-
-            } catch (err) {}
+                // Registre des dépenses
+                const { data: depenses } = await clientSupabase.from('depenses_boutique').select('*').order('created_at', { ascending: false });
+                const tbodyDep = document.getElementById('table-depenses-compta');
+                tbodyDep.innerHTML = '';
+                if(depenses && depenses.length > 0) {
+                    depenses.forEach(d => {
+                        let date = new Date(d.created_at).toLocaleDateString('fr-FR');
+                        tbodyDep.innerHTML += `<tr><td>${date}</td><td><strong>${d.categorie_depense || 'AUTRE'}</strong></td><td>${d.motif}</td><td style="color:var(--danger)">-${parseFloat(d.montant).toLocaleString('fr-FR')} F</td></tr>`;
+                    });
+                }
+            } catch (e) { console.error(e); }
         }
 
-        // ============================================================================
-        // 5. CATALOGUE & DÉPÔT LOGISTIQUE
-        // ============================================================================
-        
-        async function chargerMouvementsStock() {
-            const { data } = await clientSupabase.from('mouvements_stock').select('*').order('created_at', { ascending: false }).limit(50);
-            const tbody = document.getElementById('table-mouvements');
-            tbody.innerHTML = '';
+        async function enregistrerDepenseComptable() {
+            const motif = document.getElementById('compta-motif').value;
+            const cat = document.getElementById('compta-cat').value;
+            const montant = document.getElementById('compta-montant').value;
             
-            if (data && data.length > 0) {
-                data.forEach(m => {
-                    let dateStr = new Date(m.created_at).toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-                    let badgeType = m.type_mouvement === 'ENTREE' ? '<span class="badge badge-cash">📥 ENTRÉE</span>' : '<span class="badge badge-attente">📤 SORTIE</span>';
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="color:#7f8c8d; font-size:0.85rem;">${dateStr}</td>
-                            <td><strong>${m.nom_article}</strong></td>
-                            <td>${badgeType}</td>
-                            <td style="font-weight:bold;">${m.quantite_totale} U</td>
-                            <td>${m.destination || '-'}</td>
-                            <td><span class="badge badge-vendeur">📦 ${m.utilisateur || 'Anonyme'}</span></td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucun mouvement récent.</td></tr>';
-            }
+            if(!motif || !montant) { alert("Saisissez motif et montant."); return; }
+            await clientSupabase.from('depenses_boutique').insert([{ motif, categorie_depense: cat, montant }]);
+            
+            document.getElementById('compta-motif').value = "";
+            document.getElementById('compta-montant').value = "";
+            chargerComptabilite();
         }
 
+        // --- 5. LOGIQUE CATALOGUE ---
         async function chargerCatalogue() {
-            const { data: arts } = await clientSupabase.from('articles').select('*').order('nom_article');
+            const { data } = await clientSupabase.from('articles_v2').select('*').order('nom_article');
             const tbody = document.getElementById('table-articles');
             tbody.innerHTML = '';
-            if (arts && arts.length > 0) {
-                arts.forEach(a => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><code>${a.ref}</code></td>
-                            <td><strong>${a.nom_article}</strong><br><small style="color:#7f8c8d;">${a.categorie}</small></td>
-                            <td><span class="badge" style="background:var(--primary);">${(a.scope || 'TOUS')}</span></td>
-                            <td style="font-weight:bold; color:var(--success);">${parseFloat(a.prix_detail).toLocaleString('fr-FR')} F</td>
-                            <td style="color:#7f8c8d; font-weight:bold;">${parseFloat(a.prix_achat||0).toLocaleString('fr-FR')} F</td>
-                            <td><button class="btn btn-action btn-danger" onclick="supprimerArticle('${a.id}')">🗑️</button></td>
-                        </tr>
-                    `;
+            if(data) {
+                data.forEach(a => {
+                    let badgeCible = a.cible_utilisation === 'CONSOMMATION_INTERNE' ? '🟣 Atelier Seul' : '🔵 Public';
+                    tbody.innerHTML += `<tr>
+                        <td><code>${a.ref || 'N/A'}</code></td>
+                        <td><strong>${a.nom_article}</strong><br><small>${a.famille || ''}</small></td>
+                        <td>${badgeCible}</td>
+                        <td>${a.prix_vente} F</td>
+                        <td>${a.prix_achat} F</td>
+                        <td><button class="btn btn-action btn-danger" onclick="clientSupabase.from('articles_v2').delete().eq('id', '${a.id}'); chargerCatalogue();">X</button></td>
+                    </tr>`;
                 });
             }
-        }
-
-        // INJECTION CSV (Préservé de ton code original)
-        let articlesPourImport = [];
-        function preparerImport() {
-            const file = document.getElementById('csv-file').files[0];
-            if(!file) return;
-            Papa.parse(file, {
-                header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    articlesPourImport = results.data;
-                    document.getElementById('btn-import').style.display = 'inline-block';
-                    document.getElementById('btn-import').innerText = `🚀 Lancer l'injection de ${articlesPourImport.length} articles`;
-                }
-            });
-        }
-        
-        async function lancerImport() {
-            if(articlesPourImport.length === 0) return;
-            document.getElementById('btn-import').disabled = true;
-            document.getElementById('btn-import').innerText = "⏳ Injection en cours...";
-            try {
-                const articlesNettoyes = articlesPourImport.map(row => ({
-                    ref: row.ref || row.reference || row.REF,
-                    nom_article: row.nom_article || row.designation || row.nom || row.NOM,
-                    categorie: row.categorie || row.SECTION || row.famille || 'Catalogue',
-                    prix_detail: parseFloat(row.prix_detail) || parseFloat(row.prix_vente) || 0,
-                    prix_achat: parseFloat(row.prix_achat) || 0,
-                    stock_actuel: parseFloat(row.stock_actuel) || 0,
-                    seuil_alerte: parseFloat(row.seuil_alerte) || 5,
-                    scope: row.scope ? row.scope.toUpperCase() : "TOUS"
-                })).filter(a => a.ref && a.nom_article);
-                
-                await clientSupabase.from('articles').upsert(articlesNettoyes, { onConflict: 'ref' });
-                alert(`🔥 Importation validée ! ${articlesNettoyes.length} articles mis à jour.`);
-                document.getElementById('csv-file').value = "";
-                document.getElementById('btn-import').style.display = "none";
-                chargerCatalogue();
-            } catch(err) { alert("❌ Erreur d'analyse CSV."); document.getElementById('btn-import').disabled = false; }
         }
 
         async function ajouterArticleManuel() {
             const payload = {
-                ref: document.getElementById('art-ref').value.trim(),
-                nom_article: document.getElementById('art-nom').value.trim(),
-                categorie: document.getElementById('art-cat').value.trim(),
-                scope: document.getElementById('art-scope').value,
-                prix_detail: parseFloat(document.getElementById('art-pv').value) || 0,
-                prix_achat: parseFloat(document.getElementById('art-pa').value) || 0
+                ref: document.getElementById('art-ref').value,
+                nom_article: document.getElementById('art-nom').value,
+                famille: document.getElementById('art-cat').value,
+                cible_utilisation: document.getElementById('art-scope').value,
+                prix_vente: document.getElementById('art-pv').value || 0,
+                prix_achat: document.getElementById('art-pa').value || 0
             };
-            if (!payload.ref || !payload.nom_article || !payload.categorie) { alert("⚠️ Référence, nom et catégorie obligatoires."); return; }
-            try {
-                await clientSupabase.from('articles').upsert([payload], { onConflict: 'ref' });
-                document.getElementById('art-ref').value = ""; document.getElementById('art-nom').value = ""; document.getElementById('art-cat').value = "";
-                chargerCatalogue();
-            } catch(err) { alert("❌ Erreur d'enregistrement."); }
-        }
-        
-        async function supprimerArticle(id) {
-            if(!confirm("Supprimer cet article définitivement ?")) return;
-            try { await clientSupabase.from('articles').delete().eq('id', id); chargerCatalogue(); } catch(err) {}
+            if(!payload.nom_article) { alert("Le nom est obligatoire."); return; }
+            await clientSupabase.from('articles_v2').insert([payload]);
+            chargerCatalogue();
         }
 
-        // ============================================================================
-        // 6. SÉCURITÉ DU PERSONNEL
-        // ============================================================================
-        
+        // --- 6. LOGIQUE AUDIT DÉPÔT ---
+        async function chargerAuditDepot() {
+            const { data } = await clientSupabase.from('mouvements_depot').select('*, articles_v2(nom_article)').order('created_at', { ascending: false }).limit(50);
+            const tbody = document.getElementById('table-mouvements-audit');
+            tbody.innerHTML = '';
+            if(data) {
+                data.forEach(m => {
+                    let date = new Date(m.created_at).toLocaleString('fr-FR');
+                    let badgeMvt = m.type_mouvement === 'ENTREE' ? '🟢 ENTRÉE' : '🔴 SORTIE';
+                    let nomArticle = m.articles_v2 ? m.articles_v2.nom_article : 'Inconnu';
+                    
+                    tbody.innerHTML += `<tr>
+                        <td><small>${date}</small></td>
+                        <td><strong>${nomArticle}</strong></td>
+                        <td>🎨 ${m.couleur_ref}</td>
+                        <td>${badgeMvt}</td>
+                        <td><strong>${m.quantite}</strong></td>
+                        <td>👤 ${m.utilisateur || 'Magasinier'}</td>
+                    </tr>`;
+                });
+            }
+        }
+
+        // --- 7. SÉCURITÉ ET ÉQUIPE ---
         async function chargerEquipe() {
-            try {
-                const { data } = await clientSupabase.from('personnel_nina').select('*').order('role');
-                const tbody = document.getElementById('table-equipe');
-                tbody.innerHTML = '';
-                if (data && data.length > 0) {
-                    data.forEach(m => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${m.nom_employe}</strong></td>
-                                <td><span class="badge" style="background:#7f8c8d;">${m.role}</span></td>
-                                <td><code style="background:#eee; padding:3px 6px; border-radius:4px;">${m.code_pin}</code></td>
-                                <td><span class="badge" style="background:${m.actif ? 'var(--success)' : 'var(--danger)'};">${m.actif ? 'Actif' : 'Bloqué'}</span></td>
-                                <td><button class="btn btn-action" style="background:var(--text-dark);" onclick="toggleEmploye('${m.id}', ${!m.actif})">${m.actif ? 'Bloquer' : 'Débloquer'}</button></td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch(err) {}
+            const { data } = await clientSupabase.from('personnel_nina').select('*').order('role');
+            const tbody = document.getElementById('table-equipe');
+            tbody.innerHTML = '';
+            if(data) {
+                data.forEach(m => {
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${m.nom_employe}</strong></td>
+                        <td>${m.role}</td>
+                        <td><code>${m.code_pin}</code></td>
+                        <td>${m.actif ? '✅ Actif' : '❌ Inactif'}</td>
+                        <td><button class="btn btn-action" onclick="clientSupabase.from('personnel_nina').update({actif: ${!m.actif}}).eq('id', ${m.id}); chargerEquipe();">Toggle</button></td>
+                    </tr>`;
+                });
+            }
         }
 
         async function ajouterEmploye() {
-            const nom = document.getElementById('emp-nom').value.trim();
+            const nom = document.getElementById('emp-nom').value;
             const role = document.getElementById('emp-role').value;
-            const pin = document.getElementById('emp-pin').value.trim();
-            if (!nom || pin.length < 4) { alert("⚠️ Nom et code PIN à 4 chiffres obligatoires."); return; }
-            try {
-                await clientSupabase.from('personnel_nina').insert([{ nom_employe: nom, role: role, code_pin: pin, actif: true }]);
-                document.getElementById('emp-nom').value = ""; document.getElementById('emp-pin').value = "";
-                chargerEquipe();
-            } catch(err) { alert("❌ Erreur."); }
-        }
-          
-async function afficherArchives() {
-    const section = document.getElementById('section-archives');
-    const tbody = document.getElementById('table-archives');
-    
-    // Si la section est cachée, on l'affiche et on charge les données
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">⏳ Chargement en cours...</td></tr>';
-        
-        try {
-            const { data, error } = await clientSupabase
-                .from('clotures_caisse')
-                .select('*')
-                .order('date_cloture', { ascending: false }); // Du plus récent au plus ancien
-
-            if (error) throw error;
-
-            tbody.innerHTML = ""; // On vide le chargement
-            
-            if (data && data.length > 0) {
-                data.forEach(c => {
-                    // Nettoyage de la date (ex: 2026-07-04 devient 04/07/2026)
-                    let dateFormatee = new Date(c.date_cloture).toLocaleDateString('fr-FR');
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${dateFormatee}</strong></td>
-                            <td>${parseFloat(c.total_especes_attendu).toLocaleString('fr-FR')} F</td>
-                            <td>${parseFloat(c.total_momo_attendu).toLocaleString('fr-FR')} F</td>
-                            <td style="color:var(--danger)">${parseFloat(c.total_depenses).toLocaleString('fr-FR')} F</td>
-                            <td style="color:var(--success); font-weight:bold;">${parseFloat(c.benefice_net_estime).toLocaleString('fr-FR')} F</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Aucune archive trouvée pour le moment.</td></tr>';
-            }
-        } catch (err) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger);">❌ Erreur lors du chargement des archives.</td></tr>';
-        }
-    } else {
-        // Si elle est déjà affichée, on la cache pour faire de la place
-        section.style.display = 'none';
-    }
-                        }
-          
-        async function toggleEmploye(id, statut) {
-            try { await clientSupabase.from('personnel_nina').update({ actif: statut }).eq('id', id); chargerEquipe(); } catch(err) {}
+            const pin = document.getElementById('emp-pin').value;
+            if(!nom || pin.length < 4) { alert("Erreur saisie."); return; }
+            await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin}]);
+            chargerEquipe();
         }
 
-        // DÉMARRAGE AUTOMATIQUE
+        // DÉMARRAGE
         chargerCaisse();
     </script>
 </body>
 </html>
+
