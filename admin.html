@@ -29,7 +29,7 @@
         .tab-content { display: none; flex-direction: column; gap: 20px; }
         .tab-content.active { display: flex; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .stat-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .stat-card.gold { border-left-color: var(--gold); }
         .stat-card.danger { border-left-color: var(--danger); }
@@ -37,7 +37,7 @@
         .stat-title { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
         .stat-value { font-size: 1.6rem; font-weight: 900; color: var(--text-dark); }
 
-        .data-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .data-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .data-section h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
         .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
@@ -49,9 +49,8 @@
         .badge-cash { background: var(--success); }
         .badge-momo { background: var(--info); }
         .badge-reliquat { background: var(--gold); }
-        .badge-vendeur { background: #ecf0f1; color: var(--text-dark); border: 1px solid #bdc3c7; }
 
-        .btn { border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-align: center; }
+        .btn { border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-align: center; text-decoration: none; display: inline-block; }
         .btn-primary { background: var(--primary); }
         .btn-gold { background: var(--gold); }
         .btn-danger { background: var(--danger); }
@@ -64,7 +63,11 @@
         .form-control { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 1rem; }
         .form-control:focus { border-color: var(--gold); outline: none; }
         
-        .chart-container { position: relative; height: 300px; width: 100%; margin-bottom: 20px; }
+        .chart-container { position: relative; height: 320px; width: 100%; margin-top: 10px; }
+        
+        /* Style spécifique pour le palmarès */
+        .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .rank-number { font-weight: bold; color: var(--gold); font-size: 1.2rem; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -74,7 +77,7 @@
         <a href="index.html" class="btn-retour">Déconnexion</a>
     </header>
 
-    <!-- MENU DE NAVIGATION -->
+    <!-- NAVIGATION PRINCIPALE -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('caisse')">💰 Caisse (Aujourd'hui)</button>
         <button class="tab-btn" onclick="switchTab('compta')">📈 Comptabilité & Bilan</button>
@@ -84,31 +87,32 @@
     </div>
 
     <div class="container">
-
-        <!-- 1. ONGLET CAISSE (Trésorerie du Jour J) -->
+                <!-- ========================================== -->
+        <!-- 1. ONGLET CAISSE (Trésorerie du Jour J)    -->
+        <!-- ========================================== -->
         <div id="tab-caisse" class="tab-content active">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <h2>💵 Équilibre du Jour (Recette brute)</h2>
+                <h2>💵 Équilibre du Jour (Recettes d'Aujourd'hui)</h2>
                 <button class="btn btn-primary" onclick="cloturerJournee()">🔒 Clôturer la Caisse</button>
             </div>
 
             <div class="stats-grid">
                 <div class="stat-card success">
-                    <div class="stat-title">💰 Espèces Attendues (Tiroir)</div>
+                    <div class="stat-title">💰 Espèces (Tiroir)</div>
                     <div class="stat-value" id="stat-cash">0 F</div>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--info);">
-                    <div class="stat-title">📱 Mobile Money Encaissé</div>
+                    <div class="stat-title">📱 Mobile Money</div>
                     <div class="stat-value" id="stat-momo">0 F</div>
                 </div>
                 <div class="stat-card danger">
-                    <div class="stat-title">📉 Petites Dépenses du Jour</div>
-                    <div class="stat-value" id="stat-depenses">0 F</div>
+                    <div class="stat-title">📉 Dépenses du Jour</div>
+                    <div class="stat-value" id="stat-depenses-jour">0 F</div>
                 </div>
             </div>
 
             <div class="data-section">
-                <h2>🧾 Historique des Transactions de la Caisse</h2>
+                <h2>🧾 Historique des Encaissements du Jour</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -129,31 +133,53 @@
             </div>
         </div>
 
-        <!-- 2. ONGLET COMPTABILITÉ & BILAN -->
+        <!-- ========================================== -->
+        <!-- 2. ONGLET COMPTABILITÉ & BILAN (Le Cerveau) -->
+        <!-- ========================================== -->
         <div id="tab-compta" class="tab-content">
-            <h2>📈 Analyse et Santé Financière globale</h2>
+            <h2>📈 Santé Financière du Mois en Cours</h2>
             
             <div class="stats-grid">
                 <div class="stat-card gold">
-                    <div class="stat-title">📦 Valeur du Stock Réserve</div>
+                    <div class="stat-title">📦 Valeur du Stock Dormant</div>
                     <div class="stat-value" id="stat-valeur-stock">0 F</div>
                 </div>
                 <div class="stat-card success">
-                    <div class="stat-title">💎 Bénéfice Brut (Mois en cours)</div>
+                    <div class="stat-title">💎 Bénéfice Net (Réel)</div>
                     <div class="stat-value" id="stat-benefice">0 F</div>
                 </div>
                 <div class="stat-card danger">
-                    <div class="stat-title">💸 Reliquats Actifs</div>
-                    <div class="stat-value" id="stat-reliquats-total">0 F</div>
+                    <div class="stat-title">💸 Reliquats (Argent dehors)</div>
+                    <div class="stat-value" id="stat-reliquats">0 F</div>
                 </div>
             </div>
 
+            <div class="form-grid">
+                <!-- LE GRAPHIQUE COMPARATIF -->
+                <div class="data-section">
+                    <h2>📊 Flux Financiers (Boutique vs Atelier)</h2>
+                    <div class="chart-container">
+                        <canvas id="comptaChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- LE NOUVEAU PALMARÈS DE RENTABILITÉ (Top 5) -->
+                <div class="data-section">
+                    <h2>🏆 Palmarès de Rentabilité (Top 5)</h2>
+                    <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Les articles qui génèrent le plus de bénéfice net ce mois-ci.</p>
+                    <div id="palmares-list">
+                        <div style="text-align:center; color:#7f8c8d; padding:20px;">Calcul en cours...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENREGISTREMENT DES DÉPENSES COMPTABLES -->
             <div class="data-section">
-                <h2>📑 Enregistrer une Dépense Comptable Structurelle</h2>
+                <h2>📑 Enregistrer une Dépense (Loyer, Salaire, etc.)</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Motif / Libellé :</label>
-                        <input type="text" id="compta-motif" class="form-control" placeholder="Ex: Loyer, CIE, Salaire...">
+                        <input type="text" id="compta-motif" class="form-control" placeholder="Ex: Loyer, CIE, Apprenti...">
                     </div>
                     <div class="form-group">
                         <label>Catégorie :</label>
@@ -175,9 +201,9 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="data-section">
-                <h2>📋 Registre des Dépenses</h2>
+                <h2>📋 Registre des Dépenses du Mois</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -194,19 +220,21 @@
                     </table>
                 </div>
             </div>
-    </div>
-              <!-- 3. ONGLET CATALOGUE (Fiches Mères) -->
+        </div>
+                <!-- ========================================== -->
+        <!-- 3. ONGLET CATALOGUE (Fiches Mères)         -->
+        <!-- ========================================== -->
         <div id="tab-catalogue" class="tab-content">
             <div class="data-section" style="background: #fffcf5;">
                 <h2>📥 Injection Massive (CSV)</h2>
                 <input type="file" id="csv-file" accept=".csv" onchange="preparerImport()">
-                <button id="btn-import" class="btn btn-gold" style="display:none;" onclick="lancerImport()">🚀 Lancer l'injection</button>
+                <button id="btn-import" class="btn btn-gold" style="display:none; margin-top:10px;" onclick="lancerImport()">🚀 Lancer l'injection</button>
             </div>
 
             <div class="data-section">
                 <h2>➕ Création Manuelle d'un Article Mère</h2>
                 <div class="form-grid">
-                    <div class="form-group"><label>Référence :</label><input type="text" id="art-ref" class="form-control"></div>
+                    <div class="form-group"><label>Référence :</label><input type="text" id="art-ref" class="form-control" placeholder="Ex: REF-001"></div>
                     <div class="form-group"><label>Nom de l'article :</label><input type="text" id="art-nom" class="form-control" placeholder="Ex: Popeline faible"></div>
                     <div class="form-group"><label>Famille / Catégorie :</label><input type="text" id="art-cat" class="form-control" placeholder="Ex: Tissus"></div>
                     <div class="form-group">
@@ -216,8 +244,8 @@
                             <option value="CONSOMMATION_INTERNE">🛠️ Atelier (Invisible vendeurs)</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Prix Vente conseillé :</label><input type="number" id="art-pv" class="form-control"></div>
-                    <div class="form-group"><label>Prix Achat (Gros) :</label><input type="number" id="art-pa" class="form-control"></div>
+                    <div class="form-group"><label>Prix Vente conseillé :</label><input type="number" id="art-pv" class="form-control" placeholder="0"></div>
+                    <div class="form-group"><label>Prix Achat (Gros) :</label><input type="number" id="art-pa" class="form-control" placeholder="0"></div>
                 </div>
                 <button class="btn btn-gold" onclick="ajouterArticleManuel()">✨ Ajouter au Catalogue</button>
             </div>
@@ -229,7 +257,7 @@
                         <thead>
                             <tr>
                                 <th>Réf</th>
-                                <th>Nom de l'article / Famille</th>
+                                <th>Nom / Famille</th>
                                 <th>Cible</th>
                                 <th>Prix Vente</th>
                                 <th>Prix Achat</th>
@@ -244,7 +272,9 @@
             </div>
         </div>
 
-        <!-- 4. ONGLET AUDIT DÉPÔT -->
+        <!-- ========================================== -->
+        <!-- 4. ONGLET AUDIT DÉPÔT                      -->
+        <!-- ========================================== -->
         <div id="tab-audit" class="tab-content">
             <h2>👁️ Surveillance Logistique de la Réserve</h2>
             <div class="data-section">
@@ -269,7 +299,9 @@
             </div>
         </div>
 
-        <!-- 5. ONGLET ÉQUIPE & SÉCURITÉ -->
+        <!-- ========================================== -->
+        <!-- 5. ONGLET ÉQUIPE & SÉCURITÉ                -->
+        <!-- ========================================== -->
         <div id="tab-securite" class="tab-content">
             <div class="data-section">
                 <h2>👤 Créer un Profil Employé</h2>
@@ -305,10 +337,13 @@
             </div>
         </div>
 
-    </div> <!-- Fin Container -->
+    </div> <!-- FIN DU CONTAINER PRINCIPAL -->
 
+    <!-- ========================================== -->
+    <!-- DÉBUT DU MOTEUR JAVASCRIPT                 -->
+    <!-- ========================================== -->
     <script>
-        // --- 1. CONFIGURATION SUPABASE ---
+        // --- 1. CONFIGURATION SUPABASE (La vraie clé de la Caisse) ---
         const SUPABASE_URL = "https://tkqosylwvymaracevamt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWx3dm1hcmFjZXZhbXQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczODIxOTQzNSwiZXhwIjoyMDUzNzk1NDM1fQ.XQ1p5i3D9l1e48jQYw_rK7YJ-QW5s4tq-vH0Z6T7Vxw";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -319,20 +354,28 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             
             document.getElementById('tab-' + tabId).classList.add('active');
-            event.target.classList.add('active');
+            
+            // Activer le bouton cliqué
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                if(b.getAttribute('onclick').includes(tabId)) b.classList.add('active');
+            });
 
+            // Rechargement des données selon l'onglet
             if(tabId === 'caisse') { chargerCaisse(); }
             if(tabId === 'compta') { chargerComptabilite(); }
             if(tabId === 'catalogue') { chargerCatalogue(); }
             if(tabId === 'audit') { chargerAuditDepot(); }
             if(tabId === 'securite') { chargerEquipe(); }
         }
-            // --- 3. LOGIQUE CAISSE (Aujourd'hui) ---
+                    // ==========================================
+        // --- 3. CAISSE CENTRALE (Aujourd'hui)   ---
+        // ==========================================
         async function chargerCaisse() {
             try {
                 const debutJournee = new Date();
                 debutJournee.setHours(0, 0, 0, 0);
 
+                // On ne charge QUE les commandes payées aujourd'hui
                 const { data: ventes, error } = await clientSupabase
                     .from('commandes')
                     .select('*')
@@ -361,55 +404,173 @@
 
                         let dateObj = new Date(v.created_at);
                         let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
-                        let badgeSource = v.origine === 'atelier' ? '🟣 Atelier' : '🔵 Boutique';
-                        let paiement = cash > 0 && momo > 0 ? "Cash+MoMo" : (cash > 0 ? "Espèces" : "MoMo");
+                        let badgeSource = v.origine === 'atelier' ? '<span class="badge" style="background:#8e44ad;">✂️ Atelier</span>' : '<span class="badge" style="background:#2980b9;">🛒 Boutique</span>';
+                        let paiement = cash > 0 && momo > 0 ? "Mixte (Cash+MoMo)" : (cash > 0 ? "Espèces" : "Mobile Money");
 
                         tbody.innerHTML += `<tr>
                             <td>${heureStr}</td>
                             <td><strong>#${v.num_panier}</strong></td>
                             <td>${badgeSource}</td>
-                            <td>👤 ${v.caissiere_nom || 'Inconnue'}</td>
+                            <td><span class="badge" style="background:#ecf0f1; color:#2c3e50; border:1px solid #bdc3c7;">👤 ${v.caissiere_nom || 'Inconnue'}</span></td>
                             <td>${paiement}</td>
-                            <td>✅ Payé</td>
+                            <td><span class="badge badge-cash">✅ Payé</span></td>
                         </tr>`;
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucune vente aujourd\'hui.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">Aucun encaissement pour le moment aujourd\'hui.</td></tr>';
                 }
 
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
-                document.getElementById('stat-depenses').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
-            } catch (e) { console.error(e); }
+                document.getElementById('stat-depenses-jour').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
+            } catch (e) { console.error("Erreur Caisse:", e); }
         }
 
-        // --- 4. LOGIQUE COMPTABILITÉ & BILAN ---
+        async function cloturerJournee() {
+            if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro pour demain.")) return;
+            let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
+            let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
+            let depenses = parseInt(document.getElementById('stat-depenses-jour').innerText.replace(/\D/g, '')) || 0;
+
+            try {
+                await clientSupabase.from('clotures_caisse').insert([{
+                    date_cloture: new Date().toISOString().split('T')[0],
+                    total_especes_attendu: cashAttendu,
+                    total_momo_attendu: momoAttendu,
+                    total_depenses: depenses,
+                    benefice_net_estime: 0 
+                }]);
+                alert("✅ La journée est clôturée et archivée.");
+            } catch(err) { alert("❌ Erreur lors de la clôture."); }
+        }
+
+        // ==========================================
+        // --- 4. LE CERVEAU : RENTABILITÉ & BILAN ---
+        // ==========================================
+        let chartInstance = null;
+
         async function chargerComptabilite() {
             try {
-                // Valeur du stock
+                // 1. Valeur du stock dormant
                 const { data: stock } = await clientSupabase.from('stock_depot').select('quantite, article_id');
-                const { data: articles } = await clientSupabase.from('articles_v2').select('id, prix_achat');
+                const { data: articles } = await clientSupabase.from('articles_v2').select('*');
                 
                 let valeurStock = 0;
-                if(stock && articles) {
-                    stock.forEach(s => {
-                        let art = articles.find(a => a.id === s.article_id);
-                        if(art) valeurStock += (parseFloat(s.quantite) * parseFloat(art.prix_achat || 0));
-                    });
+                let mapArticles = {}; 
+                if(articles) {
+                    articles.forEach(a => { mapArticles[a.ref] = a; });
+                    if(stock) {
+                        stock.forEach(s => {
+                            let art = articles.find(a => a.id === s.article_id);
+                            if(art) valeurStock += (parseFloat(s.quantite) * parseFloat(art.prix_achat || 0));
+                        });
+                    }
                 }
                 document.getElementById('stat-valeur-stock').innerText = valeurStock.toLocaleString('fr-FR') + " F";
 
-                // Registre des dépenses
-                const { data: depenses } = await clientSupabase.from('depenses_boutique').select('*').order('created_at', { ascending: false });
+                // 2. Calcul du mois en cours
+                let dateDebutMois = new Date();
+                dateDebutMois.setDate(1);
+                dateDebutMois.setHours(0,0,0,0);
+
+                const { data: commandesMois } = await clientSupabase.from('commandes').select('*').gte('created_at', dateDebutMois.toISOString()).eq('statut', 'paye');
+                const { data: depensesMois } = await clientSupabase.from('depenses_boutique').select('*').gte('created_at', dateDebutMois.toISOString()).order('created_at', { ascending: false });
+
+                let caBoutique = 0;
+                let caAtelier = 0;
+                let coutMarchandiseVendue = 0;
+                let totalDepensesMois = 0;
+                let palmares = {}; // Pour calculer qui rapporte le plus
+
+                // Analyse des dépenses
                 const tbodyDep = document.getElementById('table-depenses-compta');
                 tbodyDep.innerHTML = '';
-                if(depenses && depenses.length > 0) {
-                    depenses.forEach(d => {
+                if(depensesMois && depensesMois.length > 0) {
+                    depensesMois.forEach(d => {
+                        let montant = parseFloat(d.montant) || 0;
+                        totalDepensesMois += montant;
                         let date = new Date(d.created_at).toLocaleDateString('fr-FR');
-                        tbodyDep.innerHTML += `<tr><td>${date}</td><td><strong>${d.categorie_depense || 'AUTRE'}</strong></td><td>${d.motif}</td><td style="color:var(--danger)">-${parseFloat(d.montant).toLocaleString('fr-FR')} F</td></tr>`;
+                        tbodyDep.innerHTML += `<tr><td>${date}</td><td><span class="badge" style="background:#34495e;">${d.categorie_depense || 'AUTRE'}</span></td><td>${d.motif}</td><td style="color:var(--danger); font-weight:bold;">-${montant.toLocaleString('fr-FR')} F</td></tr>`;
+                    });
+                } else {
+                    tbodyDep.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Aucune dépense enregistrée ce mois-ci.</td></tr>';
+                }
+
+                // Analyse des ventes et de la rentabilité article par article
+                if(commandesMois) {
+                    commandesMois.forEach(cmd => {
+                        let totalCmd = parseFloat(cmd.total) || 0;
+                        if(cmd.origine === 'atelier') { caAtelier += totalCmd; } 
+                        else { caBoutique += totalCmd; }
+
+                        try {
+                            let details = typeof cmd.details === 'string' ? JSON.parse(cmd.details) : cmd.details;
+                            if(details) {
+                                details.forEach(item => {
+                                    let articleDb = mapArticles[item.ref];
+                                    let prixAchatUnitaire = articleDb ? parseFloat(articleDb.prix_achat) || 0 : 0;
+                                    let prixVenteUnitaire = parseFloat(item.prix_unitaire_vente) || parseFloat(item.prix) || 0;
+                                    let qte = parseFloat(item.qte) || 0;
+
+                                    let coutAchatLigne = prixAchatUnitaire * qte;
+                                    coutMarchandiseVendue += coutAchatLigne;
+
+                                    // L'algorithme de rentabilité (Bénéfice Net généré par l'article)
+                                    let beneficeLigne = (prixVenteUnitaire * qte) - coutAchatLigne;
+                                    let nomArt = item.nom_article || item.nom || 'Article inconnu';
+                                    
+                                    if(!palmares[nomArt]) palmares[nomArt] = 0;
+                                    palmares[nomArt] += beneficeLigne;
+                                });
+                            }
+                        } catch(e) {}
                     });
                 }
-            } catch (e) { console.error(e); }
+
+                // Calcul du vrai bénéfice net du mois
+                let chiffreAffairesTotal = caBoutique + caAtelier;
+                let beneficeNet = chiffreAffairesTotal - coutMarchandiseVendue - totalDepensesMois;
+                document.getElementById('stat-benefice').innerText = beneficeNet.toLocaleString('fr-FR') + " F";
+
+                // Dessin du graphique
+                dessinerGraphiqueComparatif(caBoutique, caAtelier, totalDepensesMois);
+
+                // Affichage du Palmarès Top 5
+                let top5 = Object.entries(palmares).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                let palmaresHtml = "";
+                if(top5.length > 0) {
+                    top5.forEach((item, index) => {
+                        palmaresHtml += `
+                            <div class="rank-item">
+                                <div><span class="rank-number">#${index + 1}</span> <strong>${item[0]}</strong></div>
+                                <div style="color:var(--success); font-weight:bold;">+ ${item[1].toLocaleString('fr-FR')} F (Net)</div>
+                            </div>`;
+                    });
+                } else {
+                    palmaresHtml = "<div style='text-align:center; padding:10px; color:#7f8c8d;'>Pas assez de données pour le moment.</div>";
+                }
+                document.getElementById('palmares-list').innerHTML = palmaresHtml;
+
+            } catch (e) { console.error("Erreur Comptabilité:", e); }
+        }
+
+        function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses) {
+            const ctx = document.getElementById('comptaChart');
+            if(!ctx) return;
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Boutique (Ventes)', 'Atelier (Prestations)', 'Dépenses Totales'],
+                    datasets: [{
+                        label: 'Flux du Mois (FCFA)',
+                        data: [caBoutique, caAtelier, depenses],
+                        backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c'],
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
         }
 
         async function enregistrerDepenseComptable() {
@@ -417,7 +578,7 @@
             const cat = document.getElementById('compta-cat').value;
             const montant = document.getElementById('compta-montant').value;
             
-            if(!motif || !montant) { alert("Saisissez motif et montant."); return; }
+            if(!motif || !montant) { alert("⚠️ Saisissez un motif et un montant."); return; }
             await clientSupabase.from('depenses_boutique').insert([{ motif, categorie_depense: cat, montant }]);
             
             document.getElementById('compta-motif').value = "";
@@ -425,23 +586,33 @@
             chargerComptabilite();
         }
 
-        // --- 5. LOGIQUE CATALOGUE ---
+        async function chargerReliquats() {
+            const { data } = await clientSupabase.from('reliquats').select('montant').eq('statut', 'actif');
+            let total = data ? data.reduce((sum, r) => sum + parseFloat(r.montant), 0) : 0;
+            document.getElementById('stat-reliquats').innerText = total.toLocaleString('fr-FR') + " F";
+        }
+
+        // ==========================================
+        // --- 5. CATALOGUE & IMPORT CSV          ---
+        // ==========================================
         async function chargerCatalogue() {
             const { data } = await clientSupabase.from('articles_v2').select('*').order('nom_article');
             const tbody = document.getElementById('table-articles');
             tbody.innerHTML = '';
-            if(data) {
+            if(data && data.length > 0) {
                 data.forEach(a => {
-                    let badgeCible = a.cible_utilisation === 'CONSOMMATION_INTERNE' ? '🟣 Atelier Seul' : '🔵 Public';
+                    let badgeCible = a.cible_utilisation === 'CONSOMMATION_INTERNE' ? '<span class="badge" style="background:#8e44ad;">Atelier Seul</span>' : '<span class="badge" style="background:#2980b9;">Boutique</span>';
                     tbody.innerHTML += `<tr>
                         <td><code>${a.ref || 'N/A'}</code></td>
-                        <td><strong>${a.nom_article}</strong><br><small>${a.famille || ''}</small></td>
+                        <td><strong>${a.nom_article}</strong><br><small style="color:#7f8c8d;">${a.famille || ''}</small></td>
                         <td>${badgeCible}</td>
-                        <td>${a.prix_vente} F</td>
-                        <td>${a.prix_achat} F</td>
-                        <td><button class="btn btn-action btn-danger" onclick="clientSupabase.from('articles_v2').delete().eq('id', '${a.id}'); chargerCatalogue();">X</button></td>
+                        <td style="color:var(--success); font-weight:bold;">${a.prix_vente} F</td>
+                        <td style="color:var(--danger);">${a.prix_achat} F</td>
+                        <td><button class="btn btn-action btn-danger" onclick="supprimerArticle('${a.id}')">X</button></td>
                     </tr>`;
                 });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Catalogue vide.</td></tr>';
             }
         }
 
@@ -451,200 +622,24 @@
                 nom_article: document.getElementById('art-nom').value,
                 famille: document.getElementById('art-cat').value,
                 cible_utilisation: document.getElementById('art-scope').value,
-                prix_vente: document.getElementById('art-pv').value || 0,
-                prix_achat: document.getElementById('art-pa').value || 0
+                prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
+                prix_achat: parseFloat(document.getElementById('art-pa').value) || 0
             };
-            if(!payload.nom_article) { alert("Le nom est obligatoire."); return; }
+            if(!payload.nom_article) { alert("⚠️ Le nom de l'article est obligatoire."); return; }
             await clientSupabase.from('articles_v2').insert([payload]);
+            
+            // Vider les cases
+            document.querySelectorAll('#tab-catalogue input').forEach(input => input.value = "");
             chargerCatalogue();
         }
 
-        // --- 6. LOGIQUE AUDIT DÉPÔT ---
-        async function chargerAuditDepot() {
-            const { data } = await clientSupabase.from('mouvements_depot').select('*, articles_v2(nom_article)').order('created_at', { ascending: false }).limit(50);
-            const tbody = document.getElementById('table-mouvements-audit');
-            tbody.innerHTML = '';
-            if(data) {
-                data.forEach(m => {
-                    let date = new Date(m.created_at).toLocaleString('fr-FR');
-                    let badgeMvt = m.type_mouvement === 'ENTREE' ? '🟢 ENTRÉE' : '🔴 SORTIE';
-                    let nomArticle = m.articles_v2 ? m.articles_v2.nom_article : 'Inconnu';
-                    
-                    tbody.innerHTML += `<tr>
-                        <td><small>${date}</small></td>
-                        <td><strong>${nomArticle}</strong></td>
-                        <td>🎨 ${m.couleur_ref}</td>
-                        <td>${badgeMvt}</td>
-                        <td><strong>${m.quantite}</strong></td>
-                        <td>👤 ${m.utilisateur || 'Magasinier'}</td>
-                    </tr>`;
-                });
+        async function supprimerArticle(id) {
+            if(confirm("Supprimer cet article du catalogue définitif ?")) {
+                await clientSupabase.from('articles_v2').delete().eq('id', id);
+                chargerCatalogue();
             }
         }
 
-        // --- 7. SÉCURITÉ ET ÉQUIPE ---
-        async function chargerEquipe() {
-            const { data } = await clientSupabase.from('personnel_nina').select('*').order('role');
-            const tbody = document.getElementById('table-equipe');
-            tbody.innerHTML = '';
-            if(data) {
-                data.forEach(m => {
-                    tbody.innerHTML += `<tr>
-                        <td><strong>${m.nom_employe}</strong></td>
-                        <td>${m.role}</td>
-                        <td><code>${m.code_pin}</code></td>
-                        <td>${m.actif ? '✅ Actif' : '❌ Inactif'}</td>
-                        <td><button class="btn btn-action" onclick="clientSupabase.from('personnel_nina').update({actif: ${!m.actif}}).eq('id', ${m.id}); chargerEquipe();">Toggle</button></td>
-                    </tr>`;
-                });
-            }
-        }
-
-        async function ajouterEmploye() {
-            const nom = document.getElementById('emp-nom').value;
-            const role = document.getElementById('emp-role').value;
-            const pin = document.getElementById('emp-pin').value;
-            if(!nom || pin.length < 4) { alert("Erreur saisie."); return; }
-            await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin}]);
-            chargerEquipe();
-        }
-
-        // DÉMARRAGE
-        chargerCaisse();
-                // =========================================================
-        // --- 8. LE CERVEAU : INTELLIGENCE FINANCIÈRE ET GRAPHES ---
-        // =========================================================
-        
-        async function calculerIntelligenceFinanciere() {
-            try {
-                // Obtenir le 1er jour du mois en cours
-                let dateDebutMois = new Date();
-                dateDebutMois.setDate(1);
-                dateDebutMois.setHours(0,0,0,0);
-
-                // 1. Charger toutes les commandes du mois
-                const { data: commandesMois } = await clientSupabase
-                    .from('commandes')
-                    .select('*')
-                    .gte('created_at', dateDebutMois.toISOString())
-                    .eq('statut', 'paye');
-
-                // 2. Charger toutes les dépenses du mois
-                const { data: depensesMois } = await clientSupabase
-                    .from('depenses_boutique')
-                    .select('montant')
-                    .gte('created_at', dateDebutMois.toISOString());
-
-                // 3. Charger le catalogue pour connaître les prix d'achat
-                const { data: catalogue } = await clientSupabase.from('articles_v2').select('ref, prix_achat');
-                let mapPrixAchat = {};
-                if(catalogue) {
-                    catalogue.forEach(art => mapPrixAchat[art.ref] = parseFloat(art.prix_achat) || 0);
-                }
-
-                let chiffreAffairesBoutique = 0;
-                let chiffreAffairesAtelier = 0;
-                let coutMarchandiseVendue = 0;
-
-                if(commandesMois) {
-                    commandesMois.forEach(cmd => {
-                        let totalCmd = parseFloat(cmd.total) || 0;
-                        
-                        // Séparation pour le graphique
-                        if(cmd.origine === 'atelier') {
-                            chiffreAffairesAtelier += totalCmd;
-                        } else {
-                            chiffreAffairesBoutique += totalCmd;
-                        }
-
-                        // Calcul du coût d'achat pour trouver la marge
-                        try {
-                            let details = typeof cmd.details === 'string' ? JSON.parse(cmd.details) : cmd.details;
-                            if(details) {
-                                details.forEach(item => {
-                                    let coutAchatUnitaire = mapPrixAchat[item.ref] || 0;
-                                    coutMarchandiseVendue += (coutAchatUnitaire * parseFloat(item.qte));
-                                });
-                            }
-                        } catch(e) {}
-                    });
-                }
-
-                let totalDepensesMois = depensesMois ? depensesMois.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
-                let chiffreAffairesTotal = chiffreAffairesBoutique + chiffreAffairesAtelier;
-                
-                // LE VRAI BÉNÉFICE NET : Argent rentré - Coût d'achat de la marchandise vendue - Dépenses
-                let beneficeNet = chiffreAffairesTotal - coutMarchandiseVendue - totalDepensesMois;
-                
-                document.getElementById('stat-benefice').innerText = beneficeNet.toLocaleString('fr-FR') + " F";
-
-                // --- DESSIN DU GRAPHIQUE INTELLIGENT ---
-                dessinerGraphiqueComparatif(chiffreAffairesBoutique, chiffreAffairesAtelier, totalDepensesMois);
-
-            } catch (err) { console.error("Erreur Intelligence Financière:", err); }
-        }
-
-        let chartInstance = null;
-        function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses) {
-            const ctx = document.getElementById('comptaChart');
-            if(!ctx) return;
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Ventes Boutique', 'Prestations Atelier', 'Dépenses Totales'],
-                    datasets: [{
-                        label: 'Flux Financiers du Mois (FCFA)',
-                        data: [caBoutique, caAtelier, depenses],
-                        backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c'],
-                        borderWidth: 1
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-
-        // =========================================================
-        // --- 9. GESTION DES RELIQUATS (Dettes) ---
-        // =========================================================
-        async function chargerReliquats() {
-            try {
-                const { data } = await clientSupabase.from('reliquats').select('montant_restant').eq('statut', 'actif');
-                let totalReliquats = data ? data.reduce((sum, r) => sum + parseFloat(r.montant_restant), 0) : 0;
-                let element = document.getElementById('stat-reliquats-total');
-                if(element) element.innerText = totalReliquats.toLocaleString('fr-FR') + " F";
-            } catch(e) { console.error(e); }
-        }
-
-
-        // =========================================================
-        // --- 10. ARCHIVAGE ET CLÔTURE DE LA CAISSE ---
-        // =========================================================
-        async function cloturerJournee() {
-            if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro pour demain.")) return;
-
-            let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
-            let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
-            let depenses = parseInt(document.getElementById('stat-depenses').innerText.replace(/\D/g, '')) || 0;
-
-            try {
-                await clientSupabase.from('clotures_caisse').insert([{
-                    date_cloture: new Date().toISOString().split('T')[0],
-                    total_especes_attendu: cashAttendu,
-                    total_momo_attendu: momoAttendu,
-                    total_depenses: depenses,
-                    benefice_net_estime: 0 // Géré désormais par le bilan mensuel
-                }]);
-                alert("✅ La journée est clôturée et archivée dans le registre de sécurité.");
-            } catch(err) { alert("❌ Erreur lors de la clôture."); }
-        }
-
-
-        // =========================================================
-        // --- 11. IMPORTATION MASSIVE EXCEL (CSV) ---
-        // =========================================================
         let articlesPourImport = [];
         function preparerImport() {
             const file = document.getElementById('csv-file').files[0];
@@ -653,8 +648,9 @@
                 header: true, skipEmptyLines: true,
                 complete: function(results) {
                     articlesPourImport = results.data;
-                    document.getElementById('btn-import').style.display = 'inline-block';
-                    document.getElementById('btn-import').innerText = `🚀 Lancer l'injection de ${articlesPourImport.length} articles`;
+                    const btn = document.getElementById('btn-import');
+                    btn.style.display = 'inline-block';
+                    btn.innerText = `🚀 Injecter ${articlesPourImport.length} articles`;
                 }
             });
         }
@@ -674,21 +670,78 @@
                 })).filter(a => a.ref && a.nom_article);
 
                 await clientSupabase.from('articles_v2').upsert(articlesNettoyes, { onConflict: 'ref' });
-                alert(`🔥 Importation validée ! ${articlesNettoyes.length} articles ajoutés ou mis à jour.`);
+                alert(`🔥 Importation réussie ! ${articlesNettoyes.length} fiches créées.`);
                 document.getElementById('csv-file').value = "";
                 btn.style.display = "none";
+                btn.disabled = false;
                 chargerCatalogue();
             } catch(err) { alert("❌ Erreur lors de l'injection."); btn.disabled = false; }
         }
 
-        // --- DÉMARRAGES AUTOMATIQUES CACHÉS ---
-        // Ces fonctions se lancent en silence pour préparer les données des autres onglets
-        setTimeout(() => {
-            calculerIntelligenceFinanciere();
-            chargerReliquats();
-        }, 1500);
+        // ==========================================
+        // --- 6. AUDIT LOGISTIQUE (Dépôt)        ---
+        // ==========================================
+        async function chargerAuditDepot() {
+            // Jointure pour récupérer le nom de l'article depuis sa référence (si enregistré sous forme d'ID ou de ref)
+            const { data } = await clientSupabase.from('mouvements_stock').select('*').order('created_at', { ascending: false }).limit(50);
+            const tbody = document.getElementById('table-mouvements-audit');
+            tbody.innerHTML = '';
+            if(data && data.length > 0) {
+                data.forEach(m => {
+                    let date = new Date(m.created_at).toLocaleString('fr-FR');
+                    let badgeMvt = m.type_mouvement === 'ENTREE' ? '<span class="badge badge-cash">🟢 ENTRÉE</span>' : '<span class="badge btn-danger">🔴 SORTIE</span>';
                     
+                    tbody.innerHTML += `<tr>
+                        <td><small>${date}</small></td>
+                        <td><strong>${m.nom_article || 'Inconnu'}</strong></td>
+                        <td>🎨 ${m.couleur || m.nuance || '-'}</td>
+                        <td>${badgeMvt}</td>
+                        <td><strong>${m.quantite_totale || m.quantite}</strong></td>
+                        <td><span class="badge" style="background:#ecf0f1; color:#2c3e50;">👤 ${m.utilisateur || 'Magasinier'}</span></td>
+                    </tr>`;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Aucun mouvement logistique récent.</td></tr>';
+            }
+        }
+
+        // ==========================================
+        // --- 7. SÉCURITÉ & ÉQUIPE               ---
+        // ==========================================
+        async function chargerEquipe() {
+            const { data } = await clientSupabase.from('personnel_nina').select('*').order('role');
+            const tbody = document.getElementById('table-equipe');
+            tbody.innerHTML = '';
+            if(data) {
+                data.forEach(m => {
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${m.nom_employe}</strong></td>
+                        <td>${m.role}</td>
+                        <td><code>${m.code_pin}</code></td>
+                        <td>${m.actif ? '<span class="badge badge-cash">✅ Actif</span>' : '<span class="badge btn-danger">❌ Inactif</span>'}</td>
+                        <td><button class="btn btn-action" style="background:#7f8c8d;" onclick="clientSupabase.from('personnel_nina').update({actif: ${!m.actif}}).eq('id', ${m.id}); chargerEquipe();">Bloquer / Débloquer</button></td>
+                    </tr>`;
+                });
+            }
+        }
+
+                async function ajouterEmploye() {
+            const nom = document.getElementById('emp-nom').value;
+            const role = document.getElementById('emp-role').value;
+            const pin = document.getElementById('emp-pin').value;
+            if(!nom || pin.length < 4) { alert("⚠️ Saisissez un nom et un PIN à 4 chiffres."); return; }
+            await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin, actif: true}]);
+            document.getElementById('emp-nom').value = ""; document.getElementById('emp-pin').value = "";
+            chargerEquipe();
+        }
+
+        // ==========================================
+        // --- 8. DÉMARRAGE DU LOGICIEL           ---
+        // ==========================================
+        // Lance la caisse par défaut et précharge la dette en fond
+        chargerCaisse();
+        chargerReliquats();
+
     </script>
 </body>
 </html>
-
