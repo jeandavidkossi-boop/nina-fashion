@@ -526,18 +526,27 @@ let nomMachiniste = roleActuel;
                 messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET ENVOYÉ À LA CAISSE ! \nNuméro : " + numTicket : "✅ NOUVEAU TICKET SAUVEGARDÉ !";
             }
 
-            // 3. INSERTION DES LIGNES DÉTAILLÉES
+                        // 3. INSERTION DES LIGNES DÉTAILLÉES
             const lignesAInserer = ticket.map(item => ({
                 commande_id: commandeIdToUse,
-                article_ref: item.ref || 'SRV',
+                article_ref: item.ref || 'SRV_ATELIER',
                 nom_article: item.nom,
                 quantite: item.qte,
                 prix_unitaire_vente: item.prix
             }));
-            await clientSupabase.from('lignes_commandes').insert(lignesAInserer);
+            
+            // On écoute la réponse de Supabase
+            const { error: erreurLignes } = await clientSupabase.from('lignes_commandes').insert(lignesAInserer);
+            
+            // Si Supabase refuse, on bloque tout et on affiche le vrai problème !
+            if (erreurLignes) {
+                alert("❌ REFUS DE LA BASE DE DONNÉES : " + erreurLignes.message);
+                throw erreurLignes; // On arrête l'exécution ici
+            }
 
+            // Si tout s'est bien passé dans les DEUX tables, alors on crie victoire
             alert(messageSucces);
-
+            
             // 4. RÉINITIALISATION
             ticket = [];
             ticketOuvertId = null;
