@@ -511,6 +511,183 @@
 
         // DÉMARRAGE
         chargerCaisse();
+                // =========================================================
+        // --- 8. LE CERVEAU : INTELLIGENCE FINANCIÈRE ET GRAPHES ---
+        // =========================================================
+        
+        async function calculerIntelligenceFinanciere() {
+            try {
+                // Obtenir le 1er jour du mois en cours
+                let dateDebutMois = new Date();
+                dateDebutMois.setDate(1);
+                dateDebutMois.setHours(0,0,0,0);
+
+                // 1. Charger toutes les commandes du mois
+                const { data: commandesMois } = await clientSupabase
+                    .from('commandes')
+                    .select('*')
+                    .gte('created_at', dateDebutMois.toISOString())
+                    .eq('statut', 'paye');
+
+                // 2. Charger toutes les dépenses du mois
+                const { data: depensesMois } = await clientSupabase
+                    .from('depenses_boutique')
+                    .select('montant')
+                    .gte('created_at', dateDebutMois.toISOString());
+
+                // 3. Charger le catalogue pour connaître les prix d'achat
+                const { data: catalogue } = await clientSupabase.from('articles_v2').select('ref, prix_achat');
+                let mapPrixAchat = {};
+                if(catalogue) {
+                    catalogue.forEach(art => mapPrixAchat[art.ref] = parseFloat(art.prix_achat) || 0);
+                }
+
+                let chiffreAffairesBoutique = 0;
+                let chiffreAffairesAtelier = 0;
+                let coutMarchandiseVendue = 0;
+
+                if(commandesMois) {
+                    commandesMois.forEach(cmd => {
+                        let totalCmd = parseFloat(cmd.total) || 0;
+                        
+                        // Séparation pour le graphique
+                        if(cmd.origine === 'atelier') {
+                            chiffreAffairesAtelier += totalCmd;
+                        } else {
+                            chiffreAffairesBoutique += totalCmd;
+                        }
+
+                        // Calcul du coût d'achat pour trouver la marge
+                        try {
+                            let details = typeof cmd.details === 'string' ? JSON.parse(cmd.details) : cmd.details;
+                            if(details) {
+                                details.forEach(item => {
+                                    let coutAchatUnitaire = mapPrixAchat[item.ref] || 0;
+                                    coutMarchandiseVendue += (coutAchatUnitaire * parseFloat(item.qte));
+                                });
+                            }
+                        } catch(e) {}
+                    });
+                }
+
+                let totalDepensesMois = depensesMois ? depensesMois.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
+                let chiffreAffairesTotal = chiffreAffairesBoutique + chiffreAffairesAtelier;
+                
+                // LE VRAI BÉNÉFICE NET : Argent rentré - Coût d'achat de la marchandise vendue - Dépenses
+                let beneficeNet = chiffreAffairesTotal - coutMarchandiseVendue - totalDepensesMois;
+                
+                document.getElementById('stat-benefice').innerText = beneficeNet.toLocaleString('fr-FR') + " F";
+
+                // --- DESSIN DU GRAPHIQUE INTELLIGENT ---
+                dessinerGraphiqueComparatif(chiffreAffairesBoutique, chiffreAffairesAtelier, totalDepensesMois);
+
+            } catch (err) { console.error("Erreur Intelligence Financière:", err); }
+        }
+
+        let chartInstance = null;
+        function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses) {
+            const ctx = document.getElementById('comptaChart');
+            if(!ctx) return;
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Ventes Boutique', 'Prestations Atelier', 'Dépenses Totales'],
+                    datasets: [{
+                        label: 'Flux Financiers du Mois (FCFA)',
+                        data: [caBoutique, caAtelier, depenses],
+                        backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c'],
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+
+        // =========================================================
+        // --- 9. GESTION DES RELIQUATS (Dettes) ---
+        // =========================================================
+        async function chargerReliquats() {
+            try {
+                const { data } = await clientSupabase.from('reliquats').select('montant_restant').eq('statut', 'actif');
+                let totalReliquats = data ? data.reduce((sum, r) => sum + parseFloat(r.montant_restant), 0) : 0;
+                let element = document.getElementById('stat-reliquats-total');
+                if(element) element.innerText = totalReliquats.toLocaleString('fr-FR') + " F";
+            } catch(e) { console.error(e); }
+        }
+
+
+        // =========================================================
+        // --- 10. ARCHIVAGE ET CLÔTURE DE LA CAISSE ---
+        // =========================================================
+        async function cloturerJournee() {
+            if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro pour demain.")) return;
+
+            let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
+            let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
+            let depenses = parseInt(document.getElementById('stat-depenses').innerText.replace(/\D/g, '')) || 0;
+
+            try {
+                await clientSupabase.from('clotures_caisse').insert([{
+                    date_cloture: new Date().toISOString().split('T')[0],
+                    total_especes_attendu: cashAttendu,
+                    total_momo_attendu: momoAttendu,
+                    total_depenses: depenses,
+                    benefice_net_estime: 0 // Géré désormais par le bilan mensuel
+                }]);
+                alert("✅ La journée est clôturée et archivée dans le registre de sécurité.");
+            } catch(err) { alert("❌ Erreur lors de la clôture."); }
+        }
+
+
+        // =========================================================
+        // --- 11. IMPORTATION MASSIVE EXCEL (CSV) ---
+        // =========================================================
+        let articlesPourImport = [];
+        function preparerImport() {
+            const file = document.getElementById('csv-file').files[0];
+            if (!file) return;
+            Papa.parse(file, {
+                header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    articlesPourImport = results.data;
+                    document.getElementById('btn-import').style.display = 'inline-block';
+                    document.getElementById('btn-import').innerText = `🚀 Lancer l'injection de ${articlesPourImport.length} articles`;
+                }
+            });
+        }
+
+        async function lancerImport() {
+            if (articlesPourImport.length === 0) return;
+            const btn = document.getElementById('btn-import');
+            btn.disabled = true; btn.innerText = "⏳ Injection en cours...";
+            try {
+                const articlesNettoyes = articlesPourImport.map(row => ({
+                    ref: row.ref || row.reference || row.REF,
+                    nom_article: row.nom_article || row.designation || row.nom || row.NOM,
+                    famille: row.categorie || row.section || row.famille || 'Catalogue',
+                    prix_vente: parseFloat(row.prix_detail) || parseFloat(row.prix_vente) || 0,
+                    prix_achat: parseFloat(row.prix_achat) || 0,
+                    cible_utilisation: "VENTE_PUBLIQUE"
+                })).filter(a => a.ref && a.nom_article);
+
+                await clientSupabase.from('articles_v2').upsert(articlesNettoyes, { onConflict: 'ref' });
+                alert(`🔥 Importation validée ! ${articlesNettoyes.length} articles ajoutés ou mis à jour.`);
+                document.getElementById('csv-file').value = "";
+                btn.style.display = "none";
+                chargerCatalogue();
+            } catch(err) { alert("❌ Erreur lors de l'injection."); btn.disabled = false; }
+        }
+
+        // --- DÉMARRAGES AUTOMATIQUES CACHÉS ---
+        // Ces fonctions se lancent en silence pour préparer les données des autres onglets
+        setTimeout(() => {
+            calculerIntelligenceFinanciere();
+            chargerReliquats();
+        }, 1500);
+                    
     </script>
 </body>
 </html>
