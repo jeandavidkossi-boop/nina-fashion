@@ -352,7 +352,7 @@ let nomMachiniste = roleActuel;
         localStorage.setItem('nina_atelier_avance', document.getElementById('input-avance').value);
             }
             
-        function mettreAjourUI() {
+        function mettreAJourUI() {
             sauvegarderTicketLocal();
 
             const container = document.getElementById('ticket-items');
@@ -559,7 +559,7 @@ let nomMachiniste = roleActuel;
             localStorage.removeItem('nina_atelier_tel');
             localStorage.removeItem('nina_atelier_avance');
             
-            mettreAjourUI();
+            mettreAJourUI();
 
         } catch (err) {
             alert("❌ ERREUR SUPABASE : " + err.message);
