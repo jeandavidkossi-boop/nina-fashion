@@ -114,7 +114,11 @@
                 <label style="color: var(--danger);">🎨 Spécifier la Couleur / Variante (Obligatoire) :</label>
                 <input type="text" id="mvt-couleur" class="form-control" placeholder="Ex: Rouge Vif, Bleu Nuit, Doré...">
             </div>
-
+        <div class="form-group" id="group-seuil" style="display: none;">
+            <label style="color: var(--primary);">🔔 Seuil d'alerte (Optionnel) :</label>
+            <input type="number" id="mvt-seuil" class="form-control" placeholder="Ex: 10 (Quantité minimum avant alerte)">
+        </div>
+            
             <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                 <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>Conditionnement :</label>
@@ -185,28 +189,40 @@ document.getElementById('badge-magasinier').innerText = "📦 " + roleActuel;
 // CRUCIAL : On crée la variable pour signer les mouvements de stock et éviter l'erreur réseau
 let nomMagasinier = roleActuel;
             
+    // --- 3. LE BORDEREAU ET LES DONNÉES ---
+    let STOCK_DEPOT = [];
+    let CATALOGUE = [];
+    let bordereau = JSON.parse(localStorage.getItem('nina_depot_bordereau')) || [];
 
-        // --- 3. LE BORDEREAU INCREVABLE (Mémoire locale) ---
-        let STOCK_CENTRAL = [];
-        // On récupère le bordereau s'il a été commencé avant une coupure
-        let bordereau = JSON.parse(localStorage.getItem('nina_depot_bordereau')) || [];
+    async function chargerDonneesDepot() {
+        try {
+            // 1. On charge le catalogue officiel pour la liste déroulante
+            const { data: catData } = await clientSupabase.from('articles_v2').select('*').order('nom_article');
+            CATALOGUE = catData || [];
 
-        async function chargerDonneesDpot() {
-            try {
-                const { data, error } = await clientSupabase.from('stock_mercerie').select('*').order('nom_article');
-                if (error) throw error;
-                
-                STOCK_CENTRAL = data;
-                
-                construireInterfaceStock();
-                construireSelectArticles();
-                construireAlertesCommande();
-                afficherBordereau(); // Restaure l'affichage du bordereau mémorisé
-            } catch (err) {
-                document.getElementById('grid-stock').innerHTML = '<div style="color:red; text-align:center; padding:20px;">❌ Erreur réseau.</div>';
-            }
+            // 2. On charge le stock physique avec les noms du catalogue (Magie de Supabase)
+            const { data: stockData, error } = await clientSupabase.from('stock_depot').select('*, articles_v2(nom_article, famille)').order('couleur_ref');
+            if (error) throw error;
+
+            // On formate les données pour que ton affichage accordéon fonctionne sans rien casser
+            STOCK_DEPOT = stockData.map(s => ({
+                id_article: s.article_id,
+                famille: s.articles_v2?.famille || 'Autre',
+                nom_article: s.articles_v2?.nom_article || 'Article inconnu',
+                couleur_ref: s.couleur_ref,
+                quantite: s.quantite,
+                seuil_alerte: s.seuil_alerte
+            }));
+
+            construireInterfaceStock();
+            construireSelectArticles();
+            construireAlertesCommande();
+            afficherBordereau();
+        } catch (err) {
+            document.getElementById('grid-stock').innerHTML = "<div style='color:red; text-align:center;'>Erreur réseau.</div>";
         }
-
+    }
+            
         // --- 4. GESTION DES ONGLETS ET ACCORDÉON ---
         function switchTab(tabId) {
             document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
@@ -228,7 +244,7 @@ let nomMagasinier = roleActuel;
 
             // 1. Regrouper par Famille, puis par Article
             const parFamille = {};
-            STOCK_CENTRAL.forEach(art => {
+            STOCK_DEPOT.forEach(art => {.
                 let famille = art.famille || 'Autre';
                 if (!parFamille[famille]) parFamille[famille] = {};
                 if (!parFamille[famille][art.nom_article]) parFamille[famille][art.nom_article] = [];
@@ -247,32 +263,33 @@ let nomMagasinier = roleActuel;
                         <div class="cat-body">
                 `;
                 
-                for (const [nom, variantes] of Object.entries(articles)) {
-                    let totalStockArticle = variantes.reduce((somme, v) => somme + parseFloat(v.stock_actuel), 0);
-                    
-                    catHtml += `
-                        <div class="article-group" data-nom="${nom.toLowerCase()}">
-                            <div class="art-header" onclick="toggleAccordion(this.nextElementSibling)">
-                                <span>${nom} <span style="font-size:0.8rem; color:#95a5a6;">(${variantes.length} var.)</span></span>
-                                <strong>∑ ${totalStockArticle}</strong>
-                            </div>
-                            <div class="art-body">
-                    `;
-                    
-                    variantes.forEach(v => {
-                        const estAlerte = parseFloat(v.stock_actuel) <= parseFloat(v.seuil_alerte);
-                        catHtml += `
-                            <div class="variante-card" data-couleur="${(v.couleur_variante || '').toLowerCase()}">
-                                <div>
-                                    <span class="variante-badge">🎨 ${v.couleur_variante || 'Standard'}</span>
-                                    <span style="font-size:0.8rem; color:#7f8c8d; margin-left:5px;">> Seuil: ${v.seuil_alerte}</span>
-                                </div>
-                                <div class="stock-val ${estAlerte ? 'alert' : ''}">${v.stock_actuel}</div>
-                            </div>
-                        `;
-                    });
-                    catHtml += `</div></div>`; // Fermeture article
-                }
+                        for (const [nom, variantes] of Object.entries(articles)) {
+            let totalStockArticle = variantes.reduce((somme, v) => somme + parseFloat(v.quantite), 0);
+            
+            catHtml += `
+                <div class="article-group" data-nom="${nom.toLowerCase()}">
+                    <div class="art-header" onclick="toggleAccordion(this.nextElementSibling)">
+                        <span>${nom} <span style="font-size:0.8rem; color:#95a5a6;">(${variantes.length} var.)</span></span>
+                        <strong>${totalStockArticle}</strong>
+                    </div>
+                    <div class="art-body">
+            `;
+
+            variantes.forEach(v => {
+                const estAlerte = parseFloat(v.quantite) <= parseFloat(v.seuil_alerte);
+                catHtml += `
+                    <div class="variante-card" data-couleur="${(v.couleur_ref || '').toLowerCase()}">
+                        <div>
+                            <span class="variante-badge">🎨 ${v.couleur_ref}</span><br>
+                            <span style="font-size:0.8rem; color:#7f8c8d;">Seuil d'alerte : ${v.seuil_alerte}</span>
+                        </div>
+                        <div class="stock-val ${estAlerte ? 'alert' : ''}">${v.quantite}</div>
+                    </div>
+                `;
+            });
+            catHtml += `</div></div>`;
+                        }
+                                                
                 catHtml += `</div></div>`; // Fermeture catégorie
             }
             grid.innerHTML = catHtml;
@@ -322,17 +339,14 @@ let nomMagasinier = roleActuel;
         }
 
         // --- 5. LOGIQUE DES FORMULAIRES DE MOUVEMENT ---
-        function construireSelectArticles() {
-            const select = document.getElementById('mvt-article');
-            select.innerHTML = '<option value="">--- Choisir un article ---</option>';
+            function construireSelectArticles() {
+        const select = document.getElementById('mvt-article');
+        select.innerHTML = '<option value="">--- Choisir un article ---</option>';
+        CATALOGUE.forEach(art => {
+            select.innerHTML += `<option value="${art.id}" data-famille="${art.famille}">${art.nom_article}</option>`;
+        });
+            }
             
-            const nomsUniques = [...new Set(STOCK_CENTRAL.map(s => s.nom_article))];
-            nomsUniques.forEach(nom => {
-                const art = STOCK_CENTRAL.find(s => s.nom_article === nom);
-                select.innerHTML += `<option value="${art.id}" data-famille="${art.famille}">${nom}</option>`;
-            });
-        }
-
         function toggleDestination() {
             const type = document.getElementById('mvt-type').value;
             document.getElementById('group-destination').style.display = type === 'SORTIE' ? 'block' : 'none';
@@ -424,65 +438,80 @@ let nomMagasinier = roleActuel;
             });
         }
 
-        // --- 6. VALIDATION ET ENVOI À L'ADMINISTRATEUR (Supabase) ---
-        async function validerBordereau() {
-            if (bordereau.length === 0) return;
+            // --- 6. VALIDATION ET ENVOI À L'ADMINISTRATEUR (Supabase) ---
+    async function validerBordereau() {
+        if (bordereau.length === 0) return;
 
-            const btn = document.getElementById('btn-valider-mvt');
-            btn.disabled = true;
-            btn.innerText = "⏳ Enregistrement...";
+        const btn = document.getElementById('btn-valider-mvt');
+        btn.disabled = true;
+        btn.innerText = "⏳ Enregistrement...";
 
-            try {
-                for (let item of bordereau) {
-                    // 1. Chercher si la variante (article + couleur) existe déjà
-                    let { data: existant, error: fetchErr } = await clientSupabase.from('stock_mercerie')
-                        .select('*')
-                        .eq('nom_article', item.nom_article)
-                        .eq('couleur_variante', item.couleur)
-                        .maybeSingle();
-                    
-                    let idArticleFinal = null;
+        try {
+            for (let item of bordereau) {
+                // 1. Chercher si la couleur exacte existe déjà dans le dépôt pour cet article
+                const { data: existant, error: fetchErr } = await clientSupabase
+                    .from('stock_depot')
+                    .select('*')
+                    .eq('article_id', item.id_article)
+                    .eq('couleur_ref', item.couleur)
+                    .maybeSingle();
 
-                    if (existant) {
-                        idArticleFinal = existant.id;
-                        let nouveauStock = parseFloat(existant.stock_actuel);
-                        
-                        if (item.type_mouvement === 'ENTREE') nouveauStock += item.qte_totale;
-                        else nouveauStock -= item.qte_totale; // SORTIE
-                        
-                        await clientSupabase.from('stock_mercerie').update({ stock_actuel: nouveauStock }).eq('id', existant.id);
+                if (fetchErr) throw fetchErr;
+
+                let nouveauStock = 0;
+
+                if (existant) {
+                    // SI LA COULEUR EXISTE : On met à jour (Addition ou Soustraction)
+                    if (item.type_mouvement === 'ENTREE') {
+                        nouveauStock = parseFloat(existant.quantite) + item.qte_totale;
                     } else {
-                        // S'il n'existe pas, on le crée en clonant les propriétés de base (famille, ref, prix)
-                        let parent = STOCK_CENTRAL.find(s => s.id === item.id_article);
-                        let stockInitial = item.type_mouvement === 'ENTREE' ? item.qte_totale : -item.qte_totale;
-                        
-                        let { data: nouveau, error: insErr } = await clientSupabase.from('stock_mercerie').insert([{
-                            reference: (parent.reference || 'REF') + '-NEW',
-                            nom_article: item.nom_article,
-                            famille: parent.famille || 'Autre',
-                            couleur_variante: item.couleur,
-                            stock_actuel: stockInitial,
-                            seuil_alerte: parent.seuil_alerte || 5,
-                            prix_achat: parent.prix_achat || 0
-                        }]).select().single();
-                        
-                        idArticleFinal = nouveau.id;
+                        nouveauStock = parseFloat(existant.quantite) - item.qte_totale;
                     }
+                    await clientSupabase.from('stock_depot').update({ quantite: nouveauStock }).eq('id', existant.id);
+                } else {
+                    // SI LA COULEUR N'EXISTE PAS : On la crée (Seulement si c'est une ENTREE !)
+                    if (item.type_mouvement !== 'ENTREE') {
+                        alert("⚠️ Impossible de sortir la couleur '" + item.couleur + "' car elle n'existe pas en réserve.");
+                        continue; // On passe à l'article suivant
+                    }
+                    
+                    nouveauStock = item.qte_totale;
+                    let seuilSaisi = parseFloat(document.getElementById('mvt-seuil').value) || 10;
 
-                    // 2. Enregistrer l'historique chirurgical dans la tour de contrôle (L'Œil de Moscou)
-                    await clientSupabase.from('mouvements_stock').insert([{
-                        id_article: idArticleFinal,
-                        nom_article: `${item.nom_article} (${item.couleur})`,
-                        type_mouvement: item.type_mouvement,
-                        quantite_conditionnement: item.qte_cond,
-                        type_conditionnement: item.conditionnement,
-                        contenance_unitaire: item.contenance,
-                        quantite_totale: item.qte_totale,
-                        destination: item.destination,
-                        utilisateur: nomMagasinier // <-- LA SIGNATURE DU MAGASINIER !
+                    await clientSupabase.from('stock_depot').insert([{
+                        article_id: item.id_article,
+                        couleur_ref: item.couleur,
+                        quantite: nouveauStock,
+                        seuil_alerte: seuilSaisi
                     }]);
                 }
 
+                // 2. Enregistrer l'historique dans l'Oeil de Moscou
+                await clientSupabase.from('mouvements_depot').insert([{
+                    article_id: item.id_article,
+                    couleur_ref: item.couleur,
+                    type_mouvement: item.type_mouvement,
+                    quantite: item.qte_totale,
+                    utilisateur: nomMagasinier // Signature
+                }]);
+            }
+
+            alert("✅ Tout le bordereau a été enregistré avec succès !");
+            bordereau = [];
+            localStorage.removeItem('nina_depot_bordereau');
+            document.getElementById('mvt-seuil').value = ""; // On vide le champ seuil
+            afficherBordereau();
+            chargerDonneesDepot();
+            btn.innerText = "✅ ENREGISTRER LE BORDEREAU";
+            switchTab('vision');
+
+        } catch (err) {
+            alert("❌ Erreur réseau. Le bordereau n'est pas perdu, réessayez.");
+            btn.disabled = false;
+            btn.innerText = "🔄 RÉESSAYER";
+        }
+                }
+            
                 alert("✅ Tout le bordereau a été enregistré avec succès !");
                 
                 // Nettoyage complet
