@@ -227,47 +227,78 @@ let nomCaissiere = roleActuel;
                 let dateObj = new Date(ticket.created_at);
                 let heure = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
 
-                card.innerHTML = `
-                    <div class="ticket-top"><span>Ticket N° ${ticket.num_panier}</span><span>🕒 ${heure}</span></div>
-                    <div class="ticket-vendeur">Vendeur: ${ticket.vendeur_nom || 'Anonyme'}</div>
-                    <div class="ticket-price">${parseFloat(ticket.total).toLocaleString('fr-FR')} F</div>
-                `;
+                            // Détermination du badge et du nom client
+            let estAtelier = ticket.origine === 'atelier';
+            let badge = estAtelier ? `<span style="background:#8e44ad; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">✂️ ATELIER</span>` : `<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛒 BOUTIQUE</span>`;
+            let nomClientAffiche = ticket.client_nom ? `<br><small style="color:#7f8c8d;">👤 Client: ${ticket.client_nom}</small>` : '';
+
+            card.innerHTML = `
+                <div class="ticket-top"><span>Ticket ${ticket.num_panier}</span> 🕒 ${heure}</div>
+                <div class="ticket-vendeur">Source: ${badge} | Par: ${ticket.vendeur_nom || 'Anonyme'}${nomClientAffiche}</div>
+                <div class="ticket-price">${parseFloat(ticket.total).toLocaleString('fr-FR')} F</div>
+            `;
+                
                 liste.appendChild(card);
             });
         }
 
-        function selectionnerTicket(ticket) {
-            ticketSelectionne = ticket;
-            afficherFileDAttente(); // Pour mettre en surbrillance
+        async function selectionnerTicket(ticket) {
+    ticketSelectionne = ticket;
+    afficherFileDAttente(); // Pour mettre en surbrillance
 
-            document.getElementById("empty-state").style.display = "none";
-            document.getElementById("active-receipt").style.display = "flex";
-            document.getElementById("receipt-title").innerText = "Ticket N° " + ticket.num_panier;
-            document.getElementById("receipt-info").innerText = "Envoyé par : " + (ticket.vendeur_nom || 'Anonyme');
-            document.getElementById("receipt-total").innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + " F";
+    document.getElementById("empty-state").style.display = "none";
+    document.getElementById("active-receipt").style.display = "flex";
+    
+    // Affichage des entêtes de base
+    document.getElementById("receipt-title").innerText = "Ticket N° " + ticket.num_panier;
+    
+    // Si c'est l'atelier, on montre le calcul financier complet à la caissière
+    if (ticket.origine === 'atelier') {
+        let avancePayee = parseFloat(ticket.avance) || 0;
+        let resteAPayer = parseFloat(ticket.reste_a_payer) || 0;
+        document.getElementById("receipt-info").innerHTML = `📢 <strong>PRESTATION ATELIER</strong><br>Dépôt par : ${ticket.vendeur_nom || 'Anonyme'}<br>Client : ${ticket.client_nom || 'Anonyme'} (${ticket.client_numero || 'Pas de numéro'})<br><br><span style="color:#27ae60;">Montant Total : ${parseFloat(ticket.total).toLocaleString('fr-FR')} F</span><br><span style="color:#e74c3c;">Avance déjà reçue : ${avancePayee.toLocaleString('fr-FR')} F</span>`;
+        document.getElementById("receipt-total").innerText = resteAPayer.toLocaleString('fr-FR') + " F";
+    } else {
+        let telAffiche = ticket.client_numero ? ` (${ticket.client_numero})` : '';
+        document.getElementById("receipt-info").innerHTML = `👤 Client : ${ticket.client_nom || 'Anonyme'}${telAffiche}<br>Vendeur : ${ticket.vendeur_nom || 'Anonyme'}`;
+        document.getElementById("receipt-total").innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + " F";
+    }
 
-            const boxItems = document.getElementById("receipt-items");
-            boxItems.innerHTML = "";
+    const boxItems = document.getElementById("receipt-items");
+    boxItems.innerHTML = "";
 
-            try {
-                let articles = typeof ticket.details === 'string' ? JSON.parse(ticket.details) : ticket.details;
-                articles.forEach(art => {
-                    const sousTotal = art.prixU * art.qte;
-                    boxItems.innerHTML += `
-                        <div class="item-line">
-                            <div>
-                                <div class="item-name">${art.nom}</div>
-                                <div class="item-calc">${art.details} (Qté: ${art.qte} x ${parseFloat(art.prixU).toLocaleString('fr-FR')}F)</div>
-                            </div>
-                            <div class="item-total">${Math.round(sousTotal).toLocaleString('fr-FR')} F</div>
-                        </div>
-                    `;
-                });
-            } catch (e) {
-                boxItems.innerHTML = '<div style="color:red;">Détails illisibles</div>';
-            }
+    try {
+        // Interrogation de la nouvelle table détaillée lignes_commandes
+        const { data: lignes, error } = await clientSupabase
+            .from('lignes_commandes')
+            .select('*')
+            .eq('commande_id', ticket.id);
+
+        if (error) throw error;
+
+        if (!lignes || lignes.length === 0) {
+            boxItems.innerHTML = '<div style="text-align:center; padding:10px; color:#95a5a6;">Aucun article trouvé pour ce ticket.</div>';
+            return;
         }
 
+        lignes.forEach(art => {
+            let sousTotal = parseFloat(art.prix_unitaire_vente) * parseFloat(art.quantite);
+            boxItems.innerHTML += `
+                <div class="item-line">
+                    <div>
+                        <div class="item-name">${art.nom_article}</div>
+                        <div class="item-calc">Qté: ${art.quantite} x ${parseFloat(art.prix_unitaire_vente).toLocaleString('fr-FR')} F</div>
+                    </div>
+                    <div class="item-total">${Math.round(sousTotal).toLocaleString('fr-FR')} F</div>
+                </div>
+            `;
+        });
+    } catch (e) {
+        boxItems.innerHTML = '<div style="color:red; text-align:center; padding:10px;">⚠️ Erreur lors du chargement des articles détaillés.</div>';
+        console.error(e);
+    }
+                                     }
+            
         function masquerDetails() {
             document.getElementById("empty-state").style.display = "block";
             document.getElementById("active-receipt").style.display = "none";
@@ -317,7 +348,7 @@ let nomCaissiere = roleActuel;
         }
 
         function calculerReste() {
-            const totalFacture = parseFloat(ticketSelectionne.total);
+            const totalFacture = ticketSelectionne.origine === 'atelier' ? parseFloat(ticketSelectionne.reste_a_payer) : parseFloat(ticketSelectionne.total);
             const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
             const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
             const totalPaye = cash + momo + reliquatValideMontant;
@@ -357,7 +388,7 @@ let nomCaissiere = roleActuel;
         function calculerReliquatPartiel() {
             document.getElementById("pay-rendu-reel").dataset.modifie = "true";
             
-            const totalFacture = parseFloat(ticketSelectionne.total);
+            const totalFacture = ticketSelectionne.origine === 'atelier' ? parseFloat(ticketSelectionne.reste_a_payer) : parseFloat(ticketSelectionne.total);
             const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
             const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
             const totalPaye = cash + momo + reliquatValideMontant;
@@ -382,7 +413,7 @@ let nomCaissiere = roleActuel;
             btn.disabled = true;
             btn.innerText = "⏳ Enregistrement...";
 
-            const totalFacture = parseFloat(ticketSelectionne.total);
+            const totalFacture = ticketSelectionne.origine === 'atelier' ? parseFloat(ticketSelectionne.reste_a_payer) : parseFloat(ticketSelectionne.total);
             const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
             const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
             const oldReliqMontant = reliquatValideMontant;
@@ -398,18 +429,23 @@ let nomCaissiere = roleActuel;
             let nomClient = "";
             let numRecuNouveau = "";
 
-            // --- GESTION DU NOUVEAU RELIQUAT (Si la caissière garde de la monnaie) ---
-            if (reliquatACreer > 0) {
-                nomClient = prompt(`⚠️ Vous devez conserver ${reliquatACreer} F.\nÉcrivez le NOM DU CLIENT pour créer le reçu :`);
-                if (!nomClient || nomClient.trim() === "") {
-                    alert("❌ L'opération est annulée : Le nom du client est obligatoire pour garder l'argent.");
+                    if (reliquatACreer > 0) {
+            // SÉCURITÉ ANTIVOL & CONFORT : Si le client a déjà donné son nom à l'atelier ou au vendeur, on l'utilise directement !
+            if (ticketSelectionne.client_nom && ticketSelectionne.client_nom.trim() !== "") {
+                nomClient = ticketSelectionne.client_nom.trim();
+            } else {
+                // S'il n'y a aucun nom (Client Anonyme au comptoir), ALORS SEULEMENT on demande à la caissière
+                nomClient = prompt("⚠️ Le ticket est anonyme. Veuillez inscrire le NOM DU CLIENT pour lui éditer son Reçu d'Avoir (Reliquat) :");
+                if (!nomClient || !nomClient.trim()) {
+                    alert("❌ OPÉRATION ANNULÉE : Il est strictement interdit de créer un avoir sans y attacher le nom d'un client.");
                     btn.disabled = false;
                     btn.innerText = "✅ CONFIRMER LE PAIEMENT";
                     return;
                 }
-                numRecuNouveau = "R-" + Math.floor(1000 + Math.random() * 9000);
             }
-
+            numRecuNouveau = "R-" + Math.floor(1000 + Math.random() * 9000);
+                    }
+            
             try {
                 // 1. CLÔTURER LA COMMANDE AVEC TOUS LES DÉTAILS FINANCIERS POUR LE RADAR ADMIN
                 const { error: errCmd } = await clientSupabase.from('commandes').update({ 
