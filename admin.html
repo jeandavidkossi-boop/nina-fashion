@@ -381,7 +381,6 @@ const { data: ventes, error } = await clientSupabase
     .select('*')
     .eq('statut', 'paye')
     .order('created_at', { ascending: false });
-
 if (error) {
     alert("❌ ERREUR SUPABASE : " + error.message);
     throw error;
@@ -431,7 +430,8 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
     alert("❌ CRASH JAVASCRIPT : " + e.message);
     console.error("Erreur Caisse:", e);
             }
-            
+                 }
+        
         async function cloturerJournee() {
             if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro pour demain.")) return;
             let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
