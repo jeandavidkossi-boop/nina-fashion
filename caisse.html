@@ -450,7 +450,7 @@ let nomCaissiere = roleActuel;
                 // 1. CLÔTURER LA COMMANDE AVEC TOUS LES DÉTAILS FINANCIERS POUR LE RADAR ADMIN
                 const { error: errCmd } = await clientSupabase.from('commandes').update({ 
                     statut: 'paye',
-                    montant_cash: cash,
+                    montant_cash: cash - renduReel, // 🔒 CORRECTION : Le vrai argent resté dans le tiroir !
                     montant_momo: momo,
                     montant_reliquat: oldReliqMontant,
                     caissiere_nom: nomCaissiere
