@@ -375,14 +375,13 @@
                 const debutJournee = new Date();
                 debutJournee.setHours(0, 0, 0, 0);
 
-                // On ne charge QUE les commandes payées aujourd'hui
-                const { data: ventes, error } = await clientSupabase
-                    .from('commandes')
-                    .select('*')
-                    .gte('created_at', debutJournee.toISOString())
-                    .eq('statut', 'paye')
-                    .order('created_at', { ascending: false });
-
+                // Remplace tout le bloc de la ligne 380 à 384 par ceci :
+const { data: ventes, error } = await clientSupabase
+    .from('commandes')
+    .select('*')
+    .eq('statut', 'paye') // On cherche tout ce qui est payé, peu importe la date
+    .order('created_at', { ascending: false });
+                
                 if (error) throw error;
 
                 const { data: depenses } = await clientSupabase
