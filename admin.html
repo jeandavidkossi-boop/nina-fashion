@@ -384,7 +384,6 @@ const { data: ventes, error } = await clientSupabase
     .gte('created_at', debutJournee.toISOString())
     .eq('statut', 'paye')
     .order('created_at', { ascending: false });
-
 if (error) {
     alert("❌ ERREUR SUPABASE : " + error.message);
     throw error;
