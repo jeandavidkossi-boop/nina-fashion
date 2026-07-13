@@ -116,14 +116,16 @@
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
+                                                        <tr>
                                 <th>Heure</th>
-                                <th>Ticket</th>
-                                <th>Source</th>
-                                <th>Encaissé par</th>
-                                <th>Paiement</th>
+                                <th>Ticket / Source</th>
+                                <th>Client</th>
+                                <th>Articles de la commande</th>
+                                <th>Caissière</th>
+                                <th>Paiement & Reliquats</th>
                                 <th>Statut</th>
-                            </tr>
+                                                        </tr>
+                            
                         </thead>
                         <tbody id="table-ventes-directes">
                             <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
@@ -379,8 +381,10 @@
 const { data: ventes, error } = await clientSupabase
     .from('commandes')
     .select('*')
+    .gte('created_at', debutJournee.toISOString())
     .eq('statut', 'paye')
     .order('created_at', { ascending: false });
+
 if (error) {
     alert("❌ ERREUR SUPABASE : " + error.message);
     throw error;
@@ -405,20 +409,42 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
                         let momo = parseFloat(v.montant_momo) || 0;
                         totalCash += cash; totalMomo += momo;
 
-                        let dateObj = new Date(v.created_at);
-                        let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
-                        let badgeSource = v.origine === 'atelier' ? '<span class="badge" style="background:#8e44ad;">✂️ Atelier</span>' : '<span class="badge" style="background:#2980b9;">🛒 Boutique</span>';
-                        let paiement = cash > 0 && momo > 0 ? "Mixte (Cash+MoMo)" : (cash > 0 ? "Espèces" : "Mobile Money");
+                                            let dateObj = new Date(v.created_at);
+                    let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
+                    let badgeSource = v.origine === 'atelier' ? '<span class="badge" style="background:#8e44ad; color:white;">Atelier</span>' : '<span class="badge" style="background:#2980b9; color:white;">Boutique</span>';
+                    let paiement = cash > 0 && momo > 0 ? `Mixte (${cash+momo} F)` : (cash > 0 ? `Espèces : ${cash} F` : `Mobile Money : ${momo} F`);
 
-                        tbody.innerHTML += `<tr>
-                            <td>${heureStr}</td>
-                            <td><strong>#${v.num_panier}</strong></td>
-                            <td>${badgeSource}</td>
-                            <td><span class="badge" style="background:#ecf0f1; color:#2c3e50; border:1px solid #bdc3c7;">👤 ${v.caissiere_nom || 'Inconnue'}</span></td>
-                            <td>${paiement}</td>
-                            <td><span class="badge badge-cash">✅ Payé</span></td>
-                        </tr>`;
-                    });
+                    // 1. DÉTECTION DU CLIENT
+                    let clientInfo = (v.client_nom || 'Anonyme') + (v.client_numero ? `<br><small style="color:#7f8c8d;">${v.client_numero}</small>` : '');
+
+                    // 2. DÉTECTION DES ARTICLES
+                    let detailsHtml = "";
+                    try {
+                        let articles = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
+                        if (articles && articles.length > 0) {
+                            detailsHtml = articles.map(a => `<span style="font-size:0.75rem; background:#eee; padding:2px 4px; border-radius:4px; margin:2px; display:inline-block; color:#333;">${a.nom_article || a.nom || 'Article'} (x${a.quantite || a.qte || 1})</span>`).join('');
+                        } else { detailsHtml = "-"; }
+                    } catch(e) { detailsHtml = "-"; }
+
+                    // 3. DÉTECTION DES RELIQUATS
+                    let reliquatInfo = "";
+                    if (v.montant_reliquat && parseFloat(v.montant_reliquat) > 0) {
+                        reliquatInfo = `<br><span style="font-size:0.8rem; color:var(--danger); font-weight:bold;">⚠️ Reliquat déduit : ${v.montant_reliquat} F</span>`;
+                    }
+
+                    // 4. AFFICHAGE DE LA LIGNE
+                    tbody.innerHTML += `
+                    <tr>
+                        <td>${heureStr}</td>
+                        <td><strong>${v.num_panier}</strong><br>${badgeSource}</td>
+                        <td>${clientInfo}</td>
+                        <td style="max-width:250px; line-height:1.4;">${detailsHtml}</td>
+                        <td><span class="badge" style="background:#ecf0f1; color:#2c3e50; border:1px solid #bdc3c7;">🧑‍💼 ${v.caissiere_nom || 'Inconnue'}</span></td>
+                        <td><strong>${paiement}</strong>${reliquatInfo}</td>
+                        <td><span class="badge badge-cash">✅ Payé</span></td>
+                    </tr>
+                    `;
+                        
                 } else {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">Aucun encaissement pour le moment aujourd\'hui.</td></tr>';
                 }
