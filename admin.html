@@ -133,6 +133,25 @@
                     </table>
                 </div>
             </div>
+                    <div class="data-section" style="margin-top: 20px; border-left: 5px solid var(--danger);">
+            <h2 id="titre-radar-reliquat">⚠️ Dettes (Reliquats) Créées Aujourd'hui : 0 F</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Heure</th>
+                            <th>Client</th>
+                            <th>Code Reçu</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-reliquats-jour">
+                        <tr><td colspan="5" style="text-align:center;">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+                    </div>
         </div>
 
         <!-- ========================================== -->
@@ -364,7 +383,7 @@
 
             // Rechargement des données selon l'onglet
             if(tabId === 'caisse') { chargerCaisse(); }
-            if(tabId === 'compta') { chargerComptabilite(); }
+            if(tabId === 'compta') { chargerComptabilite(); chargerReliquats(); }
             if(tabId === 'catalogue') { chargerCatalogue(); }
             if(tabId === 'audit') { chargerAuditDepot(); }
             if(tabId === 'securite') { chargerEquipe(); }
@@ -448,6 +467,39 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">Aucun encaissement pour le moment aujourd\'hui.</td></tr>';
                 }
 
+                                    // --- LECTURE DES DETTES (RELIQUATS) DU JOUR ---
+                    const { data: reliquatsJour } = await clientSupabase
+                        .from('reliquats')
+                        .select('*')
+                        .gte('created_at', debutJournee.toISOString())
+                        .order('created_at', { ascending: false });
+
+                    const tbodyReq = document.getElementById('table-reliquats-jour');
+                    tbodyReq.innerHTML = '';
+                    let totalReliquatsJour = 0;
+
+                    if (reliquatsJour && reliquatsJour.length > 0) {
+                        reliquatsJour.forEach(r => {
+                            totalReliquatsJour += parseFloat(r.montant) || 0;
+                            let dateR = new Date(r.created_at);
+                            let heureR = dateR.getHours().toString().padStart(2, '0') + ':' + dateR.getMinutes().toString().padStart(2, '0');
+                            let badgeStatut = r.statut === 'actif' ? '<span class="badge" style="background:var(--danger);">⚠️ En attente</span>' : '<span class="badge" style="background:var(--success);">✅ Remboursé</span>';
+                            
+                            tbodyReq.innerHTML += `
+                            <tr>
+                                <td>${heureR}</td>
+                                <td><strong>${r.nom_client || 'Inconnu'}</strong></td>
+                                <td><span class="badge" style="background:#ecf0f1; color:#333; border:1px solid #bdc3c7;">${r.num_recu}</span></td>
+                                <td><strong>${r.montant} F</strong></td>
+                                <td>${badgeStatut}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        tbodyReq.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Aucune dette créée aujourd'hui.</td></tr>`;
+                    }
+                    
+                    // Mise à jour du titre rouge avec le total du jour
+                    document.getElementById('titre-radar-reliquat').innerHTML = `⚠️ Dettes (Reliquats) Créées Aujourd'hui : <span style="color:var(--danger);">${totalReliquatsJour.toLocaleString('fr-FR')} F</span>`;
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-depenses-jour').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
