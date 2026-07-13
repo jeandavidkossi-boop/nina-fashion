@@ -379,10 +379,15 @@
 const { data: ventes, error } = await clientSupabase
     .from('commandes')
     .select('*')
-    .eq('statut', 'paye') // On cherche tout ce qui est payé, peu importe la date
+    .eq('statut', 'paye')
     .order('created_at', { ascending: false });
-                
-                if (error) throw error;
+
+if (error) {
+    alert("❌ ERREUR SUPABASE : " + error.message);
+    throw error;
+}
+
+alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets payés dans la base !");
 
                 const { data: depenses } = await clientSupabase
                     .from('depenses_boutique')
@@ -422,9 +427,11 @@ const { data: ventes, error } = await clientSupabase
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-depenses-jour').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
-            } catch (e) { console.error("Erreur Caisse:", e); }
-        }
-
+            } catch (e) {
+    alert("❌ CRASH JAVASCRIPT : " + e.message);
+    console.error("Erreur Caisse:", e);
+            }
+            
         async function cloturerJournee() {
             if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro pour demain.")) return;
             let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
