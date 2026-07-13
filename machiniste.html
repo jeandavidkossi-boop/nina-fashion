@@ -448,54 +448,54 @@ let nomMachiniste = roleActuel;
             }
         }
 
-        async function reprendreTicketPropre(idTicket) {
-            // On retrouve les données proprement dans notre mémoire
-            const cmd = memoireCarnet.find(t => t.id === idTicket);
-            if (!cmd) return;
+             async function reprendreTicketPropre(idTicket) {
+        // 1. LA CORRECTION EST ICI : On force la comparaison pour éviter le bug texte/chiffre
+        const cmd = memoireCarnet.find(t => String(t.id) === String(idTicket));
+        
+        if (!cmd) {
+            alert("❌ Erreur : Le ticket n'a pas pu être retrouvé dans la mémoire.");
+            return;
+        }
 
-            try {
-                // 1. On cherche les articles détaillés
-                const { data: lignes } = await clientSupabase.from('lignes_commandes').select('*').eq('commande_id', idTicket);
-                
-                let nouveauTicket = [];
-                if (lignes && lignes.length > 0) {
-                    nouveauTicket = lignes.map(l => ({
-                        ref: l.article_ref,
-                        nom: l.nom_article,
-                        prix: l.prix_unitaire_vente,
-                        qte: l.quantite,
-                        type: l.quantite % 1 === 0 ? 'piece' : 'metre'
-                    }));
-                } else {
-                    // Si c'est un ancien ticket sans détails
-                    if (typeof cmd.details === 'string') {
-                        try { nouveauTicket = JSON.parse(cmd.details); } catch(e) {}
-                    }
+        try {
+            // 2. On cherche les articles détaillés
+            const { data: lignes } = await clientSupabase.from('lignes_commandes').select('*').eq('commande_id', cmd.id);
+            
+            let nouveauTicket = [];
+            if (lignes && lignes.length > 0) {
+                nouveauTicket = lignes.map(l => ({
+                    ref: l.article_ref,
+                    nom: l.nom_article,
+                    prix: l.prix_unitaire_vente,
+                    qte: l.quantite,
+                    type: l.quantite % 1 === 0 ? 'piece' : 'metre'
+                }));
+            } else {
+                // Si c'est un ancien ticket sans détails
+                if (typeof cmd.details === 'string') {
+                    try { nouveauTicket = JSON.parse(cmd.details); } catch(e) {}
                 }
-                
-                // 2. On charge l'écran
-                ticket = nouveauTicket || [];
-                ticketOuvertId = cmd.id; // L'application sait maintenant exactement sur quel ticket elle travaille
-                
-                document.getElementById('input-client').value = cmd.client_nom || "";
-                if (document.getElementById('input-tel')) document.getElementById('input-tel').value = cmd.client_numero || "";
-                if (document.getElementById('input-avance')) document.getElementById('input-avance').value = cmd.avance || 0;
-                
-                fermerModal('modal-carnet');
-                
-                // 3. On rafraîchit l'interface avec la fonction qui marche chez toi
-                if (typeof mettreAjourUI === "function") {
-                    mettreAjourUI();
-                } else if (typeof mettreAJourUI === "function") {
-                    mettreAJourUI();
-                }
-                
-            } catch (err) {
-                alert("❌ Erreur technique : " + err.message);
-                ticketOuvertId = null; // SÉCURITÉ : on vide la mémoire pour ne rien écraser
             }
-                                    }
-                    
+            
+            // 3. On charge l'écran
+            ticket = nouveauTicket || [];
+            ticketOuvertId = cmd.id; 
+            
+            document.getElementById('input-client').value = cmd.client_nom || "";
+            if (document.getElementById('input-tel')) document.getElementById('input-tel').value = cmd.client_numero || "";
+            if (document.getElementById('input-avance')) document.getElementById('input-avance').value = cmd.avance || 0;
+            
+            fermerModal('modal-carnet');
+            
+            // 4. On rafraîchit l'interface avec ta fonction qui marche
+            mettreAjourUI();
+            
+        } catch (err) {
+            alert("❌ Erreur technique : " + err.message);
+            ticketOuvertId = null; 
+        }
+             }
+            
     // --- 8. ENVOI À SUPABASE (L'Œil de Moscou actif) ---
     async function validerTicket(statutChoisi) {
         if (ticket.length === 0) return;
