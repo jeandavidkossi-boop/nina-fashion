@@ -753,13 +753,21 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
             prix_achat: parseFloat(row.prix_achat || row.prix_gros || row['Prix Achat']) || 0,
             cible_utilisation: "VENTE_PUBLIQUE"
         })).filter(a => a.ref && a.nom_article);
-                
-                await clientSupabase.from('articles_v2').upsert(articlesNettoyes, { onConflict: 'ref' });
-                alert(`🔥 Importation réussie ! ${articlesNettoyes.length} fiches créées.`);
-                document.getElementById('csv-file').value = "";
-                btn.style.display = "none";
+                            const { data, error } = await clientSupabase.from('articles_v2').upsert(articlesNettoyes, { onConflict: 'ref' });
+
+            if (error) {
+                alert("❌ REFUS DE SUPABASE : " + error.message);
+                console.error("Détails de l'erreur :", error);
                 btn.disabled = false;
-                chargerCatalogue();
+                return;
+            }
+
+            alert(`🔥 Importation réussie ! ${articlesNettoyes.length} fiches créées.`);
+            document.getElementById('csv-file').value = "";
+            btn.style.display = 'none';
+            btn.disabled = false;
+            chargerCatalogue();
+                
             } catch(err) { alert("❌ Erreur lors de l'injection."); btn.disabled = false; }
         }
 
