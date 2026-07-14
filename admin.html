@@ -248,7 +248,7 @@
         <div id="tab-catalogue" class="tab-content">
             <div class="data-section" style="background: #fffcf5;">
                 <h2>📥 Injection Massive (CSV)</h2>
-                <input type="file" id="csv-file" accept=".csv" onchange="preparerImport()">
+                <input type="file" id="csv-file" accept=".csv, .tsv, .txt" onchange="preparerImport()">
                 <button id="btn-import" class="btn btn-gold" style="display:none; margin-top:10px;" onclick="lancerImport()">🚀 Lancer l'injection</button>
             </div>
 
@@ -727,15 +727,17 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
         function preparerImport() {
             const file = document.getElementById('csv-file').files[0];
             if (!file) return;
-            Papa.parse(file, {
-                header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    articlesPourImport = results.data;
-                    const btn = document.getElementById('btn-import');
-                    btn.style.display = 'inline-block';
-                    btn.innerText = `🚀 Injecter ${articlesPourImport.length} articles`;
-                }
-            });
+                Papa.parse(file, {
+        header: true, 
+        skipEmptyLines: true,
+        delimiter: "\t",
+        complete: function(results) {
+            articlesPourImport = results.data;
+            const btn = document.getElementById('btn-import');
+            btn.style.display = 'inline-block';
+            btn.innerText = `🚀 Injecter ${articlesPourImport.length} articles`;
+        }
+    });
         }
 
         async function lancerImport() {
