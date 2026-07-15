@@ -244,40 +244,42 @@ document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
             }
         }
 
-        function genererOngletsCategories() {
-            const tabsContainer = document.getElementById('category-tabs');
-            let categories = ['Tous', ...new Set(CATALOGUE.map(art => art.categorie || 'Autre'))].sort();
-            
-            tabsContainer.innerHTML = categories.map(cat => 
-                `<button class="tab-btn ${cat === 'Tous' ? 'active' : ''}" onclick="filtrerCategorie('${cat}', this)">${cat}</button>`
-            ).join('');
-        }
+function genererOngletsCategories() {
+    const tabsContainer = document.getElementById('category-tabs');
+    let categories = ['Tous', ...new Set(CATALOGUE.map(art => art.famille || 'Autre'))].sort();
 
-        function filtrerCategorie(cat, btnElement) {
-            categorieActive = cat;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
-            afficherCatalogue();
-        }
+    tabsContainer.innerHTML = categories.map(cat =>
+        `<button class="tab-btn ${cat === 'Tous' ? 'active' : ''}" onclick="filtrerCategorie('${cat}', this)">${cat}</button>`
+    ).join('');
+}
 
-        function filtrerArticles() { afficherCatalogue(); }
+function filtrerCategorie(cat, btnElement) {
+    categorieActive = cat;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    afficherCatalogue();
+}
 
-        function afficherCatalogue() {
-            const grid = document.getElementById('products-grid');
-            grid.innerHTML = '';
-            const recherche = document.getElementById('search-input').value.toLowerCase();
+function filtrerArticles() { afficherCatalogue(); }
 
-            let articlesFiltres = CATALOGUE.filter(art => {
-                let matchCat = (categorieActive === 'Tous' || art.categorie === categorieActive);
-                let matchRech = art.nom_article.toLowerCase().includes(recherche) || art.ref.toLowerCase().includes(recherche);
-                return matchCat && matchRech;
-            });
+function afficherCatalogue() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = '';
+    const recherche = document.getElementById('search-input').value.toLowerCase();
 
-            if (articlesFiltres.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#7f8c8d;">Aucun article trouvé.</div>';
-                return;
-            }
+    let articlesFiltres = CATALOGUE.filter(art => {
+        let matchCat = (categorieActive === 'Tous' || art.famille === categorieActive);
+        let nomSafe = String(art.nom_article || '').toLowerCase();
+        let refSafe = String(art.ref || '').toLowerCase();
+        let matchRech = nomSafe.includes(recherche) || refSafe.includes(recherche);
+        return matchCat && matchRech;
+    });
 
+    if (articlesFiltres.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#7f8c8d;">Aucun article trouvé.</div>';
+        return;
+    }
+    
             articlesFiltres.forEach(art => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
