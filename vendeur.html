@@ -280,26 +280,29 @@ function afficherCatalogue() {
         return;
     }
     
-            articlesFiltres.forEach(art => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                        // Le prix affiché est un texte standard, le vendeur décidera
+                articlesFiltres.forEach(art => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        
+        // Le prix affiché est un texte standard, le vendeur décidera
         let prixAffiche = "Prix à saisir";
 
         // TOUT clic ouvre la modale de découpe libre
         card.onclick = () => {
-            ouvrirModalDecoupe(art); 
+            ouvrirModalDecoupe(art);
         };
 
-card.innerHTML = `
-    <span class="product-ref">${art.ref || art.reference || ''}</span>
-    <div class="product-name" style="color:#95a5a6">${art.nom_article || art.designation || art.nom || art.NOM || ''}</div>
-    <div class="product-price" style="font-size: 12px; color: var(--gold); font-style: italic;">${prixAffiche}</div>
-`;
-                
-                
-            });
-        }
+        card.innerHTML = `
+            <span class="product-ref">${art.ref || art.reference || ''}</span>
+            <div class="product-name" style="color:#95a5a6; font-weight:bold;">${art.nom_article || art.designation || art.nom || ''}</div>
+            <div class="product-price" style="font-size: 12px; color: var(--gold); font-style: italic;">${prixAffiche}</div>
+        `;
+
+        // LA LIGNE MAGIQUE QUI MANQUAIT POUR AFFICHER SUR L'ÉCRAN :
+        grid.appendChild(card);
+    });
+}
+            
 
         // --- 5. GESTION DES FENÊTRES MODALES (POP-UPS) ---
         function fermerModal(id) {
