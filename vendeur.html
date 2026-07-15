@@ -289,11 +289,12 @@ document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
             ouvrirModalDecoupe(art); 
         };
 
-         card.innerHTML = `
+card.innerHTML = `
     <span class="product-ref">${art.ref || art.reference || ''}</span>
-    <div class="product-name" style="color:#95a5a6">${art.nom_article || art.nom || ''}</div>
+    <div class="product-name" style="color:#95a5a6">${art.nom_article || art.designation || art.nom || art.NOM || ''}</div>
     <div class="product-price" style="font-size: 12px; color: var(--gold); font-style: italic;">${prixAffiche}</div>
 `;
+                
                 
             });
         }
