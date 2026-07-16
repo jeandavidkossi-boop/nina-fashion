@@ -246,13 +246,18 @@ document.getElementById('badge-vendeur').innerText = "👤 " + roleActuel;
 
 function genererOngletsCategories() {
     const tabsContainer = document.getElementById('category-tabs');
-    let categories = ['Tous', ...new Set(CATALOGUE.map(art => art.famille || 'Autre'))].sort();
+    
+    // 1. On extrait les familles de ta base et on les trie de A à Z
+    let famillesUniques = [...new Set(CATALOGUE.map(art => art.famille || 'Autre'))].sort();
+    
+    // 2. On FORCE le bouton 'Tous' à se placer en première position
+    let categories = ['Tous', ...famillesUniques];
 
     tabsContainer.innerHTML = categories.map(cat =>
         `<button class="tab-btn ${cat === 'Tous' ? 'active' : ''}" onclick="filtrerCategorie('${cat}', this)">${cat}</button>`
     ).join('');
 }
-
+            
 function filtrerCategorie(cat, btnElement) {
     categorieActive = cat;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
