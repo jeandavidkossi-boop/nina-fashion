@@ -715,7 +715,7 @@ async function ajouterArticleManuel() {
     }
 
     try {
-        const { error } = await clientSupabase.from('articles_v2').insert([payload]);
+        const { error } = await clientSupabase.from('articles_v2').upsert([payload], { onConflict: 'ref' });
         if (error) throw error; // S'il y a un refus, on déclenche l'erreur
 
         alert("✅ Article ajouté avec succès au catalogue !");
