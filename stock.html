@@ -514,16 +514,15 @@ function switchTab(tabId) {
             btn.disabled = false;
             btn.innerText = "🔄 RÉESSAYER";
         }
-                }
-            
-
+                }   
+            }
         // --- 7. ALERTES ET COMMANDES (WhatsApp Flexible) ---
         function construireAlertesCommande() {
             const grid = document.getElementById('grid-alertes');
             grid.innerHTML = '';
             
-            const enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.stock_actuel) <= parseFloat(art.seuil_alerte));
-
+            const enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.quantite) <= parseFloat(art.seuil_alerte));
+            
             if (enAlerte.length === 0) {
                 grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--success); font-weight:bold;">✅ Aucun article en rupture de stock.</div>';
                 document.getElementById('btn-whatsapp').style.display = 'none';
@@ -535,7 +534,7 @@ function switchTab(tabId) {
             enAlerte.forEach(art => {
                 grid.innerHTML += `
                     <div class="alerte-card">
-                        <strong style="color:var(--primary);">${art.nom_article} (${art.couleur_variante || 'Standard'})</strong><br>
+                        <strong style="color:var(--primary);">${art.nom_article} (${art.couleur_ref || 'Standard'})</strong><br>
                         <span style="font-size:0.9rem; color:#7f8c8d;">Reste : <span style="color:var(--danger); font-weight:bold;">${art.stock_actuel}</span> (Seuil critique : ${art.seuil_alerte})</span>
                     </div>
                 `;
@@ -548,7 +547,7 @@ function switchTab(tabId) {
             let texte = "🚨 *RUPTURE DE STOCK - DÉPÔT*\nVoici la liste des articles à commander d'urgence :\n\n";
             
             enAlerte.forEach((art, idx) => {
-                texte += `${idx + 1}. *${art.nom_article}* (${art.couleur_variante || 'Standard'}) -> Il ne reste que ${art.stock_actuel}\n`;
+                texte += `${idx + 1}. *${art.nom_article}* (${art.couleur_ref || 'Standard'}) -> Il ne reste que ${art.stock_actuel}\n`;
             });
             
             texte += "\nMerci de valider la commande dès que possible !";
