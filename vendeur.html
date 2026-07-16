@@ -481,7 +481,9 @@ function afficherCatalogue() {
     let numTicket = "T-" + dateObj.getHours().toString().padStart(2, '0') + dateObj.getMinutes().toString().padStart(2, '0') + dateObj.getSeconds().toString().padStart(2, '0');
 
     try {
-        // 1. Création du ticket général
+                // 1. Création du ticket général
+        let detailsPanier = panier.map(item => ({ nom_article: item.nom, quantite: item.qte }));
+
         const { data: commandeData, error: commandeError } = await clientSupabase
             .from('commandes')
             .insert([{
@@ -490,7 +492,8 @@ function afficherCatalogue() {
                 statut: 'en_attente',
                 vendeur_nom: nomVendeur,
                 client_nom: nomClient,
-                client_numero: telClient
+                client_numero: telClient,
+                details: JSON.stringify(detailsPanier)
             }])
             .select();
 
