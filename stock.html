@@ -24,10 +24,42 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; }
         .header h1 { margin: 0; color: var(--gold); font-size: 24px; }
 
-        /* Tes vrais onglets clairs et coulissants */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid var(--border); }
-        .tab-btn { flex: 1; padding: 15px 20px; background-color: transparent; color: #95a5a6; border: none; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
-        .tab-btn.active { color: var(--gold); border-bottom: 3px solid var(--gold); background-color: #fffcf5; }
+                /* NOUVEAUX ONGLETS COULISSANTS (Style Vendeur / Machiniste) */
+        .tabs { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 25px; 
+            overflow-x: auto; 
+            white-space: nowrap; 
+            padding-bottom: 10px; 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+        }
+        .tabs::-webkit-scrollbar { 
+            display: none; 
+        }
+        
+        .tab-btn { 
+            padding: 10px 20px; 
+            background-color: white; 
+            color: #7f8c8d; 
+            border: 1px solid var(--border); 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 0.95rem; 
+            transition: all 0.3s ease; 
+            flex-shrink: 0; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .tab-btn.active { 
+            background-color: var(--gold); 
+            color: white; 
+            border-color: var(--gold);
+            box-shadow: 0 2px 5px rgba(179, 135, 40, 0.3);
+        }
+        
 
         .container { display: none; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .container.active { display: block; animation: fadeIn 0.3s ease-in-out; }
