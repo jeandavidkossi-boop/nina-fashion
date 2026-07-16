@@ -24,43 +24,42 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; }
         .header h1 { margin: 0; color: var(--gold); font-size: 24px; }
 
-                /* NOUVEAUX ONGLETS COULISSANTS (Style Vendeur / Machiniste) */
+                       /* ONGLETS COULISSANTS (Copiés sur l'interface Vendeur) */
         .tabs { 
             display: flex; 
-            gap: 12px; 
-            margin-bottom: 25px; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            border-bottom: 1px solid var(--border); 
             overflow-x: auto; 
             white-space: nowrap; 
             padding-bottom: 10px; 
+            
+            /* Ces deux lignes cachent la barre de défilement pour faire plus propre sur mobile */
             -ms-overflow-style: none; 
             scrollbar-width: none; 
         }
         .tabs::-webkit-scrollbar { 
             display: none; 
         }
-        
-        .tab-btn { 
-            padding: 10px 20px; 
-            background-color: white; 
-            color: #7f8c8d; 
-            border: 1px solid var(--border); 
-            border-radius: 25px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 0.95rem; 
-            transition: all 0.3s ease; 
-            flex-shrink: 0; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        .tab-btn.active { 
-            background-color: var(--gold); 
-            color: white; 
-            border-color: var(--gold);
-            box-shadow: 0 2px 5px rgba(179, 135, 40, 0.3);
-        }
-        
 
+        .tab-btn { 
+            padding: 8px 15px; 
+            border: 1px solid var(--border); 
+            background: white; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            color: #7f8c8d; 
+            font-weight: bold; 
+            font-size: 14px; 
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active { 
+            color: white; 
+            background: var(--gold); 
+            border-color: var(--gold); 
+        }
+        
         .container { display: none; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .container.active { display: block; animation: fadeIn 0.3s ease-in-out; }
 
