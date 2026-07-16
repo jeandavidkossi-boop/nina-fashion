@@ -224,20 +224,24 @@ let nomMagasinier = roleActuel;
     }
             
         // --- 4. GESTION DES ONGLETS ET ACCORDÉON ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            event.target.classList.add('active');
-            
-            if (tabId === 'vision') chargerDonneesDpot(); // Rafraîchit à chaque fois qu'on regarde le stock
-        }
+function switchTab(tabId) {
+    document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById('tab-' + tabId).classList.add('active');
+    
+    // Le correctif magique pour les onglets :
+    let btnActif = document.querySelector(`button[onclick*="${tabId}"]`);
+    if (btnActif) btnActif.classList.add('active');
+    
+    if (tabId === 'vision') chargerDonneesDepot();
+}
 
         function construireInterfaceStock() {
             const grid = document.getElementById('grid-stock');
             grid.innerHTML = '';
 
-            if (STOCK_CENTRAL.length === 0) {
+            if (STOCK_DEPOT.length === 0) {
                 grid.innerHTML = '<div style="text-align:center; padding:20px; color:#7f8c8d;">Aucun article en stock.</div>';
                 return;
             }
@@ -534,7 +538,7 @@ let nomMagasinier = roleActuel;
             const grid = document.getElementById('grid-alertes');
             grid.innerHTML = '';
             
-            const enAlerte = STOCK_CENTRAL.filter(art => parseFloat(art.stock_actuel) <= parseFloat(art.seuil_alerte));
+            const enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.stock_actuel) <= parseFloat(art.seuil_alerte));
 
             if (enAlerte.length === 0) {
                 grid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--success); font-weight:bold;">✅ Aucun article en rupture de stock.</div>';
