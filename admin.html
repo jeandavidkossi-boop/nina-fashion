@@ -699,22 +699,34 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
             }
         }
 
-        async function ajouterArticleManuel() {
-            const payload = {
-                ref: document.getElementById('art-ref').value,
-                nom_article: document.getElementById('art-nom').value,
-                famille: document.getElementById('art-cat').value,
-                cible_utilisation: document.getElementById('art-scope').value,
-                prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
-                prix_achat: parseFloat(document.getElementById('art-pa').value) || 0
-            };
-            if(!payload.nom_article) { alert("⚠️ Le nom de l'article est obligatoire."); return; }
-            await clientSupabase.from('articles_v2').insert([payload]);
-            
-            // Vider les cases
-            document.querySelectorAll('#tab-catalogue input').forEach(input => input.value = "");
-            chargerCatalogue();
-        }
+async function ajouterArticleManuel() {
+    const payload = {
+        ref: document.getElementById('art-ref').value,
+        nom_article: document.getElementById('art-nom').value,
+        famille: document.getElementById('art-cat').value,
+        cible_utilisation: document.getElementById('art-scope').value,
+        prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
+        prix_achat: parseFloat(document.getElementById('art-pa').value) || 0
+    };
+
+    if(!payload.nom_article || !payload.ref) { 
+        alert("⚠️ La Référence et le Nom de l'article sont obligatoires."); 
+        return; 
+    }
+
+    try {
+        const { error } = await clientSupabase.from('articles_v2').insert([payload]);
+        if (error) throw error; // S'il y a un refus, on déclenche l'erreur
+
+        alert("✅ Article ajouté avec succès au catalogue !");
+        
+        // Vider les cases après succès
+        document.querySelectorAll('#tab-catalogue input').forEach(input => input.value = "");
+        chargerCatalogue(); // Rafraîchit le tableau en bas
+    } catch(err) {
+        alert("❌ Erreur lors de l'ajout : " + err.message);
+    }
+}
 
         async function supprimerArticle(id) {
             if(confirm("Supprimer cet article du catalogue définitif ?")) {
