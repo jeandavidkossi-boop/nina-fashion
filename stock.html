@@ -150,18 +150,23 @@
             afficherBordereau();
         };
 
-        function switchTab(tabId) {
+                function switchTab(tabId) {
+            // On cache tout et on désactive les boutons
             document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
+
+            // On affiche le bon conteneur
             document.getElementById('tab-' + tabId).classList.add('active');
-            let btnActif = document.querySelector(`button[onclick*="${tabId}"]`);
+
+            // On active le bon bouton (avec la ligne dorée)
+            let btnActif = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
             if (btnActif) btnActif.classList.add('active');
-            
+
+            // Rafraîchissement des données selon l'onglet
             if (tabId === 'vision') chargerDonneesDepot();
             if (tabId === 'entree') remplirSelectArticles();
-        }
-
+                }
+            
         async function chargerDonneesDepot() {
             try {
                 // On charge le catalogue
