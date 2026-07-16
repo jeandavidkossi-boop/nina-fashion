@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock & Logistique - Mercerie Générale Nina Fashion</title>
+    <title>Gestion du Dépôt - Mercerie Générale Nina Fashion</title>
+    <!-- Chargement de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        <style>
+        /* TES COULEURS OFFICIELLES */
         :root {
             --primary: #1a1c1e; 
             --gold: #b38728; 
@@ -17,157 +19,262 @@
             --danger: #e74c3c; 
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         
-        body { background-color: var(--bg-gray); color: var(--text-dark); margin: 0; padding: 20px; }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            background-color: var(--bg-gray); 
+            color: var(--text-dark); 
+        }
 
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: var(--gold); font-size: 24px; }
+        /* TON EN-TÊTE D'ORIGINE (Noir et Or) */
+        header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        header h1 { 
+            font-size: 1.2rem; 
+            margin: 0; 
+            color: var(--gold); 
+            font-family: 'Georgia', serif; 
+        }
+        .badge-role { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid var(--gold); 
+            color: white; 
+            padding: 5px 12px; 
+            border-radius: 20px; 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+        }
+        .btn-retour { 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            cursor: pointer; 
+            text-decoration: underline; 
+            font-size: 0.9rem; 
+        }
 
-                       /* ONGLETS COULISSANTS (Copiés sur l'interface Vendeur) */
+        /* LES ONGLETS COULISSANTS ARRONDIS */
+        .tabs-container { 
+            padding: 15px 20px 0 20px; 
+            background: white; 
+            border-bottom: 1px solid var(--border); 
+        }
         .tabs { 
             display: flex; 
             gap: 10px; 
-            margin-bottom: 20px; 
-            border-bottom: 1px solid var(--border); 
             overflow-x: auto; 
             white-space: nowrap; 
-            padding-bottom: 10px; 
-            
-            /* Ces deux lignes cachent la barre de défilement pour faire plus propre sur mobile */
+            padding-bottom: 15px; 
             -ms-overflow-style: none; 
             scrollbar-width: none; 
         }
-        .tabs::-webkit-scrollbar { 
-            display: none; 
-        }
-
+        .tabs::-webkit-scrollbar { display: none; }
+        
         .tab-btn { 
-            padding: 8px 15px; 
+            padding: 10px 20px; 
             border: 1px solid var(--border); 
             background: white; 
-            border-radius: 20px; 
+            border-radius: 25px; 
             cursor: pointer; 
             color: #7f8c8d; 
             font-weight: bold; 
             font-size: 14px; 
             transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-
         .tab-btn.active { 
             color: white; 
             background: var(--gold); 
             border-color: var(--gold); 
+            box-shadow: 0 2px 5px rgba(179, 135, 40, 0.3);
         }
-        
-        .container { display: none; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        .container.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        /* CONTENEURS DES PAGES */
+        .container { 
+            padding: 20px; 
+            flex: 1; 
+            display: none; 
+            flex-direction: column; 
+            gap: 20px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            width: 100%; 
+        }
+        .container.active { 
+            display: flex; 
+            animation: fadeIn 0.3s ease-in-out; 
+        }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Garde le reste de tes styles de tableaux et boutons intacts ici */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { color: var(--gold); font-weight: bold; background-color: white; }
+        /* DESIGN DES TABLEAUX ET FORMULAIRES */
+        .table-responsive { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { color: var(--gold); background: var(--primary); font-weight: bold; }
         
-        input, select { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 5px; box-sizing: border-box; }
+        .form-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-group label { font-size: 0.85rem; font-weight: bold; color: var(--primary); }
         
-        .btn-action { background-color: var(--gold); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; width: 100%; }
-        .btn-action:hover { background-color: #f39c12; }
-        .btn-danger { background-color: var(--danger); width: auto; padding: 5px 10px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; }
         
-        .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: start; }
+        .btn-block { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.05rem; cursor: pointer; color: white; margin-top: 10px; }
+        .btn-gold { background: var(--gold); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); width: auto; padding: 6px 12px; font-size: 12px;}
+        .btn-block:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* Style spécifique pour les alertes */
+        .alerte-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--danger); padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>📦 LOGISTIQUE & DÉPÔT - NINA FASHION</h1>
-        <span style="color: #95a5a6;">Connecté en tant que : Magasinier</span>
+    <!-- EN-TÊTE -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-retour" onclick="window.location.href='index.html'">🚪 Accueil</button>
+            <h1>Nina Fashion</h1>
+        </div>
+        <div class="badge-role" id="badge-magasinier">📦 DÉPÔT</div>
+    </header>
+
+    <!-- ONGLETS -->
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('vision')">📊 Vision Globale</button>
+            <button class="tab-btn" onclick="switchTab('mouvement')">🔄 Mouvements (Entrée / Sortie)</button>
+            <button class="tab-btn" onclick="switchTab('commande')">🚨 Alertes & Commandes</button>
+        </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('vision')">👁️ VISION GLOBALE</button>
-        <button class="tab-btn" onclick="switchTab('entree')">📥 MOUVEMENTS (COLIS)</button>
-        <button class="tab-btn" onclick="switchTab('commandes')">⚠️ ALERTES & COMMANDES</button>
-    </div>
-
+    <!-- ONGLET 1 : VISION GLOBALE -->
     <div id="tab-vision" class="container active">
-        <h2 style="color: var(--gold);">État du Stock Physique</h2>
-        <input type="text" id="search-stock" placeholder="🔍 Rechercher un article ou une référence..." onkeyup="filtrerStock()">
-        <table>
-            <thead>
-                <tr>
-                    <th>Réf.</th>
-                    <th>Article</th>
-                    <th>Couleur/Variante</th>
-                    <th>Quantité en Dépôt</th>
-                    <th>Seuil Alerte</th>
-                </tr>
-            </thead>
-            <tbody id="table-stock-body">
-                <tr><td colspan="5" style="text-align: center;">⏳ Chargement du stock...</td></tr>
-            </tbody>
-        </table>
+        <input type="text" id="search-stock" placeholder="🔍 Rechercher un article ou une couleur..." onkeyup="filtrerStock()">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Couleur</th>
+                        <th>Quantité</th>
+                        <th>Seuil</th>
+                    </tr>
+                </thead>
+                <tbody id="table-stock-body">
+                    <tr><td colspan="4" style="text-align:center; padding:30px; color:#7f8c8d; font-weight:bold;">⏳ Chargement du stock physique...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="tab-entree" class="container">
-        <h2 style="color: var(--gold);">Enregistrer un Arrivage</h2>
-        <div class="form-grid">
-            <div>
-                <label>Article du Catalogue</label>
-                <select id="mvt-article"><option>Chargement...</option></select>
+    <!-- ONGLET 2 : MOUVEMENTS (Séparés Entrée / Sortie) -->
+    <div id="tab-mouvement" class="container">
+        <div class="form-card">
+            <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Enregistrer un mouvement</h2>
+            
+            <div class="form-group">
+                <label>1. Type de mouvement :</label>
+                <select id="mvt-type" onchange="toggleDestination()" style="background-color: #f8f9fa; font-weight: bold;">
+                    <option value="ENTREE">📥 ENTRÉE (Arrivage Fournisseur)</option>
+                    <option value="SORTIE">📤 SORTIE (Diminution du stock)</option>
+                </select>
             </div>
-            <div>
-                <label>Couleur / Motif</label>
-                <input type="text" id="mvt-couleur" placeholder="Ex: Bleu Nuit">
+
+            <div class="form-group" id="group-destination" style="display: none; background: #fffcf5; padding: 10px; border-radius: 6px; border: 1px solid var(--gold);">
+                <label style="color: var(--danger);">2. Destination de la marchandise :</label>
+                <select id="mvt-destination">
+                    <option value="Rayon Boutique">🛍️ Transfert vers Rayons Boutique</option>
+                    <option value="Atelier Interne">✂️ Consommation par les Machinistes</option>
+                </select>
             </div>
-            <div>
-                <label>Quantité reçue</label>
-                <input type="number" id="mvt-qte" placeholder="0" min="1">
+
+            <div class="form-group">
+                <label>Article du Catalogue :</label>
+                <select id="mvt-article">
+                    <option value="">⏳ Chargement du catalogue...</option>
+                </select>
             </div>
-            <div style="padding-top: 22px;">
-                <button class="btn-action" onclick="ajouterAuBordereau()">➕ AJOUTER</button>
+
+            <div class="form-group">
+                <label>Couleur / Motif :</label>
+                <input type="text" id="mvt-couleur" placeholder="Ex: Blanc, Bleu Nuit, Doré...">
             </div>
+
+            <div class="form-group">
+                <label>Quantité :</label>
+                <input type="number" id="mvt-qte" placeholder="Ex: 10" min="0">
+            </div>
+
+            <button class="btn-block btn-gold" onclick="ajouterAuBordereau()">➕ AJOUTER AU BORDEREAU</button>
         </div>
 
-        <h3 style="margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">📋 Bordereau en cours</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Article</th>
-                    <th>Couleur</th>
-                    <th>Quantité</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="table-bordereau"></tbody>
-        </table>
-        <br>
-        <button id="btn-valider" class="btn-action" style="background-color: var(--success); color: white;" onclick="validerBordereau(this)">💾 VALIDER LE BORDEREAU</button>
+        <div class="form-card">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--primary);">📋 Bordereau en cours</h3>
+            <div class="table-responsive" style="margin-bottom: 15px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mvt</th>
+                            <th>Détail</th>
+                            <th>Qté</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-bordereau">
+                        <tr><td colspan="4" style="text-align: center; color: #95a5a6; font-size: 0.9rem;">Le bordereau est vide.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button id="btn-valider" class="btn-block btn-success" onclick="validerBordereau()" disabled>💾 ENREGISTRER DANS LA BASE</button>
+        </div>
     </div>
 
-    <div id="tab-commandes" class="container">
-        <h2 style="color: var(--gold);">Articles en Rupture / Alerte</h2>
-        <div id="liste-alertes"></div>
-        <br>
-        <button class="btn-action" style="background-color: #25D366; color: white;" onclick="envoyerWhatsApp()">📲 ENVOYER LA COMMANDE AU FOURNISSEUR</button>
-    </div>
-        <script>
-        // --- 1. CONNEXION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <!-- ONGLET 3 : ALERTES ET COMMANDES -->
+    <div id="tab-commande" class="container">
+        <div class="form-card">
+            <h2 style="color: var(--danger); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.1rem;">🚨 Articles en Rupture ou Alerte</h2>
             
-        // --- 2. VARIABLES GLOBALES BÉTONNÉES ---
+            <div id="liste-alertes" style="margin-top: 15px; margin-bottom: 20px;">
+                <!-- Les alertes se mettront ici automatiquement -->
+            </div>
+
+            <!-- Le bouton magique pour envoyer sur WhatsApp peu importe le numéro -->
+            <button id="btn-whatsapp" class="btn-block btn-success" onclick="envoyerWhatsApp()" style="display: none; background-color: #25D366; gap: 10px;">
+                💬 TRANSMETTRE LA LISTE VIA WHATSAPP
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // LA PARTIE 2 VIENDRA SE COLLER JUSTE ICI EN DESSOUS !
+                // --- 1. CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
+        // ⚠️ VÉRIFIE QUE CETTE CLÉ EST COMPLÈTE (Colle ta vraie clé ici si elle est coupée)
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY4ODgzNDIsImV4cCI6MjAzMjQ2NDM0Mn0.TA_VRAIE_CLE_SECRETE_ICI"; 
+        
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. VARIABLES GLOBALES (La mémoire du navigateur) ---
         let CATALOGUE = [];
         let STOCK_DEPOT = [];
         let bordereau = [];
 
-        // Sécurité anti-crash pour le cache mémoire
+        // Sécurité : On récupère le bordereau en cours si le magasinier a fermé l'écran par erreur
         try {
             bordereau = JSON.parse(localStorage.getItem('nina_depot_bordereau')) || [];
         } catch(e) {
@@ -175,119 +282,157 @@
             bordereau = [];
         }
 
-        // --- 3. DÉMARRAGE ET CHARGEMENT ---
+        // --- 3. DÉMARRAGE ET GESTION DES ONGLETS COULISSANTS ---
         window.onload = () => {
             chargerDonneesDepot();
             afficherBordereau();
         };
 
-                function switchTab(tabId) {
-            // On cache tout et on désactive les boutons
+        function switchTab(tabId) {
+            // 1. On cache tous les écrans
             document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            // 2. On enlève la couleur or de tous les boutons
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-            // On affiche le bon conteneur
+            // 3. On affiche le bon écran
             document.getElementById('tab-' + tabId).classList.add('active');
 
-            // On active le bon bouton (avec la ligne dorée)
+            // 4. On met la couleur or sur l'onglet cliqué
             let btnActif = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
             if (btnActif) btnActif.classList.add('active');
 
-            // Rafraîchissement des données selon l'onglet
+            // 5. Si on revient sur la vision globale, on rafraîchit le stock pour être sûr
             if (tabId === 'vision') chargerDonneesDepot();
-            if (tabId === 'entree') remplirSelectArticles();
-                }
-            
+        }
+
+        // --- 4. CHARGEMENT DES DONNÉES DEPUIS SUPABASE ---
         async function chargerDonneesDepot() {
             try {
-                // On charge le catalogue
-                const { data: catData, error: catErr } = await clientSupabase.from('articles_v2').select('*').order('nom_article');
+                // A. On charge le catalogue (pour avoir le nom de tes articles)
+                const { data: catData, error: catErr } = await clientSupabase
+                    .from('articles_v2')
+                    .select('*')
+                    .order('nom_article');
+                
                 if (catErr) throw catErr;
                 CATALOGUE = catData || [];
 
-                // On charge le stock physique existant
-                const { data: stockData, error: stockErr } = await clientSupabase.from('stock_depot').select('*');
+                // B. On charge le stock physique réel de la mercerie
+                const { data: stockData, error: stockErr } = await clientSupabase
+                    .from('stock_depot')
+                    .select('*');
+                
                 if (stockErr) throw stockErr;
                 STOCK_DEPOT = stockData || [];
 
+                // C. On envoie ces données aux autres fonctions pour dessiner l'écran
                 afficherVisionGlobale();
                 remplirSelectArticles();
                 construireAlertesCommande();
-            } catch (error) {
-                console.error("Erreur de chargement :", error);
-                document.getElementById('table-stock-body').innerHTML = `<tr><td colspan="5" style="color: var(--danger); text-align: center;">❌ Erreur de connexion à la base de données.</td></tr>`;
+                
+            } catch (err) {
+                console.error("Erreur de chargement réseau :", err);
+                document.getElementById('table-stock-body').innerHTML = `<tr><td colspan="4" style="color: var(--danger); text-align: center; font-weight: bold;">❌ Erreur réseau. Impossible de charger le stock.</td></tr>`;
             }
         }
-
-        // --- 4. AFFICHAGE VISION GLOBALE ---
+                // --- 5. AFFICHAGE VISION GLOBALE ---
         function afficherVisionGlobale() {
             const tbody = document.getElementById('table-stock-body');
             tbody.innerHTML = '';
 
             if (STOCK_DEPOT.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #7f8c8d;">Aucun article physiquement en stock. Faites une entrée !</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #7f8c8d;">Aucun article en stock pour le moment.</td></tr>';
                 return;
             }
 
-            STOCK_DEPOT.forEach(ligneStock => {
-                // On retrouve le nom et la ref grâce au Catalogue
-                const articleInfo = CATALOGUE.find(a => a.id === ligneStock.article_id) || {};
+            STOCK_DEPOT.forEach(ligne => {
+                let infoArticle = CATALOGUE.find(a => a.id == ligne.article_id) || {};
+                let nom = infoArticle.nom_article || 'Article inconnu';
                 
-                const qte = parseFloat(ligneStock.quantite);
-                const seuil = parseFloat(ligneStock.seuil_alerte);
-                let couleurQte = (qte <= seuil) ? "color: var(--danger); font-weight: bold;" : "color: var(--success); font-weight: bold;";
+                let qte = parseFloat(ligne.quantite);
+                let seuil = parseFloat(ligne.seuil_alerte) || 5;
+                // Si la quantité est sous le seuil, la couleur devient rouge
+                let couleurAlerte = (qte <= seuil) ? 'color: var(--danger); font-weight: bold;' : 'color: var(--success); font-weight: bold;';
 
-                const tr = document.createElement('tr');
+                let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${articleInfo.ref || 'Inconnue'}</td>
-                    <td style="font-weight: bold;">${articleInfo.nom_article || 'Article supprimé'}</td>
-                    <td>${ligneStock.couleur_ref || 'Standard'}</td>
-                    <td style="${couleurQte}">${qte}</td>
-                    <td>${seuil}</td>
+                    <td style="font-weight: bold; color: var(--primary);">${nom}</td>
+                    <td style="color: #7f8c8d;">${ligne.couleur_ref || 'Standard'}</td>
+                    <td style="${couleurAlerte}">${qte}</td>
+                    <td style="color: var(--gold);">${seuil}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         function filtrerStock() {
-            const recherche = document.getElementById('search-stock').value.toLowerCase();
-            const lignes = document.querySelectorAll('#table-stock-body tr');
-            
+            let recherche = document.getElementById('search-stock').value.toLowerCase();
+            let lignes = document.querySelectorAll('#table-stock-body tr');
             lignes.forEach(ligne => {
-                const texte = ligne.innerText.toLowerCase();
+                let texte = ligne.innerText.toLowerCase();
                 ligne.style.display = texte.includes(recherche) ? '' : 'none';
             });
         }
 
+        // --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
         function remplirSelectArticles() {
             const select = document.getElementById('mvt-article');
             select.innerHTML = '<option value="">-- Sélectionnez un article --</option>';
             CATALOGUE.forEach(art => {
-                select.innerHTML += `<option value="${art.id}">${art.ref} - ${art.nom_article}</option>`;
+                select.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
             });
         }
-                    // --- 5. GESTION DU BORDEREAU (Mémoire locale) ---
+
+        function toggleDestination() {
+            const type = document.getElementById('mvt-type').value;
+            const destDiv = document.getElementById('group-destination');
+            // On affiche le choix de la destination UNIQUEMENT si c'est une sortie
+            destDiv.style.display = (type === 'SORTIE') ? 'block' : 'none';
+        }
+
         function ajouterAuBordereau() {
+            const typeMvt = document.getElementById('mvt-type').value;
+            const destination = typeMvt === 'SORTIE' ? document.getElementById('mvt-destination').value : 'Dépôt Principal';
+            
             const selectArt = document.getElementById('mvt-article');
+            const idArticle = selectArt.value;
+            if (!idArticle) return alert("⚠️ Veuillez sélectionner un article.");
+            const nomArticle = selectArt.options[selectArt.selectedIndex].text;
+
             const couleur = document.getElementById('mvt-couleur').value.trim() || 'Standard';
             const qte = parseFloat(document.getElementById('mvt-qte').value);
 
-            if (!selectArt.value || !qte || qte <= 0) {
-                return alert("⚠️ Veuillez sélectionner un article et une quantité valide !");
+            if (isNaN(qte) || qte <= 0) return alert("⚠️ Veuillez saisir une quantité valide !");
+
+            // LE FAMEUX SEUIL HYBRIDE : On vérifie si la couleur existe déjà dans le stock
+            let articleExistant = STOCK_DEPOT.find(s => s.article_id == idArticle && s.couleur_ref.toLowerCase() === couleur.toLowerCase());
+            
+            let seuilChoisi = 5; // Valeur par défaut
+            if (!articleExistant) {
+                if (typeMvt === 'SORTIE') {
+                    // Sécurité anti-erreur
+                    return alert("❌ Impossible ! Vous essayez de faire sortir une couleur (" + couleur + ") qui n'existe pas en stock.");
+                } else {
+                    // C'est une ENTRÉE d'une nouvelle couleur, on fait bosser le magasinier !
+                    let rep = prompt(`✨ Nouvelle couleur détectée : ${couleur} !\n\nÀ partir de combien d'unités restantes l'application doit-elle vous alerter de la rupture pour cette couleur précise ?\n\n(Laissez le chiffre par défaut ou modifiez-le) :`, "5");
+                    if (rep === null) return; // Le magasinier a cliqué sur Annuler
+                    seuilChoisi = parseFloat(rep) || 5;
+                }
             }
 
-            const nomArticle = selectArt.options[selectArt.selectedIndex].text;
-
             bordereau.push({
-                article_id: selectArt.value,
-                nom_affiche: nomArticle,
+                article_id: idArticle,
+                nom_article: nomArticle,
+                type_mouvement: typeMvt,
+                destination: destination,
                 couleur: couleur,
-                qte: qte
+                qte: qte,
+                seuil: seuilChoisi
             });
 
             localStorage.setItem('nina_depot_bordereau', JSON.stringify(bordereau));
             
-            // On vide les cases pour le prochain article
+            // Vider les champs pour aller plus vite au prochain article
             document.getElementById('mvt-couleur').value = '';
             document.getElementById('mvt-qte').value = '';
             
@@ -297,19 +442,26 @@
         function afficherBordereau() {
             const tbody = document.getElementById('table-bordereau');
             tbody.innerHTML = '';
+            const btnValider = document.getElementById('btn-valider');
 
             if (bordereau.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #7f8c8d;">Le bordereau est vide.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #95a5a6; font-size: 0.9rem;">Le bordereau est vide.</td></tr>';
+                btnValider.disabled = true;
                 return;
             }
 
+            btnValider.disabled = false;
+
             bordereau.forEach((item, index) => {
-                const tr = document.createElement('tr');
+                let icone = item.type_mouvement === 'ENTREE' ? '📥' : '📤';
+                let couleurLigne = item.type_mouvement === 'ENTREE' ? 'var(--success)' : 'var(--danger)';
+                
+                let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${item.nom_affiche}</td>
-                    <td>${item.couleur}</td>
-                    <td style="font-weight: bold; color: var(--gold);">${item.qte}</td>
-                    <td><button class="btn-action btn-danger" onclick="supprimerDuBordereau(${index})">X</button></td>
+                    <td style="color: ${couleurLigne}; font-weight: bold; font-size: 12px;">${icone} ${item.type_mouvement}</td>
+                    <td><strong style="font-size: 13px;">${item.nom_article}</strong><br><span style="font-size:11px; color:#7f8c8d;">${item.couleur}</span></td>
+                    <td style="font-weight: bold;">${item.qte}</td>
+                    <td><button class="btn-block btn-danger" style="margin-top:0;" onclick="supprimerDuBordereau(${index})">❌</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -321,104 +473,122 @@
             afficherBordereau();
         }
 
-        // --- 6. VALIDATION ET ENVOI À SUPABASE (Le moteur blindé) ---
-        async function validerBordereau(btn) {
-            if (bordereau.length === 0) return alert("⚠️ Le bordereau est vide !");
-            
+        // --- 7. VALIDATION ET ENVOI À SUPABASE (Le moteur mathématique sécurisé) ---
+        async function validerBordereau() {
+            if (bordereau.length === 0) return;
+
+            const btn = document.getElementById('btn-valider');
             btn.disabled = true;
             btn.innerText = "⏳ Enregistrement en cours...";
 
             try {
-                // On traite chaque ligne du bordereau une par une (Méthode la plus sûre)
                 for (let item of bordereau) {
-                    
-                    // 1. On inscrit la trace dans l'historique
+                    // 1. Historique (La trace pour l'administrateur)
                     await clientSupabase.from('mouvements_depot').insert([{
                         article_id: item.article_id,
                         couleur_ref: item.couleur,
-                        type_mouvement: 'ENTREE',
+                        type_mouvement: item.type_mouvement,
+                        destination: item.destination,
                         quantite: item.qte,
                         utilisateur: 'Magasinier'
                     }]);
 
-                    // 2. On vérifie si l'article+couleur existe déjà dans le stock physique
+                    // 2. Mise à jour du stock physique
                     const { data: existData } = await clientSupabase.from('stock_depot')
                         .select('id, quantite')
                         .eq('article_id', item.article_id)
                         .eq('couleur_ref', item.couleur);
 
                     if (existData && existData.length > 0) {
-                        // Il existe : on ADITIONNE la quantité
-                        let nouvelleQte = parseFloat(existData[0].quantite) + parseFloat(item.qte);
+                        // LA LIGNE EXISTE : Voici ton système d'addition et de soustraction !
+                        let qteActuelle = parseFloat(existData[0].quantite);
+                        let nouvelleQte = item.type_mouvement === 'ENTREE' 
+                                          ? qteActuelle + item.qte 
+                                          : qteActuelle - item.qte;
+                        
                         await clientSupabase.from('stock_depot')
                             .update({ quantite: nouvelleQte })
                             .eq('id', existData[0].id);
                     } else {
-                        // Il n'existe pas : on CRÉE la ligne dans le stock
+                        // LA LIGNE N'EXISTE PAS : On la crée avec le seuil choisi par le magasinier
                         await clientSupabase.from('stock_depot').insert([{
                             article_id: item.article_id,
                             couleur_ref: item.couleur,
                             quantite: item.qte,
-                            seuil_alerte: 5
+                            seuil_alerte: item.seuil
                         }]);
                     }
                 }
 
-                alert("✅ Arrivage enregistré avec succès dans la base !");
-                bordereau = [];
+                alert("✅ Le bordereau a été enregistré avec succès !");
+                bordereau = []; 
                 localStorage.removeItem('nina_depot_bordereau');
                 afficherBordereau();
-                chargerDonneesDepot(); // Rafraîchit la vision globale
-                
-                btn.disabled = false;
-                btn.innerText = "💾 VALIDER LE BORDEREAU";
+                chargerDonneesDepot(); // On rafraîchit l'onglet 1 instantanément
+                btn.innerText = "💾 ENREGISTRER DANS LA BASE";
 
             } catch (err) {
-                alert("❌ Erreur réseau. Le bordereau n'a pas été perdu, réessayez.");
                 console.error(err);
+                alert("❌ Erreur de réseau. Vérifiez la connexion.");
                 btn.disabled = false;
                 btn.innerText = "🔄 RÉESSAYER";
             }
         }
 
-        // --- 7. ALERTES ET WHATSAPP ---
+        // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
         function construireAlertesCommande() {
             const conteneur = document.getElementById('liste-alertes');
+            const btnWhatsApp = document.getElementById('btn-whatsapp');
             conteneur.innerHTML = '';
 
-            const enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.quantite) <= parseFloat(art.seuil_alerte));
+            // On filtre : on ne garde que ce qui est en dessous du seuil
+            let enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.quantite) <= parseFloat(art.seuil_alerte));
 
             if (enAlerte.length === 0) {
-                conteneur.innerHTML = `<div style="color: var(--success);">✅ Tout va bien, aucun article en rupture.</div>`;
+                conteneur.innerHTML = '<div style="color: var(--success); text-align: center; font-weight: bold; padding: 20px;">✅ Tout va bien, aucun article n\'est en rupture.</div>';
+                btnWhatsApp.style.display = 'none';
                 return;
             }
 
-            enAlerte.forEach(ligneStock => {
-                const articleInfo = CATALOGUE.find(a => a.id === ligneStock.article_id) || {};
+            btnWhatsApp.style.display = 'flex'; // On affiche le bouton vert WhatsApp
+
+            enAlerte.forEach(ligne => {
+                let infoArticle = CATALOGUE.find(a => a.id == ligne.article_id) || {};
+                let nom = infoArticle.nom_article || 'Article inconnu';
+                
                 conteneur.innerHTML += `
                     <div class="alerte-card">
-                        <strong>${articleInfo.nom_article || 'Article inconnu'}</strong> (${ligneStock.couleur_ref || 'Standard'})<br>
-                        <span style="color: var(--danger);">Reste : ${ligneStock.quantite}</span> (Seuil : ${ligneStock.seuil_alerte})
+                        <div>
+                            <strong style="color: var(--primary);">${nom}</strong><br>
+                            <span style="font-size: 13px; color: #7f8c8d;">Couleur: ${ligne.couleur_ref}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong style="color: var(--danger); font-size: 1.1rem;">Reste : ${ligne.quantite}</strong><br>
+                            <span style="font-size: 11px; color: var(--gold); font-weight: bold;">(Seuil: ${ligne.seuil_alerte})</span>
+                        </div>
                     </div>
                 `;
             });
         }
 
         function envoyerWhatsApp() {
-            const enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.quantite) <= parseFloat(art.seuil_alerte));
-            if (enAlerte.length === 0) return alert("Rien à commander pour le moment !");
+            let enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.quantite) <= parseFloat(art.seuil_alerte));
+            if (enAlerte.length === 0) return;
 
-            let texte = "📦 *COMMANDE URGENTE - MERCERIE NINA FASHION* 📦\n\nNous avons besoin d'un réassort pour :\n\n";
-            
-            enAlerte.forEach((ligneStock, idx) => {
-                const articleInfo = CATALOGUE.find(a => a.id === ligneStock.article_id) || {};
-                texte += `- ${idx + 1}. *${articleInfo.nom_article || 'Article inconnu'}* (${ligneStock.couleur_ref || 'Standard'}) -> Il ne reste que ${ligneStock.quantite} en stock\n`;
+            // Construction du texte clair et propre
+            let texte = "🚨 *ALERTE RUPTURE - DÉPÔT NINA FASHION* 🚨\n\nBonjour, voici les articles à recommander urgemment :\n\n";
+
+            enAlerte.forEach(ligne => {
+                let infoArticle = CATALOGUE.find(a => a.id == ligne.article_id) || {};
+                let nom = infoArticle.nom_article || 'Article inconnu';
+                texte += `🔸 *${nom}* (${ligne.couleur_ref})\n`;
+                texte += `👉 Reste : ${ligne.quantite} (Seuil paramétré : ${ligne.seuil_alerte})\n\n`;
             });
 
-            texte += "\nMerci de nous préparer cela rapidement.";
-            
-            const numFournisseur = "22500000000"; // Remplace par le vrai numéro
-            const url = `https://wa.me/${numFournisseur}?text=${encodeURIComponent(texte)}`;
+            texte += "_Message envoyé depuis l'application logistique du dépôt._";
+
+            // L'URL universelle de WhatsApp (Le magasinier choisira lui-même à qui l'envoyer)
+            const url = "https://wa.me/?text=" + encodeURIComponent(texte);
             window.open(url, '_blank');
         }
     </script>
