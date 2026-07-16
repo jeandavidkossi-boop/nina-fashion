@@ -516,22 +516,6 @@ function switchTab(tabId) {
         }
                 }
             
-                alert("✅ Tout le bordereau a été enregistré avec succès !");
-                
-                // Nettoyage complet
-                bordereau = [];
-                localStorage.removeItem('nina_depot_bordereau');
-                afficherBordereau();
-                chargerDonneesDpot(); // Rafraîchit les données du stock
-                btn.innerText = "✅ ENREGISTRER LE BORDEREAU";
-                switchTab('vision');
-
-            } catch (err) {
-                alert("❌ Erreur réseau lors de l'enregistrement. Le bordereau n'est pas perdu, réessayez.");
-                btn.disabled = false;
-                btn.innerText = "🔄 RÉESSAYER";
-            }
-        }
 
         // --- 7. ALERTES ET COMMANDES (WhatsApp Flexible) ---
         function construireAlertesCommande() {
@@ -559,7 +543,7 @@ function switchTab(tabId) {
         }
 
         function envoyerCommandeWhatsApp() {
-            const enAlerte = STOCK_CENTRAL.filter(art => parseFloat(art.stock_actuel) <= parseFloat(art.seuil_alerte));
+            const enAlerte = STOCK_DEPOT.filter(art => parseFloat(art.quantite) <= parseFloat(art.seuil_alerte));
             
             let texte = "🚨 *RUPTURE DE STOCK - DÉPÔT*\nVoici la liste des articles à commander d'urgence :\n\n";
             
