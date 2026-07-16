@@ -263,12 +263,10 @@
     <script>
         // LA PARTIE 2 VIENDRA SE COLLER JUSTE ICI EN DESSOUS !
                 // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        // ⚠️ VÉRIFIE QUE CETTE CLÉ EST COMPLÈTE (Colle ta vraie clé ici si elle est coupée)
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY4ODgzNDIsImV4cCI6MjAzMjQ2NDM0Mn0.TA_VRAIE_CLE_SECRETE_ICI"; 
-        
+           const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+        
         // --- 2. VARIABLES GLOBALES (La mémoire du navigateur) ---
         let CATALOGUE = [];
         let STOCK_DEPOT = [];
