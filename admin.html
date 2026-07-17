@@ -241,6 +241,22 @@
                     </table>
                 </div>
             </div>
+                   <!-- NOUVELLE SECTION : HISTORIQUE DES JOURNÉES (Pour Nina) -->
+        <style>
+            .ticket-jour { background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 20px; }
+            .ticket-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+            .ticket-details { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
+            .ticket-details.ouvert { display: block; }
+            .resume-finances { display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.9rem; color: #7f8c8d; }
+        </style>
+        <div class="data-section" style="border-left: 5px solid #b38728; margin-top: 20px;">
+            <h2>📅 Historique des Journées (Tickets de Caisse)</h2>
+            <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Cliquez sur un jour pour ouvrir son ticket virtuel et voir les articles vendus.</p>
+            <div id="liste-archives-jours">
+                <div style="text-align:center; color:#7f8c8d; padding:20px;">⏳ Chargement des archives...</div>
+            </div>
+        </div>
+            
         </div>
                 <!-- ========================================== -->
         <!-- 3. ONGLET CATALOGUE (Fiches Mères)         -->
@@ -267,6 +283,10 @@
                     </div>
                     <div class="form-group"><label>Prix Vente conseillé :</label><input type="number" id="art-pv" class="form-control" placeholder="0"></div>
                     <div class="form-group"><label>Prix Achat (Gros) :</label><input type="number" id="art-pa" class="form-control" placeholder="0"></div>
+                    <div class="form-group">
+    <label style="color: #e74c3c; font-weight: bold;">🚨 Seuil d'Alerte Dépôt :</label>
+    <input type="number" id="art-seuil" class="form-control" placeholder="Ex: 5" value="5">
+                    </div>
                 </div>
                 <button class="btn btn-gold" onclick="ajouterArticleManuel()">✨ Ajouter au Catalogue</button>
             </div>
