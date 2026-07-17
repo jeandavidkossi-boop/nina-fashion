@@ -769,18 +769,18 @@ function filtrerCatalogue() {
         
 async function ajouterArticleManuel() {
     const payload = {
-    ref: document.getElementById('art-ref').value,
-    non_article: document.getElementById('art-non').value,
-    famille: document.getElementById('art-cat').value,
-    cible_utilisation: document.getElementById('art-scope').value,
-    prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
-    prix_achat: parseFloat(document.getElementById('art-pa').value) || 0,
-    seuil_alerte: parseInt(document.getElementById('art-seuil').value) || 5
-};
+        ref: document.getElementById('art-ref').value,
+        nom_article: document.getElementById('art-nom').value,
+        famille: document.getElementById('art-cat').value,
+        cible_utilisation: document.getElementById('art-scope').value,
+        prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
+        prix_achat: parseFloat(document.getElementById('art-pa').value) || 0,
+        seuil_alerte: parseInt(document.getElementById('art-seuil').value) || 5
+    };
 
-    if(!payload.nom_article || !payload.ref) { 
-        alert("⚠️ La Référence et le Nom de l'article sont obligatoires."); 
-        return; 
+    if (!payload.nom_article || !payload.ref) {
+        alert("La Référence et le Nom de l'article sont obligatoires.");
+        return;
     }
 
     try {
