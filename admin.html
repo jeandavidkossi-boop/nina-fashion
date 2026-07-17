@@ -170,7 +170,7 @@
                     <div class="stat-value" id="stat-benefice">0 F</div>
                 </div>
                 <div class="stat-card danger">
-                    <div class="stat-title">💸 Reliquats (Argent dehors)</div>
+                    <div class="stat-title">💸 Reliquats (Monnaie due aux clients)</div>
                     <div class="stat-value" id="stat-reliquats">0 F</div>
                 </div>
             </div>
@@ -292,7 +292,10 @@
             </div>
 
             <div class="data-section">
-                <h2>📋 Le Catalogue Global (Fiches Mères)</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+    <h2>📦 Le Catalogue Global (Fiches Mères)</h2>
+    <input type="text" id="recherche-catalogue" class="form-control" placeholder="🔍 Chercher par nom ou réf..." style="width: 250px; max-width: 100%;" onkeyup="filtrerCatalogue()">
+                </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -403,7 +406,7 @@
 
             // Rechargement des données selon l'onglet
             if(tabId === 'caisse') { chargerCaisse(); }
-            if(tabId === 'compta') { chargerComptabilite(); chargerReliquats(); }
+            if(tabId === 'compta') { chargerComptabilite(); chargerReliquats(); chargerArchivesJours(); }
             if(tabId === 'catalogue') { chargerCatalogue(); }
             if(tabId === 'audit') { chargerAuditDepot(); }
             if(tabId === 'securite') { chargerEquipe(); }
@@ -427,8 +430,6 @@ if (error) {
     alert("❌ ERREUR SUPABASE : " + error.message);
     throw error;
 }
-
-alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets payés dans la base !");
 
                 const { data: depenses } = await clientSupabase
                     .from('depenses_boutique')
@@ -695,6 +696,40 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
             document.getElementById('stat-reliquats').innerText = total.toLocaleString('fr-FR') + " F";
         }
 
+       async function chargerArchivesJours() {
+    try {
+        const { data, error } = await clientSupabase.from('clotures_caisse')
+            .select('*')
+            .order('date_cloture', { ascending: false });
+
+        if (error) throw error;
+
+        const conteneur = document.getElementById('liste-archives-jours');
+
+        if (data && data.length > 0) {
+            conteneur.innerHTML = data.map(d => {
+                let dateFormatee = new Date(d.date_cloture).toLocaleDateString('fr-FR');
+                return `
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; text-align: left;">
+                    <div>
+                        <strong style="color: var(--primary); font-size: 1.1rem;">📅 Clôture du ${dateFormatee}</strong><br>
+                        <span style="font-size: 0.85rem; color: #7f8c8d;">Espèces: ${d.total_especes_attendu} F | MoMo: ${d.total_momo_attendu} F</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.85rem; color: var(--danger);">Dépenses: ${d.total_depenses} F</span><br>
+                        <strong style="color: var(--success);">Bénéfice (est.): ${d.benefice_net_estime} F</strong>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        } else {
+            conteneur.innerHTML = '<div style="color:#7f8c8d; padding:20px;">Aucune archive de journée trouvée.</div>';
+        }
+    } catch (e) {
+        console.error("Erreur de chargement des archives:", e);
+    }
+       }
+        
         // ==========================================
         // --- 5. CATALOGUE & IMPORT CSV          ---
         // ==========================================
@@ -718,16 +753,30 @@ alert("🟢 L'Admin a bien trouvé " + (ventes ? ventes.length : 0) + " tickets 
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Catalogue vide.</td></tr>';
             }
         }
-
+        
+function filtrerCatalogue() {
+    let input = document.getElementById('recherche-catalogue').value.toLowerCase();
+    let lignes = document.querySelectorAll('#table-articles tr');
+    
+    lignes.forEach(ligne => {
+        // On ne cache pas la ligne qui dit "Chargement..." s'il n'y a pas encore de données
+        if(ligne.innerText.includes("Chargement")) return; 
+        
+        let texteLigne = ligne.innerText.toLowerCase();
+        ligne.style.display = texteLigne.includes(input) ? '' : 'none';
+    });
+}
+        
 async function ajouterArticleManuel() {
     const payload = {
-        ref: document.getElementById('art-ref').value,
-        nom_article: document.getElementById('art-nom').value,
-        famille: document.getElementById('art-cat').value,
-        cible_utilisation: document.getElementById('art-scope').value,
-        prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
-        prix_achat: parseFloat(document.getElementById('art-pa').value) || 0
-    };
+    ref: document.getElementById('art-ref').value,
+    non_article: document.getElementById('art-non').value,
+    famille: document.getElementById('art-cat').value,
+    cible_utilisation: document.getElementById('art-scope').value,
+    prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
+    prix_achat: parseFloat(document.getElementById('art-pa').value) || 0,
+    seuil_alerte: parseInt(document.getElementById('art-seuil').value) || 5
+};
 
     if(!payload.nom_article || !payload.ref) { 
         alert("⚠️ La Référence et le Nom de l'article sont obligatoires."); 
@@ -818,7 +867,7 @@ async function ajouterArticleManuel() {
                     
                     tbody.innerHTML += `<tr>
                         <td><small>${date}</small></td>
-                        <td><strong>${m.nom_article || 'Inconnu'}</strong></td>
+                        <td><strong>${m.nom_article || m.non_article || 'Inconnu'}</strong></td>
                         <td>🎨 ${m.couleur || m.nuance || '-'}</td>
                         <td>${badgeMvt}</td>
                         <td><strong>${m.quantite_totale || m.quantite}</strong></td>
@@ -839,23 +888,40 @@ async function ajouterArticleManuel() {
             tbody.innerHTML = '';
             if(data) {
                 data.forEach(m => {
-                    tbody.innerHTML += `<tr>
-                        <td><strong>${m.nom_employe}</strong></td>
-                        <td>${m.role}</td>
-                        <td><code>${m.code_pin}</code></td>
-                        <td>${m.actif ? '<span class="badge badge-cash">✅ Actif</span>' : '<span class="badge btn-danger">❌ Inactif</span>'}</td>
-                        <td><button class="btn btn-action" style="background:#7f8c8d;" onclick="clientSupabase.from('personnel_nina').update({actif: ${!m.actif}}).eq('id', ${m.id}); chargerEquipe();">Bloquer / Débloquer</button></td>
-                    </tr>`;
+                                tbody.innerHTML += `<tr>
+                <td><strong>${m.nom_employe || 'Inconnu'}</strong></td>
+                <td>${m.role}</td>
+                <td><code style="background:#eee; padding:3px 6px; border-radius:4px;">${m.code_pin}</code></td>
+                <td>${m.actif ? '<span class="badge badge-cash" style="background:#2ecc71;">✔ Actif</span>' : '<span class="badge" style="background:#95a5a6;">❌ Inactif</span>'}</td>
+                <td>
+                    ${m.actif 
+                        ? '<button class="btn btn-action btn-danger" onclick="desactiverEmploye(' + m.id + ')">Désactiver</button>' 
+                        : '<button class="btn btn-action" style="background:#2ecc71;" onclick="reactiverEmploye(' + m.id + ')">Réactiver</button>'
+                    }
+                </td>
+            </tr>`;
                 });
             }
         }
 
+                async function desactiverEmploye(id) {
+            if(confirm("Désactiver cet employé ? Il ne pourra plus se connecter à la caisse.")) {
+                await clientSupabase.from('personnel_nina').update({ actif: false }).eq('id', id);
+                chargerEquipe();
+            }
+        }
+
+        async function reactiverEmploye(id) {
+            await clientSupabase.from('personnel_nina').update({ actif: true }).eq('id', id);
+            chargerEquipe();
+        }
+        
                 async function ajouterEmploye() {
             const nom = document.getElementById('emp-nom').value;
             const role = document.getElementById('emp-role').value;
             const pin = document.getElementById('emp-pin').value;
             if(!nom || pin.length < 4) { alert("⚠️ Saisissez un nom et un PIN à 4 chiffres."); return; }
-            await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin, actif: true}]);
+           await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin, actif: true}]);
             document.getElementById('emp-nom').value = ""; document.getElementById('emp-pin').value = "";
             chargerEquipe();
         }
