@@ -481,15 +481,16 @@
 
             try {
                 for (let item of bordereau) {
-                    // 1. Historique (La trace pour l'administrateur)
-                    await clientSupabase.from('mouvements_depot').insert([{
-                        article_id: item.article_id,
-                        couleur_ref: item.couleur,
-                        type_mouvement: item.type_mouvement,
-                        destination: item.destination,
-                        quantite: item.qte,
-                        utilisateur: 'Magasinier'
-                    }]);
+                           // 1. Historique (La trace pour l'administrateur)
+        await clientSupabase.from('mouvements_stock').insert([{
+            article_id: item.article_id,
+            nom_article: item.nom_article,
+            couleur_ref: item.couleur,
+            type_mouvement: item.type_mouvement,
+            destination: item.destination,
+            quantite: item.qte,
+            utilisateur: 'Magasinier'
+        }]);
 
                     // 2. Mise à jour du stock physique
                     const { data: existData } = await clientSupabase.from('stock_depot')
