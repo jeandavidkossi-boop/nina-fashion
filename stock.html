@@ -481,8 +481,8 @@
 
             try {
                 for (let item of bordereau) {
-                          // 1. Historique (La trace pour l'administrateur)
-        await clientSupabase.from('mouvements_stock').insert([{
+        // 1. Historique (La trace pour l'administrateur)
+        const { error: erreurHistorique } = await clientSupabase.from('mouvements_stock').insert([{
             article_id: item.article_id,
             nom_article: item.nom_article,
             couleur: item.couleur,
@@ -491,6 +491,14 @@
             quantite: item.qte,
             utilisateur: 'Magasinier'
         }]);
+
+        // LE DÉTECTEUR : S'il y a un refus, on affiche l'erreur exacte et on stoppe tout !
+        if (erreurHistorique) {
+            alert("🚨 REFUS DE SUPABASE : " + erreurHistorique.message);
+            btn.disabled = false;
+            btn.innerText = "💾 ENREGISTRER DANS LA BASE";
+            return; // On arrête le code ici pour ne pas fausser le stock
+        }
                     
                     // 2. Mise à jour du stock physique
                     const { data: existData } = await clientSupabase.from('stock_depot')
