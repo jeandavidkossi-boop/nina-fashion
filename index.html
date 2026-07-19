@@ -40,50 +40,15 @@
         }
 
         /* Logo textuel stylisé façon Or */
-        .brand-header {
-            margin-bottom: 40px;
-        }
-
-        .brand-logo-emblem {
-            font-size: 64px;
-            font-weight: bold;
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-            line-height: 1;
-            margin-bottom: 5px;
-            font-family: 'Georgia', serif;
-        }
-
-        .brand-title {
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--dark-royal);
-            letter-spacing: 0.5px;
-        }
-
-        .brand-subtitle {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: #7f8c8d;
-            margin-top: 5px;
-            font-weight: bold;
-        }
-
-        .location-badge {
-            display: inline-block;
-            background: #e9ecef;
-            padding: 4px 15px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            color: var(--gold-solid);
-            margin-top: 10px;
-            letter-spacing: 1px;
-        }
-
+                .logo-officiel {
+            width: 160px; /* Taille idéale pour un écran de téléphone */
+            height: auto;
+            border-radius: 15px; /* Bords légèrement arrondis pour faire moderne */
+            box-shadow: 0 8px 20px rgba(179, 135, 40, 0.3); /* Ombre dorée légère */
+            margin-bottom: 25px;
+            border: 2px solid var(--gold-solid); /* Fine bordure dorée */
+                }
+    
         /* Grille des boutons de rôles */
         .roles-grid {
             display: grid;
@@ -240,10 +205,7 @@
         
         <!-- EN-TÊTE DE LA MARQUE -->
         <div class="brand-header">
-            <div class="brand-logo-emblem">N</div>
-            <div class="brand-title">Nina Fashion</div>
-            <div class="brand-subtitle">Mercerie Générale</div>
-            <div class="location-badge">BOUAFLÉ — MAGASIN CENTRAL</div>
+            <img src="logo.jpg" alt="Logo Nina Fashion" class="logo-officiel"> 
         </div>
 
         <!-- GRILLE DE SÉLECTION DES POSTES -->
