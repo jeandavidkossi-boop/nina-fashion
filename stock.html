@@ -73,7 +73,7 @@
 
     <!-- EN-TÊTE -->
     <header>
-       <button class="btn-retour" onclick="localStorage.clear(); window.location.href='index.html'">◄ Quitter</button>
+       <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">◄ Quitter</button>
         <h1>Nina Fashion</h1>
         <div id="badge-magasinier">Logistique</div>
     </header>
@@ -186,27 +186,27 @@
     </div>
 
     <script>
-                // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
+                        // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
         (function verifierSecurite() {
             // 1. Vérification du badge
             const sessionActive = localStorage.getItem('sessionActive');
-        const role = localStorage.getItem('roleUtilisateur') || '';
-        const roleMinuscule = role.toLowerCase();
+            const role = localStorage.getItem('roleUtilisateur') || ''; 
+            const roleMinuscule = role.toLowerCase();
 
-        // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
-        if (!sessionActive || (roleMinuscule !== 'magasinier' && roleMinuscule !== 'administrateur')) {
-                localStorage.clear(); // Destruction des fausses données éventuelles
-                window.location.href = 'index.html';
-                return; // Bloque instantanément le reste du code
+            // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
+            if (!sessionActive || (roleMinuscule !== 'magasinier' && roleMinuscule !== 'administrateur')) {
+                localStorage.clear(); 
+                window.location.replace('index.html');
+                return; 
             }
 
             // 2. Le radar d'inactivité (30 minutes)
             let tempsInactivite;
-            const TEMPS_LIMITE = 30 * 60 * 1000; // 30 minutes converties en millisecondes
+            const TEMPS_LIMITE = 30 * 60 * 1000; 
 
             function deconnexionAutomatique() {
-                localStorage.clear(); // Amnésie forcée
-                window.location.href = 'index.html'; // Retour à l'accueil
+                localStorage.clear();
+                window.location.replace('index.html');
             }
 
             function reinitialiserMinuteur() {
@@ -214,11 +214,19 @@
                 tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
             }
 
-            // On surveille le moindre mouvement sur l'écran ou le clavier
             window.onload = reinitialiserMinuteur;
             document.onmousemove = reinitialiserMinuteur;
             document.onkeypress = reinitialiserMinuteur;
-            document.ontouchstart = reinitialiserMinuteur; // Tactile pour la tablette
+            document.ontouchstart = reinitialiserMinuteur; 
+
+            // 3. LE DÉTECTEUR ANTI-RETOUR (Contre le cache du téléphone)
+            window.addEventListener('pageshow', function(event) {
+                // Si la page ressort de l'historique (event.persisted) ou si la session a disparu
+                if (event.persisted || !localStorage.getItem('sessionActive')) {
+                    localStorage.clear();
+                    window.location.replace('index.html');
+                }
+            });
         })();
         
         // LA PARTIE 2 VIENDRA SE COLLER JUSTE ICI EN DESSOUS !
