@@ -7,166 +7,86 @@
     <!-- Chargement de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <style>
-        /* TES COULEURS OFFICIELLES */
+      <style>
+        /* DESIGN INSTITUTIONNEL - LOGISTIQUE */
         :root {
-            --primary: #1a1c1e; 
-            --gold: #b38728; 
-            --bg-gray: #f4f6f8;
-            --border: #e2e8f0; 
-            --text-dark: #2c3e50; 
-            --success: #27ae60; 
-            --danger: #e74c3c; 
+            --primary: #111418;
+            --gold: #b38728;
+            --bg-light: #f8f9fa;
+            --border: #e5e7eb;
+            --text-dark: #333;
+            --danger: #c0392b;
+            --success: #27ae60;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        
-        body { 
-            display: flex; 
-            flex-direction: column; 
-            min-height: 100vh; 
-            background-color: var(--bg-gray); 
-            color: var(--text-dark); 
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
-        /* TON EN-TÊTE D'ORIGINE (Noir et Or) */
-        header { 
-            background: var(--primary); 
-            color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        header h1 { 
-            font-size: 1.2rem; 
-            margin: 0; 
-            color: var(--gold); 
-            font-family: 'Georgia', serif; 
-        }
-        .badge-role { 
-            background: rgba(255,255,255,0.1); 
-            border: 1px solid var(--gold); 
-            color: white; 
-            padding: 5px 12px; 
-            border-radius: 20px; 
-            font-size: 0.85rem; 
-            font-weight: bold; 
-        }
-        .btn-retour { 
-            background: transparent; 
-            border: none; 
-            color: white; 
-            cursor: pointer; 
-            text-decoration: underline; 
-            font-size: 0.9rem; 
-        }
+        body { background-color: var(--bg-light); color: var(--primary); min-height: 100vh; }
 
-        /* LES ONGLETS COULISSANTS ARRONDIS */
-        .tabs-container { 
-            padding: 15px 20px 0 20px; 
-            background: white; 
-            border-bottom: 1px solid var(--border); 
+        header {
+            background: white; border-bottom: 1px solid var(--border); padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .tabs { 
-            display: flex; 
-            gap: 10px; 
-            overflow-x: auto; 
-            white-space: nowrap; 
-            padding-bottom: 15px; 
-            -ms-overflow-style: none; 
-            scrollbar-width: none; 
-        }
+        header h1 { font-family: 'Georgia', serif; font-size: 1.2rem; margin: 0; letter-spacing: 1px; }
+        .btn-retour { background: transparent; border: none; font-size: 0.75rem; color: #888; cursor: pointer; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        #badge-magasinier { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); font-weight: bold; }
+
+        .tabs-container { background: white; border-bottom: 1px solid var(--border); padding: 0 20px; }
+        .tabs { display: flex; gap: 25px; overflow-x: auto; scrollbar-width: none; }
         .tabs::-webkit-scrollbar { display: none; }
-        
-        .tab-btn { 
-            padding: 10px 20px; 
-            border: 1px solid var(--border); 
-            background: white; 
-            border-radius: 25px; 
-            cursor: pointer; 
-            color: #7f8c8d; 
-            font-weight: bold; 
-            font-size: 14px; 
-            transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .tab-btn.active { 
-            color: white; 
-            background: var(--gold); 
-            border-color: var(--gold); 
-            box-shadow: 0 2px 5px rgba(179, 135, 40, 0.3);
-        }
+        .tab-btn { background: transparent; border: none; padding: 15px 0; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: 0.3s; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--gold); }
 
-        /* CONTENEURS DES PAGES */
-        .container { 
-            padding: 20px; 
-            flex: 1; 
-            display: none; 
-            flex-direction: column; 
-            gap: 20px; 
-            max-width: 800px; 
-            margin: 0 auto; 
-            width: 100%; 
-        }
-        .container.active { 
-            display: flex; 
-            animation: fadeIn 0.3s ease-in-out; 
-        }
+        .container { padding: 20px; display: none; max-width: 800px; margin: 0 auto; width: 100%; animation: fadeIn 0.3s ease-in-out; }
+        .container.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .form-card { background: white; border-radius: 4px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
+        .form-card h2, .form-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 0.75rem; font-weight: bold; color: #888; text-transform: uppercase; }
+        
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; background: #fafafa; outline: none; }
+        input:focus, select:focus { border-color: var(--gold); background: white; }
 
-        /* DESIGN DES TABLEAUX ET FORMULAIRES */
-        .table-responsive { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-        th { color: var(--gold); background: var(--primary); font-weight: bold; }
-        
-        .form-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .form-group label { font-size: 0.85rem; font-weight: bold; color: var(--primary); }
-        
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        input:focus, select:focus { border-color: var(--gold); outline: none; }
-        
-        .btn-block { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.05rem; cursor: pointer; color: white; margin-top: 10px; }
-        .btn-gold { background: var(--gold); }
-        .btn-success { background: var(--success); }
-        .btn-danger { background: var(--danger); width: auto; padding: 6px 12px; font-size: 12px;}
-        .btn-block:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .btn-block { width: 100%; padding: 14px; border: none; border-radius: 4px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; }
+        .btn-gold { background: var(--primary); color: white; }
+        .btn-gold:active { background: #000; }
+        .btn-success { background: var(--gold); color: white; margin-top: 10px; }
+        .btn-danger { background: var(--danger); color: white; width: auto; padding: 8px 15px; font-size: 0.7rem; border-radius: 4px; }
+        .btn-block:disabled { background: #e0e0e0; cursor: not-allowed; color: #888; }
 
-        /* Style spécifique pour les alertes */
-        .alerte-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--danger); padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-         /* --- DESIGN DES TIROIRS ACCORDÉONS --- */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 12px; border-bottom: 1px solid var(--bg-light); font-size: 0.85rem; color: var(--primary); }
+
+        .alerte-card { background: white; border: 1px solid var(--border); border-left: 3px solid var(--danger); padding: 15px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        
         .cache { display: none !important; }
-        .titre-famille { background: var(--primary); color: white; padding: 12px; margin-top: 15px; border-radius: 5px; font-weight: bold; border-left: 5px solid var(--gold); }
-        .titre-article { background: var(--border); color: var(--text-dark); padding: 10px; margin-top: 5px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: 4px; }
-        .contenu-couleurs { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 10px; }
-    </style>
+        .titre-famille { color: var(--primary); padding: 15px 0 5px 0; border-bottom: 2px solid var(--primary); margin-top: 25px; font-family: 'Georgia', serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
+        .titre-article { background: white; color: var(--primary); padding: 14px; margin-top: 8px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem; }
+        .contenu-couleurs { background: white; border: 1px solid var(--border); border-top: none; padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 15px; }            
+      </style>
 </head>
 <body>
 
     <!-- EN-TÊTE -->
     <header>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button class="btn-retour" onclick="window.location.href='index.html'">🚪 Accueil</button>
-            <h1>Nina Fashion</h1>
-        </div>
-        <div class="badge-role" id="badge-magasinier">📦 DÉPÔT</div>
+        <button class="btn-retour" onclick="window.location.href='index.html'">◄ Quitter</button>
+        <h1>Nina Fashion</h1>
+        <div id="badge-magasinier">Logistique</div>
     </header>
 
     <!-- ONGLETS -->
     <div class="tabs-container">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('vision')">📊 Vision Globale</button>
-            <button class="tab-btn" onclick="switchTab('mouvement')">🔄 Mouvements (Entrée / Sortie)</button>
-            <button class="tab-btn" onclick="switchTab('commande')">🚨 Alertes & Commandes</button>
+            <button class="tab-btn active" onclick="switchTab('vision')">Vision Globale</button>
+            <button class="tab-btn" onclick="switchTab('mouvement')">Mouvements</button>
+            <button class="tab-btn" onclick="switchTab('commande')">Alertes & Commandes</button>
         </div>
     </div>
-
+    
     <!-- ONGLET 1 : VISION GLOBALE -->
     <div id="tab-vision" class="container active">
         <input type="text" id="search-stock" placeholder="🔍 Rechercher un article ou une couleur..." onkeyup="filtrerStock()">
