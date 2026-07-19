@@ -81,7 +81,7 @@
 
     <header>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <a href="index.html" class="btn-action-top" style="background:transparent; border:1px solid #fff;">🚪 Accueil</a>
+                        <button class="btn-action-top" style="background:transparent; border:1px solid #fff; cursor: pointer;" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Accueil</button>
             <h1>Nina Fashion - Caisse</h1>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -171,16 +171,50 @@
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+        // --- 2. SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
+        const roleActuel = localStorage.getItem('roleUtilisateur') || ''; // Conservé pour ton badge
 
-        // --- 2. SÉCURITÉ : VÉRIFICATION DU BADGE D'ENTRÉE ---
-const sessionActive = localStorage.getItem('sessionActive');
-const roleActuel = localStorage.getItem('roleUtilisateur');
+        (function verifierSecurite() {
+            const sessionActive = localStorage.getItem('sessionActive');
+            const roleMinuscule = roleActuel.toLowerCase();
 
-// Si la personne n'a pas de badge, ou n'est ni Caissière ni Admin -> Dehors !
-if (sessionActive !== 'true' || (roleActuel !== 'Caissière' && roleActuel !== 'Administrateur')) {
-    window.location.replace('index.html'); // Éjection immédiate
-}
+            // Si le ticket est invalide ou que le rôle n'est pas autorisé (Caissière, Admin ou Vendeur), on expulse.
+            if (!sessionActive || (roleMinuscule !== 'caissière' && roleMinuscule !== 'administrateur' && roleMinuscule !== 'vendeur')) {
+                localStorage.clear();
+                window.location.replace('index.html');
+                return;
+            }
 
+            // Le radar d'inactivité (30 minutes)
+            let tempsInactivite;
+            const TEMPS_LIMITE = 30 * 60 * 1000; 
+
+            function deconnexionAutomatique() {
+                localStorage.clear();
+                window.location.replace('index.html');
+            }
+
+            function reinitialiserMinuteur() {
+                clearTimeout(tempsInactivite);
+                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
+            }
+
+            // On surveille les mouvements
+            window.onload = reinitialiserMinuteur;
+            document.onmousemove = reinitialiserMinuteur;
+            document.onkeypress = reinitialiserMinuteur;
+            document.ontouchstart = reinitialiserMinuteur; 
+
+            // LE DÉTECTEUR ANTI-RETOUR (Contre le cache du téléphone)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted || !localStorage.getItem('sessionActive')) {
+                    localStorage.clear();
+                    window.location.replace('index.html');
+                }
+            });
+        })();
+            
 // On affiche le rôle validé sur le badge en haut de l'écran
 document.getElementById('badge-caissiere').innerText = "👩‍💻 " + roleActuel;
 
