@@ -3,370 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accueil — Nina Fashion Mercerie Générale</title>
-    <!-- Chargement du module Supabase pour la future liaison en direct -->
+    <title>Portail Sécurisé - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Charte Graphique Haut de Gamme inspirée du Logo Or de Nina Fashion */
+        /* DESIGN INSTITUTIONNEL ET LUXE */
         :root {
-            --gold-gradient: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
-            --gold-solid: #b38728;
-            --dark-royal: #1a1c1e;
-            --card-bg: #ffffff;
-            --text-dark: #2c3e50;
+            --primary: #111418;
+            --gold: #b38728;
             --bg-light: #f8f9fa;
         }
-
+        
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
         body {
             background-color: var(--bg-light);
-            color: var(--text-dark);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-        }
-
-        /* Conteneur principal de l'accueil */
-        .welcome-container {
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-            margin-top: auto;
-            margin-bottom: auto;
-        }
-
-        /* Logo textuel stylisé façon Or */
-                .logo-officiel {
-            width: 160px; /* Taille idéale pour un écran de téléphone */
-            height: auto;
-            border-radius: 15px; /* Bords légèrement arrondis pour faire moderne */
-            box-shadow: 0 8px 20px rgba(179, 135, 40, 0.3); /* Ombre dorée légère */
-            margin-bottom: 25px;
-            border: 2px solid var(--gold-solid); /* Fine bordure dorée */
-                }
-    
-        /* Grille des boutons de rôles */
-        .roles-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 30px;
-            width: 100%;
-        }
-
-        @media (min-width: 480px) {
-            .roles-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            /* L'administrateur prend toute la largeur sur tablette/ordinateur */
-            .role-card.admin-card {
-                grid-column: span 2;
-            }
-        }
-
-        /* Design des cartes boutons */
-        .role-card {
-            background: var(--card-bg);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            align-items: center;
         }
 
-        .role-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px rgba(179, 135, 40, 0.1);
-            border-color: var(--gold-solid);
-        }
-
-        .role-card.admin-card {
-            background: var(--dark-royal);
-            color: white;
-            border: none;
-        }
-        
-        .role-card.admin-card:hover {
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .role-icon {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .role-name {
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        /* Le Modal (Fenêtre Popup de Sécurité) */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            align-items: center; justify-content: center;
-            z-index: 100;
-            padding: 20px;
-        }
-
-        .modal-content {
+        .login-card {
             background: white;
-            padding: 30px 25px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 360px;
+            padding: 50px 40px;
+            border-radius: 4px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.06);
             text-align: center;
-            box-shadow: 0 20px 25px rgba(0,0,0,0.15);
-            animation: popIn 0.2s ease-out;
+            width: 90%;
+            max-width: 380px;
+            border-top: 3px solid var(--gold);
         }
 
-        @keyframes popIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        .logo-officiel {
+            width: 140px;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(179, 135, 40, 0.2);
+            margin-bottom: 25px;
         }
 
-        .modal-title {
-            font-size: 18px;
-            color: var(--dark-royal);
-            margin-bottom: 10px;
-            font-weight: bold;
+        .titre-institution {
+            font-family: 'Georgia', serif;
+            color: var(--primary);
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
         }
 
-        .modal-desc {
-            font-size: 13px;
-            color: #7f8c8d;
-            margin-bottom: 20px;
+        .sous-titre {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 35px;
         }
 
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        /* Champ de saisie minimaliste façon Banque */
         .code-input {
-            width: 100%;
-            padding: 12px;
-            font-size: 20px;
+            width: 70%;
+            padding: 10px 5px;
+            border: none;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 1.6rem;
             text-align: center;
-            letter-spacing: 6px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            letter-spacing: 12px;
+            color: var(--primary);
+            background: transparent;
             outline: none;
+            transition: all 0.3s;
+            border-radius: 0;
         }
 
         .code-input:focus {
-            border-color: var(--gold-solid);
+            border-bottom: 2px solid var(--gold);
         }
 
+        /* Bouton statutaire */
         .btn-submit {
             width: 100%;
-            background: var(--dark-royal);
+            padding: 15px;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-submit:active {
+            background: #000;
+        }
+
+        #message-erreur {
+            color: #c0392b;
+            font-size: 0.8rem;
+            margin-top: 20px;
+            display: none;
             font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        .btn-submit.gold-btn {
-            background: var(--gold-solid);
-        }
-
-        .btn-cancel {
-            background: transparent;
-            border: none;
-            color: #95a5a6;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        .btn-cancel:hover { color: #7f8c8d; }
-
-        footer {
-            font-size: 11px;
-            color: #bdc3c7;
-            margin-top: 30px;
         }
     </style>
 </head>
 <body>
 
-    <div class="welcome-container">
+    <div class="login-card">
+        <img src="logo.jpg" alt="Logo Nina Fashion" class="logo-officiel">
         
-        <!-- EN-TÊTE DE LA MARQUE -->
-        <div class="brand-header">
-            <img src="logo.jpg" alt="Logo Nina Fashion" class="logo-officiel"> 
+        <div class="titre-institution">PORTAIL D'ACCÈS</div>
+        <div class="sous-titre">Réseau Magasins</div>
+        
+        <div class="input-group">
+            <input type="password" id="input-code" class="code-input" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off">
         </div>
-
-        <!-- GRILLE DE SÉLECTION DES POSTES -->
-        <div class="roles-grid">
-            
-            <!-- 1. Administrateur -->
-            <div class="role-card admin-card" onclick="ouvrirSecurite('Administrateur', 'admin.html')">
-                <div class="role-icon">👑</div>
-                <div class="role-name">Administrateur (Gérants)</div>
-            </div>
-
-            <!-- 2. Caissière -->
-            <div class="role-card" onclick="ouvrirSecurite('Caissière', 'caisse.html')">
-                <div class="role-icon">💰</div>
-                <div class="role-name">Espace Caissière</div>
-            </div>
-
-            <!-- 3. Vendeur -->
-            <div class="role-card" onclick="ouvrirSecurite('Vendeur', 'vendeur.html')">
-                <div class="role-icon">🛍️</div>
-                <div class="role-name">Espace Vendeur</div>
-            </div>
-
-            <!-- 4. Machiniste -->
-            <div class="role-card" onclick="ouvrirSecurite('Machiniste', 'machiniste.html')">
-                <div class="role-icon">🪡</div>
-                <div class="role-name">Atelier Machinistes</div>
-            </div>
-
-            <!-- 5. Magasinier -->
-            <div class="role-card" onclick="ouvrirSecurite('Magasinier', 'stock.html')">
-                <div class="role-icon">📦</div>
-                <div class="role-name">Gestion des Stocks</div>
-            </div>
-
-        </div>
-
+        
+        <button class="btn-submit" id="btn-valider" onclick="verifierCodeAcces()">S'authentifier</button>
+        <div id="message-erreur">❌ Accès refusé. Veuillez vérifier vos habilitations.</div>
     </div>
 
-    <!-- LE PORTAL DE SÉCURITÉ (MODAL) -->
-    <div class="modal" id="login-modal">
-        <div class="modal-content">
-            <div class="modal-title" id="modal-role-title">Connexion Écran</div>
-            <div class="modal-desc">Veuillez entrer votre code d'accès secret pour continuer.</div>
-            
-            <input type="password" id="input-code" class="code-input" placeholder="••••" maxlength="6" inputmode="numeric">
-
-<div id="message-erreur" style="color: red; font-size: 14px; margin-bottom: 15px; font-weight: bold; min-height: 20px;"></div>
-
-<button class="btn-submit" id="btn-valider-code" onclick="verifierCodeAcces()">S'authentifier</button>
-            
-            <button class="btn-cancel" onclick="fermerSecurite()">Annuler</button>
-        </div>
-    </div>
-
-    <footer>
-        &copy; 2026 Nina Fashion — Système Intelligent de Gestion Réseau
-    </footer>
-
-    <!-- LE LOGICIEL DE VÉRIFICATION -->
     <script>
-        // --- CONFIGURATION SUPABASE (Pour l'étape suivante) ---
-        // Dès qu'on connectera la BDD, on mettra vos vraies clés ici :
+        // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- CODES DE TEST TEMPORAIRES (Pour valider de suite sur GitHub) ---
-        // Changez ces 4 chiffres par ce que vous voulez pour tester les accès !
-        const CODES_TEST = {
-            'Administrateur': '0000', // Code exemple pour Nina et vous
-            'Caissière': '1111',      // Code pour la caisse
-            'Vendeur': '2222',        // Code pour le vendeur d'articles
-            'Machiniste': '3333',     // Code pour les personnes au surfilage/boutons
-            'Magasinier': '4444'      // Code pour le dépôt
-        };
+        // --- 2. LE MOTEUR DE REDIRECTION INTELLIGENT ---
+        async function verifierCodeAcces() {
+            const codeSaisi = document.getElementById('input-code').value.trim();
+            const btnSubmit = document.getElementById('btn-valider');
+            const msgErreur = document.getElementById('message-erreur');
 
-        let roleSelectionne = '';
-        let fichierCible = '';
+            if (codeSaisi.length < 4) return;
 
-        // Ouvrir le panneau de sécurité
-        function ouvrirSecurite(role, fichier) {
-            roleSelectionne = role;
-            fichierCible = fichier;
-            
-            document.getElementById('modal-role-title').innerText = `Accès ${role}`;
-            document.getElementById('input-code').value = ''; // On vide l'ancien texte
-            document.getElementById('login-modal').style.display = 'flex';
-            document.getElementById('input-code').focus();
-        }
+            msgErreur.style.display = 'none';
+            btnSubmit.innerText = "AUTHENTIFICATION...";
+            btnSubmit.disabled = true;
 
-        // Fermer le panneau de sécurité
-        function fermerSecurite() {
-            document.getElementById('login-modal').style.display = 'none';
-        }
-    // Procédure de vérification et Pointage des employés
-    async function verifierCodeAcces() {
-        const codeSaisi = document.getElementById('input-code').value.trim();
-        
-        // On vide l'ancien message d'erreur
-        document.getElementById('message-erreur').innerText = "";
-    
-        if (!codeSaisi) {
-            document.getElementById('message-erreur').innerText = "⚠️ Veuillez entrer un code secret.";
-            return;
-        }
-    
-        const btnSubmit = document.getElementById('btn-valider-code');
-        btnSubmit.innerText = "Vérification...";
-        btnSubmit.disabled = true;
-    
-        try {
-            // 1. VÉRIFICATION DANS LA TABLE personnel_nina
-            let { data: employe, error } = await clientSupabase
-                .from('personnel_nina')
-                .select('*')
-                .eq('role', roleSelectionne)
-                .eq('code_pin', codeSaisi)
-                .eq('actif', true)
-                .maybeSingle();
-    
-            if (error) throw error;
-    
-            if (employe) {
-                // 2. POINTAGE DANS LA TABLE logs_connexion (avec la colonne 'action')
-                await clientSupabase.from('logs_connexion').insert([{
-                    nom_employe: employe.nom_employe,
-                    role: employe.role,
-                    action: 'Connexion'
-                }]);
-    
-                // 3. CRÉATION DU BADGE DE SÉCURITÉ COMPLET
-localStorage.setItem('sessionActive', 'true');
-localStorage.setItem('roleUtilisateur', employe.role); // On utilise le rôle officiel de la BDD
-localStorage.setItem('nomEmploye', employe.nom_employe); // INDISPENSABLE pour les tickets
-localStorage.setItem('idEmploye', employe.id); // Utile pour des statistiques précises
+            try {
+                const { data: employe, error } = await clientSupabase
+                    .from('personnel_nina')
+                    .select('*')
+                    .eq('code_pin', codeSaisi)
+                    .eq('actif', true)
+                    .maybeSingle();
 
-// Petit bonus de sécurité : on affiche un message de bienvenue
-document.getElementById('message-erreur').style.color = "green";
-document.getElementById('message-erreur').innerText = "Bienvenue " + employe.nom_employe + " ! Connexion...";
-                
-                // 4. OUVERTURE DE LA PAGE
-                window.location.href = fichierCible;
-            } else {
-                document.getElementById('message-erreur').innerText = "❌ Code incorrect ou compte désactivé.";
-                document.getElementById('input-code').value = '';
-                btnSubmit.innerText = "S'authentifier";
+                if (error) throw error;
+
+                if (employe) {
+                    localStorage.setItem('sessionActive', 'true');
+                    localStorage.setItem('roleUtilisateur', employe.role);
+                    localStorage.setItem('nomEmploye', employe.nom_employe);
+
+                    const role = employe.role.toLowerCase();
+                    
+                    if (role === 'administrateur') {
+                        window.location.href = 'admin.html';
+                    } else if (role === 'magasinier') {
+                        window.location.href = 'stock.html';
+                    } else if (role === 'caissière' || role === 'vendeur') {
+                        window.location.href = 'caisse.html';
+                    } else if (role === 'machiniste') {
+                        window.location.href = 'machiniste.html';
+                    } else {
+                        throw new Error("Rôle non configuré");
+                    }
+                } else {
+                    throw new Error("Accès refusé");
+                }
+
+            } catch (err) {
+                msgErreur.style.display = 'block';
+                btnSubmit.innerText = "S'AUTHENTIFIER";
                 btnSubmit.disabled = false;
+                document.getElementById('input-code').value = '';
                 document.getElementById('input-code').focus();
             }
-    
-        } catch (err) {
-            document.getElementById('message-erreur').innerText = "❌ Erreur réseau. Impossible de contacter la base.";
-            btnSubmit.innerText = "S'authentifier";
-            btnSubmit.disabled = false;
         }
-                }
-        
-        // Permettre de valider en appuyant sur la touche "Entrée" du téléphone
+
         document.getElementById('input-code').addEventListener('keypress', function (e) {
-            if (e.key === 'Entrée' || e.keyCode === 13) {
+            if (e.key === 'Enter') {
                 verifierCodeAcces();
             }
         });
