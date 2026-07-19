@@ -186,6 +186,40 @@
     </div>
 
     <script>
+                // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
+        (function verifierSecurite() {
+            // 1. Vérification du badge
+            const sessionActive = localStorage.getItem('sessionActive');
+            const role = localStorage.getItem('roleUtilisateur');
+
+            // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
+            if (!sessionActive || (role !== 'magasinier' && role !== 'administrateur')) {
+                localStorage.clear(); // Destruction des fausses données éventuelles
+                window.location.href = 'index.html';
+                return; // Bloque instantanément le reste du code
+            }
+
+            // 2. Le radar d'inactivité (30 minutes)
+            let tempsInactivite;
+            const TEMPS_LIMITE = 30 * 60 * 1000; // 30 minutes converties en millisecondes
+
+            function deconnexionAutomatique() {
+                localStorage.clear(); // Amnésie forcée
+                window.location.href = 'index.html'; // Retour à l'accueil
+            }
+
+            function reinitialiserMinuteur() {
+                clearTimeout(tempsInactivite);
+                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
+            }
+
+            // On surveille le moindre mouvement sur l'écran ou le clavier
+            window.onload = reinitialiserMinuteur;
+            document.onmousemove = reinitialiserMinuteur;
+            document.onkeypress = reinitialiserMinuteur;
+            document.ontouchstart = reinitialiserMinuteur; // Tactile pour la tablette
+        })();
+        
         // LA PARTIE 2 VIENDRA SE COLLER JUSTE ICI EN DESSOUS !
                 // --- 1. CONFIGURATION SUPABASE ---
            const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
