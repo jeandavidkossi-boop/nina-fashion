@@ -163,11 +163,13 @@
                     const role = employe.role.toLowerCase();
                     
                     if (role === 'administrateur') {
-                        window.location.href = 'admin.html';
+                        window.location.href = 'admin.html'; 
                     } else if (role === 'magasinier') {
                         window.location.href = 'stock.html';
                     } else if (role === 'caissière' || role === 'vendeur') {
                         window.location.href = 'caisse.html';
+                       } else if (role === 'vendeur') {
+    window.location.href = 'vendeur.html'; 
                     } else if (role === 'machiniste') {
                         window.location.href = 'machiniste.html';
                     } else {
