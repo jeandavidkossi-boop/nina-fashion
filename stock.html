@@ -333,42 +333,117 @@
                 document.getElementById('table-stock-body').innerHTML = `<tr><td colspan="4" style="color: var(--danger); text-align: center; font-weight: bold;">❌ Erreur réseau. Impossible de charger le stock.</td></tr>`;
             }
         }
-                // --- 5. AFFICHAGE VISION GLOBALE ---
+            // --- 5. AFFICHAGE VISION GLOBALE (NOUVELLE VERSION TIROIRS) ---
         function afficherVisionGlobale() {
-            const tbody = document.getElementById('table-stock-body');
-            tbody.innerHTML = '';
+            // On cible tout le conteneur pour écraser l'ancien tableau plat
+            const conteneur = document.querySelector('.table-responsive'); 
+            let html = '';
 
             if (STOCK_DEPOT.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #7f8c8d;">Aucun article en stock pour le moment.</td></tr>';
+                conteneur.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">Aucun article en stock</div>';
                 return;
             }
 
+            // 1. LE REGROUPEMENT INTELLIGENT (Catégorie -> Article -> Couleurs)
+            let donneesGroupees = {};
+
             STOCK_DEPOT.forEach(ligne => {
                 let infoArticle = CATALOGUE.find(a => a.id == ligne.article_id) || {};
-                let nom = infoArticle.nom_article || 'Article inconnu';
-                
-                let qte = parseFloat(ligne.quantite);
-                let seuil = parseFloat(ligne.seuil_alerte) || 5;
-                // Si la quantité est sous le seuil, la couleur devient rouge
-                let couleurAlerte = (qte <= seuil) ? 'color: var(--danger); font-weight: bold;' : 'color: var(--success); font-weight: bold;';
+                let nomArticle = infoArticle.nom_article || 'Article inconnu';
+                // On récupère la colonne "famille" que j'ai vue sur ta capture !
+                let famille = infoArticle.famille || 'SANS CATÉGORIE'; 
 
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight: bold; color: var(--primary);">${nom}</td>
-                    <td style="color: #7f8c8d;">${ligne.couleur_ref || 'Standard'}</td>
-                    <td style="${couleurAlerte}">${qte}</td>
-                    <td style="color: var(--gold);">${seuil}</td>
-                `;
-                tbody.appendChild(tr);
+                // On crée les tiroirs s'ils n'existent pas encore
+                if (!donneesGroupees[famille]) donneesGroupees[famille] = {};
+                if (!donneesGroupees[famille][nomArticle]) donneesGroupees[famille][nomArticle] = [];
+
+                // On range la ligne dans le bon tiroir
+                donneesGroupees[famille][nomArticle].push(ligne);
             });
+
+            // 2. DESSIN DE L'INTERFACE VISUELLE
+            for (let famille in donneesGroupees) {
+                html += `<div class="titre-famille">📦 CATÉGORIE : ${famille.toUpperCase()}</div>`;
+
+                for (let article in donneesGroupees[famille]) {
+                    let idUnique = 'art_' + Math.random().toString(36).substr(2, 9); 
+                    
+                    // En-tête cliquable de l'article (Accordéon)
+                    html += `<div class="titre-article" onclick="document.getElementById('${idUnique}').classList.toggle('cache')">
+                                <span>📁 ${article}</span>
+                                <span>🔽</span>
+                             </div>`;
+
+                    // Liste des couleurs (cachée par défaut avec la classe 'cache')
+                    html += `<div id="${idUnique}" class="contenu-couleurs cache">
+                                <table style="width: 100%; border-collapse: collapse;">`;
+
+                    donneesGroupees[famille][article].forEach(ligne => {
+                        let qte = parseFloat(ligne.quantite);
+                        let seuil = parseFloat(ligne.seuil_alerte) || 5;
+                        let couleurTexte = (qte <= seuil) ? 'var(--danger)' : 'var(--text-dark)';
+                        let nomCouleur = ligne.couleur_ref || 'Standard';
+
+                        html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
+                                    <td style="padding: 8px; width: 50%;">🎨 <b>${nomCouleur}</b></td>
+                                    <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qté: ${qte}</td>
+                                    <td style="padding: 8px; width: 25%; text-align: right;">
+                                        <!-- LE FAMEUX BOUTON DE CORRECTION -->
+                                        <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', '${qte}')" style="background: var(--gold); border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; font-size: 12px;">✏️</button>
+                                    </td>
+                                 </tr>`;
+                    });
+
+                    html += `   </table>
+                             </div>`;
+                }
+            }
+            conteneur.innerHTML = html; // On injecte le nouveau design !
         }
 
+        // --- NOUVEAUTÉ : LA FONCTION DE CORRECTION RAPIDE ---
+        async function corrigerStock(idLigne, ancienneCouleur, ancienneQte) {
+            let nouvelleCouleur = prompt(`CORRECTION\nNouveau nom pour la couleur "${ancienneCouleur}" :`, ancienneCouleur);
+            if (nouvelleCouleur === null) return; // Si le magasinier annule
+            
+            let nouvelleQte = prompt(`Nouvelle quantité (actuellement ${ancienneQte}) :`, ancienneQte);
+            if (nouvelleQte === null) return; // Si le magasinier annule
+            nouvelleQte = parseFloat(nouvelleQte);
+
+            if (isNaN(nouvelleQte) || nouvelleQte < 0) {
+                return alert("❌ Quantité invalide !");
+            }
+
+            try {
+                // On met à jour directement l'id précis dans Supabase
+                const { error } = await clientSupabase
+                    .from('stock_depot')
+                    .update({ couleur_ref: nouvelleCouleur.trim(), quantite: nouvelleQte })
+                    .eq('id', idLigne);
+
+                if (error) throw error;
+                
+                alert("✅ Ligne corrigée avec succès !");
+                chargerDonneesDepot(); // On rafraîchit l'écran pour voir la modification
+                
+            } catch (err) {
+                alert("🚨 Erreur de correction : " + err.message);
+            }
+        }
+
+        // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
         function filtrerStock() {
             let recherche = document.getElementById('search-stock').value.toLowerCase();
-            let lignes = document.querySelectorAll('#table-stock-body tr');
+            let lignes = document.querySelectorAll('.ligne-recherche'); 
+
             lignes.forEach(ligne => {
                 let texte = ligne.innerText.toLowerCase();
                 ligne.style.display = texte.includes(recherche) ? '' : 'none';
+                
+                // Petit bonus : si on trouve une couleur en cherchant, on ouvre son tiroir automatiquement !
+                if (texte.includes(recherche) && recherche !== "") {
+                    ligne.closest('.contenu-couleurs').classList.remove('cache');
+                }
             });
         }
 
