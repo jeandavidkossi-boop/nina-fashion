@@ -190,10 +190,11 @@
         (function verifierSecurite() {
             // 1. Vérification du badge
             const sessionActive = localStorage.getItem('sessionActive');
-            const role = localStorage.getItem('roleUtilisateur');
+        const role = localStorage.getItem('roleUtilisateur') || '';
+        const roleMinuscule = role.toLowerCase();
 
-            // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
-            if (!sessionActive || (role !== 'magasinier' && role !== 'administrateur')) {
+        // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
+        if (!sessionActive || (roleMinuscule !== 'magasinier' && roleMinuscule !== 'administrateur')) {
                 localStorage.clear(); // Destruction des fausses données éventuelles
                 window.location.href = 'index.html';
                 return; // Bloque instantanément le reste du code
