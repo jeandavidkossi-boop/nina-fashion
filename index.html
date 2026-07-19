@@ -161,20 +161,20 @@
                     localStorage.setItem('nomEmploye', employe.nom_employe);
 
                     const role = employe.role.toLowerCase();
+                            if (role === 'administrateur') {
+            window.location.href = 'admin.html';
+        } else if (role === 'magasinier') {
+            window.location.href = 'stock.html';
+        } else if (role === 'caissière') {
+            window.location.href = 'caisse.html';
+        } else if (role === 'vendeur') {
+            window.location.href = 'vendeur.html';
+        } else if (role === 'machiniste') {
+            window.location.href = 'machiniste.html';
+        } else {
+            throw new Error("Rôle non configuré");
+                            }
                     
-                    if (role === 'administrateur') {
-                        window.location.href = 'admin.html'; 
-                    } else if (role === 'magasinier') {
-                        window.location.href = 'stock.html';
-                    } else if (role === 'caissière' || role === 'vendeur') {
-                        window.location.href = 'caisse.html';
-                       } else if (role === 'vendeur') {
-    window.location.href = 'vendeur.html'; 
-                    } else if (role === 'machiniste') {
-                        window.location.href = 'machiniste.html';
-                    } else {
-                        throw new Error("Rôle non configuré");
-                    }
                 } else {
                     throw new Error("Accès refusé");
                 }
