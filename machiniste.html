@@ -88,7 +88,7 @@
 
     <header>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <button class="btn-retour" onclick="window.location.href='index.html'">🚪 Quitter</button>
+        <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
             <h1>Nina Fashion</h1>
         </div>
         <div class="badge-role" id="badge-machiniste">👨‍🔧 Machiniste...</div>
@@ -195,15 +195,49 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. SÉCURITÉ : VÉRIFICATION DU BADGE D'ENTRÉE ---
-const sessionActive = localStorage.getItem('sessionActive');
-const roleActuel = localStorage.getItem('roleUtilisateur');
+            // --- 2. SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (MACHINISTE) ---
+        const roleActuel = localStorage.getItem('roleUtilisateur') || '';
 
-// Si la personne n'a pas de badge, ou n'est ni Machiniste ni Admin -> Dehors !
-if (sessionActive !== 'true' || (roleActuel !== 'Machiniste' && roleActuel !== 'Administrateur')) {
-    window.location.replace('index.html'); // Retour forcé à l'accueil
-}
+        (function verifierSecurite() {
+            const sessionActive = localStorage.getItem('sessionActive');
+            const roleMinuscule = roleActuel.toLowerCase();
 
+            // Autorisé uniquement pour les Machinistes et l'Administrateur
+            if (!sessionActive || (roleMinuscule !== 'machiniste' && roleMinuscule !== 'administrateur')) {
+                localStorage.clear();
+                window.location.replace('index.html');
+                return;
+            }
+
+            // Le radar d'inactivité (30 minutes)
+            let tempsInactivite;
+            const TEMPS_LIMITE = 30 * 60 * 1000; 
+
+            function deconnexionAutomatique() {
+                localStorage.clear();
+                window.location.replace('index.html');
+            }
+
+            function reinitialiserMinuteur() {
+                clearTimeout(tempsInactivite);
+                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
+            }
+
+            // On surveille les mouvements de l'écran ou de la souris
+            window.onload = reinitialiserMinuteur;
+            document.onmousemove = reinitialiserMinuteur;
+            document.onkeypress = reinitialiserMinuteur;
+            document.ontouchstart = reinitialiserMinuteur; 
+
+            // LE DÉTECTEUR ANTI-RETOUR (Contre le bouton précédent et le cache)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted || !localStorage.getItem('sessionActive')) {
+                    localStorage.clear();
+                    window.location.replace('index.html');
+                }
+            });
+        })();
+            
 // On affiche le rôle validé en haut de l'écran :
 document.getElementById('badge-machiniste').innerText = "🧵 " + roleActuel;
 
