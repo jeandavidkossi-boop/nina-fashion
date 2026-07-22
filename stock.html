@@ -130,9 +130,19 @@
 
 <div class="form-group">
     <label>Article du Catalogue :</label>
-    <input type="text" id="search-mvt-article" placeholder="🔍 Taper un nom pour filtrer la liste..." onkeyup="filtrerSelectArticles()" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box;">
-    <select id="mvt-article">
-        <option value="">⏳ Chargement du catalogue...</option>
+    
+    <div style="position: relative;">
+        <!-- La vraie barre de saisie interactive -->
+        <input type="text" id="search-mvt-article" placeholder="🔍 Taper ou cliquer ici pour choisir..." onkeyup="filtrerCustomList()" onclick="afficherCustomList()" autocomplete="off" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; background-color: white;">
+        
+        <!-- La liste déroulante qui va apparaître juste en dessous -->
+        <div id="custom-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid var(--border); border-top: none; max-height: 250px; overflow-y: auto; z-index: 1000; border-radius: 0 0 4px 4px; box-shadow: 0px 5px 15px rgba(0,0,0,0.15);">
+        </div>
+    </div>
+
+    <!-- L'ancien select qu'on cache pour que le reste de votre application continue de fonctionner -->
+    <select id="mvt-article" style="display: none;">
+        <option value="">-- Sélectionner un article --</option>
     </select>
 </div>
             
@@ -416,32 +426,55 @@
             });
         }
 
-        // --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
-        function remplirSelectArticles() {
-            const select = document.getElementById('mvt-article');
-            select.innerHTML = '<option value="">-- Sélectionnez un article --</option>';
-            CATALOGUE.forEach(art => {
-                select.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
-            });
-        }
-
-        function filtrerSelectArticles() {
-    const recherche = document.getElementById('search-mvt-article').value.toLowerCase();
-    const select = document.getElementById('mvt-article');
+// --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
+function remplirSelectArticles() {
+    const selectDiv = document.getElementById('custom-list');
+    const hiddenSelect = document.getElementById('mvt-article');
     
-    // On réinitialise la liste avec l'option par défaut
-    select.innerHTML = '<option value="">-- Sélectionner un article --</option>';
+    selectDiv.innerHTML = '';
+    hiddenSelect.innerHTML = '<option value="">-- Sélectionner un article --</option>';
     
-    // On filtre le catalogue
-    const catalogueFiltre = CATALOGUE.filter(art => 
-        art.nom_article.toLowerCase().includes(recherche)
-    );
-    
-    // On ajoute uniquement les articles qui correspondent à la recherche
-    catalogueFiltre.forEach(art => {
-        select.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
+    CATALOGUE.forEach(art => {
+        // Remplissage du champ caché
+        hiddenSelect.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
+        
+        // Remplissage de la nouvelle liste cliquable
+        const nomEchappe = art.nom_article.replace(/'/g, "\\'"); 
+        selectDiv.innerHTML += `<div class="custom-option" style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 0.9rem;" onclick="choisirArticle('${art.id}', '${nomEchappe}')">${art.nom_article}</div>`;
     });
+}
+
+// Les 3 fonctions qui gèrent l'apparition et le filtre de la nouvelle liste
+function afficherCustomList() {
+    document.getElementById('custom-list').style.display = 'block';
+}
+
+function filtrerCustomList() {
+    const recherche = document.getElementById('search-mvt-article').value.toLowerCase();
+    const options = document.querySelectorAll('.custom-option');
+    
+    options.forEach(opt => {
+        const texte = opt.innerText.toLowerCase();
+        opt.style.display = texte.includes(recherche) ? 'block' : 'none';
+    });
+}
+
+function choisirArticle(id, nom) {
+    document.getElementById('search-mvt-article').value = nom;
+    document.getElementById('mvt-article').value = id;
+    document.getElementById('custom-list').style.display = 'none';
+}
+
+// Sécurité : On ferme la liste si on clique ailleurs sur l'écran
+document.addEventListener('click', function(event) {
+    const searchInput = document.getElementById('search-mvt-article');
+    const customList = document.getElementById('custom-list');
+    if (searchInput && customList) {
+        if (event.target !== searchInput && !customList.contains(event.target)) {
+            customList.style.display = 'none';
         }
+    }
+});
         
         function toggleDestination() {
             const type = document.getElementById('mvt-type').value;
