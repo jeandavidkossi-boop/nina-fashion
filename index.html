@@ -161,6 +161,25 @@
                     localStorage.setItem('nomEmploye', employe.nom_employe);
 
                     const role = employe.role.toLowerCase();
+                                // --- DÉBUT DE LA CONNEXION SECRÈTE SUPABASE ---
+            let emailFantome = "";
+            let passwordFantome = "";
+
+            if (role === 'administrateur') { emailFantome = 'admin@ninafashion.ci'; passwordFantome = 'NinaAdmin2026*'; }
+            else if (role === 'magasinier') { emailFantome = 'magasinier@ninafashion.ci'; passwordFantome = 'NinaMagasinier2026*'; }
+            else if (role === 'vendeur') { emailFantome = 'vendeur@ninafashion.ci'; passwordFantome = 'NinaVendeur2026*'; }
+            else if (role === 'machiniste') { emailFantome = 'machiniste@ninafashion.ci'; passwordFantome = 'NinaMachiniste2026*'; }
+            else if (role === 'caissière') { emailFantome = 'caissiere@ninafashion.ci'; passwordFantome = 'NinaCaissiere2026*'; }
+
+            // Supabase valide le compte fantôme en arrière-plan et nous donne le Jeton
+            const { data: authData, error: authError } = await clientSupabase.auth.signInWithPassword({
+                email: emailFantome,
+                password: passwordFantome
+            });
+
+            if (authError) throw new Error("Clé de sécurité Supabase refusée.");
+            // --- FIN DE LA CONNEXION SECRÈTE ---
+                    
                             if (role === 'administrateur') {
             window.location.href = 'admin.html';
         } else if (role === 'magasinier') {
