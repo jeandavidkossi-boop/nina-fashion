@@ -340,43 +340,56 @@
                 donneesGroupees[famille][nomArticle].push(ligne);
             });
 
-            // 2. DESSIN DE L'INTERFACE VISUELLE
-            for (let famille in donneesGroupees) {
-                html += `<div class="titre-famille">📦 CATÉGORIE : ${famille.toUpperCase()}</div>`;
+                 // 2. DESSIN DE L'INTERFACE VISUELLE (Système de Tiroirs Imbriqués)
+        for (let famille in donneesGroupees) {
+            // Un ID unique pour le tiroir de cette grande catégorie
+            let idFamille = 'cat_' + Math.random().toString(36).substr(2, 9);
+            
+            // 1er Niveau : Le bouton de la Catégorie
+            html += `<div class="titre-famille" onclick="document.getElementById('${idFamille}').classList.toggle('cache')">
+                        <span>📦 ${famille.toUpperCase()}</span>
+                        <span style="color: var(--gold); font-size: 0.8rem;">▼ OUVRIR</span>
+                     </div>`;
+            
+            // Le grand conteneur caché qui contient tous les articles de cette catégorie
+            html += `<div id="${idFamille}" class="cache" style="padding-left: 15px; border-left: 2px solid var(--border); margin-left: 10px; margin-bottom: 20px;">`;
 
-                for (let article in donneesGroupees[famille]) {
-                    let idUnique = 'art_' + Math.random().toString(36).substr(2, 9); 
+            for (let article in donneesGroupees[famille]) {
+                let idUnique = 'art_' + Math.random().toString(36).substr(2, 9);
+                
+                // 2ème Niveau : L'en-tête cliquable de l'article
+                html += `<div class="titre-article" onclick="document.getElementById('${idUnique}').classList.toggle('cache')">
+                            <span>${article}</span>
+                            <span style="color: #888; font-size: 0.8rem;">▼</span>
+                         </div>`;
+                
+                // 3ème Niveau : Liste des couleurs et stock (cachée par défaut)
+                html += `<div id="${idUnique}" class="contenu-couleurs cache">
+                            <table style="width: 100%; border-collapse: collapse;">`;
+                
+                donneesGroupees[famille][article].forEach(ligne => {
+                    let qte = parseFloat(ligne.quantite);
+                    let seuil = parseFloat(ligne.seuil_alerte) || 5;
+                    let couleurTexte = (qte <= seuil) ? 'var(--danger)' : 'var(--text-dark)';
+                    let nonCouleur = ligne.couleur_ref || 'Standard';
                     
-                    // En-tête cliquable de l'article (Accordéon)
-                    html += `<div class="titre-article" onclick="document.getElementById('${idUnique}').classList.toggle('cache')">
-                                <span>📁 ${article}</span>
-                                <span>🔽</span>
-                             </div>`;
-
-                    // Liste des couleurs (cachée par défaut avec la classe 'cache')
-                    html += `<div id="${idUnique}" class="contenu-couleurs cache">
-                                <table style="width: 100%; border-collapse: collapse;">`;
-
-                    donneesGroupees[famille][article].forEach(ligne => {
-                        let qte = parseFloat(ligne.quantite);
-                        let seuil = parseFloat(ligne.seuil_alerte) || 5;
-                        let couleurTexte = (qte <= seuil) ? 'var(--danger)' : 'var(--text-dark)';
-                        let nomCouleur = ligne.couleur_ref || 'Standard';
-
-                        html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
-                                    <td style="padding: 8px; width: 50%;">🎨 <b>${nomCouleur}</b></td>
-                                    <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qté: ${qte}</td>
-                                    <td style="padding: 8px; width: 25%; text-align: right;">
-                                        <!-- LE FAMEUX BOUTON DE CORRECTION -->
-                                        <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', '${qte}')" style="background: var(--gold); border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; font-size: 12px;">✏️</button>
-                                    </td>
-                                 </tr>`;
-                    });
-
-                    html += `   </table>
-                             </div>`;
-                }
+                    html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
+                                <td style="padding: 8px; width: 50%;">🎨 <b>${nonCouleur}</b></td>
+                                <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
+                                <td style="padding: 8px; width: 25%; text-align: right;">
+                                    <button onclick="corrigerStock('${ligne.id}', '${nonCouleur.replace(/'/g, "\\'")}', ${qte})" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✏️</button>
+                                </td>
+                             </tr>`;
+                });
+                
+                html += `   </table>
+                         </div>`;
             }
+            
+            // On referme le grand conteneur de la catégorie
+            html += `</div>`;
+                        }
+            
             conteneur.innerHTML = html; // On injecte le nouveau design !
         }
 
