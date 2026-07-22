@@ -128,13 +128,14 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Article du Catalogue :</label>
-                <select id="mvt-article">
-                    <option value="">⏳ Chargement du catalogue...</option>
-                </select>
-            </div>
-
+<div class="form-group">
+    <label>Article du Catalogue :</label>
+    <input type="text" id="search-mvt-article" placeholder="🔍 Taper un nom pour filtrer la liste..." onkeyup="filtrerSelectArticles()" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box;">
+    <select id="mvt-article">
+        <option value="">⏳ Chargement du catalogue...</option>
+    </select>
+</div>
+            
             <div class="form-group">
                 <label>Couleur / Motif :</label>
                 <input type="text" id="mvt-couleur" placeholder="Ex: Blanc, Bleu Nuit, Doré...">
@@ -424,6 +425,24 @@
             });
         }
 
+        function filtrerSelectArticles() {
+    const recherche = document.getElementById('search-mvt-article').value.toLowerCase();
+    const select = document.getElementById('mvt-article');
+    
+    // On réinitialise la liste avec l'option par défaut
+    select.innerHTML = '<option value="">-- Sélectionner un article --</option>';
+    
+    // On filtre le catalogue
+    const catalogueFiltre = CATALOGUE.filter(art => 
+        art.nom_article.toLowerCase().includes(recherche)
+    );
+    
+    // On ajoute uniquement les articles qui correspondent à la recherche
+    catalogueFiltre.forEach(art => {
+        select.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
+    });
+        }
+        
         function toggleDestination() {
             const type = document.getElementById('mvt-type').value;
             const destDiv = document.getElementById('group-destination');
