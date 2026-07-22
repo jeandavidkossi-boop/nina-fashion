@@ -177,7 +177,8 @@
                 password: passwordFantome
             });
 
-            if (authError) throw new Error("Clé de sécurité Supabase refusée.");
+if (authError) throw new Error(authError.message);
+                
             // --- FIN DE LA CONNEXION SECRÈTE ---
                     
                             if (role === 'administrateur') {
@@ -198,7 +199,11 @@
                     throw new Error("Accès refusé");
                 }
 
-            } catch (err) {
+                        } catch (err) {
+            alert("Rapport du vigile : " + err.message); // 👈 AJOUTEZ CETTE LIGNE ICI
+            
+            msgErreur.style.display = 'block';
+            
                 msgErreur.style.display = 'block';
                 btnSubmit.innerText = "S'AUTHENTIFIER";
                 btnSubmit.disabled = false;
