@@ -160,7 +160,7 @@
                     localStorage.setItem('roleUtilisateur', employe.role);
                     localStorage.setItem('nomEmploye', employe.nom_employe);
 
-                    employe.role.toLowerCase().trim()
+                const role = employe.role.toLowerCase().trim();
                                 // --- DÉBUT DE LA CONNEXION SECRÈTE SUPABASE ---
             let emailFantome = "";
             let passwordFantome = "";
