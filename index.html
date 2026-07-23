@@ -172,7 +172,7 @@
             else if (role === 'caissière') { emailFantome = 'caissiere@ninafashion.ci'; passwordFantome = 'NinaCaissiere2026*'; }
 
             // Supabase valide le compte fantôme en arrière-plan et nous donne le Jeton
-                    alert("Email envoyé : [" + emailFantome + "]\nMot de passe : [" + passwordFantome + "]");
+                    
                     
             const { data: authData, error: authError } = await clientSupabase.auth.signInWithPassword({
                 email: emailFantome,
@@ -202,7 +202,6 @@ if (authError) throw new Error(authError.message);
                 }
 
                         } catch (err) {
-            alert("Rapport du vigile : " + err.message); // 👈 AJOUTEZ CETTE LIGNE ICI
             
             msgErreur.style.display = 'block';
             
