@@ -531,7 +531,7 @@ let nomCaissiere = roleActuel;
             const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code.trim()).eq('statut', 'actif').maybeSingle();
 
             if (data) {
-                const conf = confirm(`👤 Client : ${data.non_client}\n💰 Montant à rembourser physiquement : ${data.montant} F\n\nConfirmez-vous avoir sorti cet argent de la caisse ?`);
+                const conf = confirm(`👤 Client : ${data.nom_client}\n💰 Montant à rembourser physiquement : ${data.montant} F\n\nConfirmez-vous avoir sorti cet argent de la caisse ?`);
                 if (conf) {
                     await clientSupabase.from('reliquats').update({ statut: 'rembourse' }).eq('id', data.id);
                     alert("✅ Remboursement enregistré. Ce reçu est maintenant désactivé.");
