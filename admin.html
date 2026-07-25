@@ -778,6 +778,7 @@ if (error) {
         // ==========================================
         async function chargerCatalogue() {
             const { data } = await clientSupabase.from('articles_v2').select('*').order('nom_article');
+            window.articlesCatalogue = data;
             const tbody = document.getElementById('table-articles');
             tbody.innerHTML = '';
             if(data && data.length > 0) {
@@ -789,7 +790,10 @@ if (error) {
                         <td>${badgeCible}</td>
                         <td style="color:var(--success); font-weight:bold;">${a.prix_vente} F</td>
                         <td style="color:var(--danger);">${a.prix_achat} F</td>
-                        <td><button class="btn btn-action btn-danger" onclick="supprimerArticle('${a.id}')">X</button></td>
+                        <td>
+    <button class="btn btn-action" style="background: var(--gold); color: white; margin-right: 5px;" onclick="editerArticle('${a.ref}')">✏️ Modifier</button>
+    <button class="btn btn-action btn-danger" onclick="supprimerArticle('${a.id}')">❌</button>
+</td>
                     </tr>`;
                 });
             } else {
@@ -840,6 +844,23 @@ async function ajouterArticleManuel() {
     }
 }
 
+        function editerArticle(ref) {
+    if (!window.articlesCatalogue) return;
+    const article = window.articlesCatalogue.find(a => a.ref === ref);
+    
+    if (article) {
+        document.getElementById('art-ref').value = article.ref || '';
+        document.getElementById('art-nom').value = article.nom_article || '';
+        document.getElementById('art-cat').value = article.famille || '';
+        document.getElementById('art-scope').value = article.cible_utilisation || '';
+        document.getElementById('art-pv').value = article.prix_vente || 0;
+        document.getElementById('art-pa').value = article.prix_achat || 0;
+        document.getElementById('art-seuil').value = article.seuil_alerte || 5;
+
+        document.getElementById('art-ref').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+        }
+        
         async function supprimerArticle(id) {
             if(confirm("Supprimer cet article du catalogue définitif ?")) {
                 await clientSupabase.from('articles_v2').delete().eq('id', id);
