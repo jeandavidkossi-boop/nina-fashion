@@ -516,8 +516,13 @@ function afficherCatalogue() {
 
     try {
                 // 1. Création du ticket général
-        let detailsPanier = panier.map(item => ({ nom_article: item.nom, quantite: item.qte }));
-
+       let detailsPanier = panier.map(item => ({ 
+    ref: item.ref, 
+    nom_article: item.nom, 
+    quantite: item.qte, 
+    prixU: item.prixU 
+}));
+        
         const { data: commandeData, error: commandeError } = await clientSupabase
             .from('commandes')
             .insert([{
