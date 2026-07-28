@@ -109,6 +109,10 @@
                     <div class="stat-title">📉 Dépenses du Jour</div>
                     <div class="stat-value" id="stat-depenses-jour">0 F</div>
                 </div>
+                        <div class="stat-card gold">
+            <div class="stat-title">💎 Bénéfice Net (Jour)</div>
+            <div class="stat-value" id="stat-benefice-jour">0 F</div>
+                        </div>
             </div>
 
             <div class="data-section">
@@ -479,8 +483,20 @@ if (error) {
                     .select('*')
                     .gte('created_at', debutJournee.toISOString());
 
-                let totalCash = 0, totalMomo = 0;
-                let totalDepenses = depenses ? depenses.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
+                     let totalCash = 0, totalMomo = 0;
+    let totalDepenses = depenses ? depenses.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
+    
+    // NOUVELLES VARIABLES POUR LE BÉNÉFICE
+    let caBoutique = 0;
+    let caAtelier = 0;
+    let coutMarchandiseJour = 0;
+
+    // CHARGEMENT DU CATALOGUE (Pour lire les prix d'achat en cachette)
+    const { data: articlesDb } = await clientSupabase.from('articles_v2').select('ref, prix_achat');
+    let mapArticles = {};
+    if (articlesDb) {
+        articlesDb.forEach(a => { mapArticles[a.ref] = a; });
+    }
                 
                 const tbody = document.getElementById('table-ventes-directes');
                 tbody.innerHTML = '';
@@ -490,7 +506,10 @@ if (error) {
                         let cash = parseFloat(v.montant_cash) || 0;
                         let momo = parseFloat(v.montant_momo) || 0;
                         totalCash += cash; totalMomo += momo;
-
+        let cmdTotal = parseFloat(v.total) || 0;
+        if (v.origine === 'atelier') caAtelier += cmdTotal;
+        else caBoutique += cmdTotal;
+                        
                                             let dateObj = new Date(v.created_at);
                     let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
                     let badgeSource = v.origine === 'atelier' ? '<span class="badge" style="background:#8e44ad; color:white;">Atelier</span>' : '<span class="badge" style="background:#2980b9; color:white;">Boutique</span>';
@@ -499,15 +518,24 @@ if (error) {
                     // 1. DÉTECTION DU CLIENT
                     let clientInfo = (v.client_nom || 'Anonyme') + (v.client_numero ? `<br><small style="color:#7f8c8d;">${v.client_numero}</small>` : '');
 
-                    // 2. DÉTECTION DES ARTICLES
-                    let detailsHtml = "";
-                    try {
-                        let articles = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
-                        if (articles && articles.length > 0) {
-                            detailsHtml = articles.map(a => `<span style="font-size:0.75rem; background:#eee; padding:2px 4px; border-radius:4px; margin:2px; display:inline-block; color:#333;">${a.nom_article || a.nom || 'Article'} (x${a.quantite || a.qte || 1})</span>`).join('');
-                        } else { detailsHtml = "-"; }
-                    } catch(e) { detailsHtml = "-"; }
+                            // 2. DETECTION DES ARTICLES ET CALCUL DU COUT D'ACHAT
+        let detailsHtml = "";
+        try {
+            let articles = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
+            if (articles && articles.length > 0) {
+                
+                // La boucle secrète de rentabilité
+                articles.forEach(item => {
+                    let articleCatalogue = mapArticles[item.ref];
+                    let prixAchat = articleCatalogue ? parseFloat(articleCatalogue.prix_achat) || 0 : 0;
+                    let qte = parseFloat(item.quantite) || parseFloat(item.qte) || 0;
+                    coutMarchandiseJour += (prixAchat * qte);
+                });
 
+                detailsHtml = articles.map(a => `<span style="font-size:0.75rem; background:#eee; padding:2px 4px; border-radius:3px; margin-right:5px;">${a.quantite || a.qte}x ${a.nom_article || a.nom}</span>`).join('');
+            } else { detailsHtml = "-"; }
+        } catch(e) { detailsHtml = "-"; }
+                        
                     // 3. DÉTECTION DES RELIQUATS
                     let reliquatInfo = "";
                     if (v.montant_reliquat && parseFloat(v.montant_reliquat) > 0) {
@@ -567,6 +595,12 @@ if (error) {
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-depenses-jour').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
+                        // AFFICHAGE DU BÉNÉFICE NET DU JOUR
+        let beneficeNetJour = (caBoutique + caAtelier) - coutMarchandiseJour - totalDepenses;
+        document.getElementById('stat-benefice-jour').innerText = beneficeNetJour.toLocaleString('fr-FR') + " F";
+        
+        // On cache la vraie valeur mathématique dans la balise pour pouvoir l'envoyer à la clôture
+        document.getElementById('stat-benefice-jour').dataset.valeur = beneficeNetJour;
             } catch (e) {
     alert("❌ CRASH JAVASCRIPT : " + e.message);
     console.error("Erreur Caisse:", e);
@@ -585,7 +619,7 @@ if (error) {
                     total_especes_attendu: cashAttendu,
                     total_momo_attendu: momoAttendu,
                     total_depenses: depenses,
-                    benefice_net_estime: 0 
+                    benefice_net_estime: parseFloat(document.getElementById('stat-benefice-jour').dataset.valeur) || 0
                 }]);
                 alert("✅ La journée est clôturée et archivée.");
             } catch(err) { alert("❌ Erreur lors de la clôture."); }
