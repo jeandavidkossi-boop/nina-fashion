@@ -589,7 +589,25 @@ if (error) {
                     } else {
                         tbodyReq.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Aucune dette créée aujourd'hui.</td></tr>`;
                     }
-                    
+
+                    // --- DÉDUCTION DES RELIQUATS REMBOURSÉS EN ESPÈCES ---
+    const { data: remboursements } = await clientSupabase
+        .from('reliquats')
+        .select('montant')
+        .eq('statut', 'rembourse')
+        .gte('date_remboursement', debutJournee.toISOString()); 
+
+    let totalRembourse = 0;
+    if (remboursements && remboursements.length > 0) {
+        remboursements.forEach(r => {
+            totalRembourse += parseFloat(r.montant) || 0;
+        });
+    }
+
+    // On fait le trou dans la caisse mathématiquement :
+    totalCash = totalCash - totalRembourse;
+    // -----------------------------------------------------
+                
                     // Mise à jour du titre rouge avec le total du jour
                     document.getElementById('titre-radar-reliquat').innerHTML = `⚠️ Dettes (Reliquats) Créées Aujourd'hui : <span style="color:var(--danger);">${totalReliquatsJour.toLocaleString('fr-FR')} F</span>`;
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
