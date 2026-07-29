@@ -190,7 +190,7 @@
 
                 <!-- LE NOUVEAU PALMARÈS DE RENTABILITÉ (Top 5) -->
                 <div class="data-section">
-                    <h2>🏆 Palmarès de Rentabilité (Top 5)</h2>
+                   <h2>🏆 Top 30 des Articles les Plus Vendus</h2>
                     <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Les articles qui génèrent le plus de bénéfice net ce mois-ci.</p>
                     <div id="palmares-list">
                         <div style="text-align:center; color:#7f8c8d; padding:20px;">Calcul en cours...</div>
@@ -714,12 +714,11 @@ if (error) {
                                     let coutAchatLigne = prixAchatUnitaire * qte;
                                     coutMarchandiseVendue += coutAchatLigne;
 
-                                    // L'algorithme de rentabilité (Bénéfice Net généré par l'article)
-                                    let beneficeLigne = (prixVenteUnitaire * qte) - coutAchatLigne;
-                                    let nomArt = item.nom_article || item.nom || 'Article inconnu';
-                                    
-                                    if(!palmares[nomArt]) palmares[nomArt] = 0;
-                                    palmares[nomArt] += beneficeLigne;
+                                // Le nouveau compteur de ventes (Quantités écoulées)
+let nomArt = item.nom_article || item.nom || 'Article inconnu';
+
+if(!palmares[nomArt]) palmares[nomArt] = 0;
+palmares[nomArt] += qte; // On additionne les quantités vendues !
                                 });
                             }
                         } catch(e) {}
@@ -734,17 +733,17 @@ if (error) {
                 // Dessin du graphique
                 dessinerGraphiqueComparatif(caBoutique, caAtelier, totalDepensesMois);
 
-                // Affichage du Palmarès Top 5
-                let top5 = Object.entries(palmares).sort((a, b) => b[1] - a[1]).slice(0, 5);
-                let palmaresHtml = "";
-                if(top5.length > 0) {
-                    top5.forEach((item, index) => {
-                        palmaresHtml += `
-                            <div class="rank-item">
-                                <div><span class="rank-number">#${index + 1}</span> <strong>${item[0]}</strong></div>
-                                <div style="color:var(--success); font-weight:bold;">+ ${item[1].toLocaleString('fr-FR')} F (Net)</div>
-                            </div>`;
-                    });
+                // Affichage du Palmarès Top 30
+let top30 = Object.entries(palmares).sort((a, b) => b[1] - a[1]).slice(0, 30);
+let palmaresHtml = "";
+if(top30.length > 0) {
+    top30.forEach((item, index) => {
+        palmaresHtml += `
+            <div class="rank-item">
+                <div><span class="rank-number">#${index + 1}</span> <strong>${item[0]}</strong></div>
+                <div style="color:var(--primary); font-weight:bold;">${item[1]} vendus</div>
+            </div>`;
+    });
                 } else {
                     palmaresHtml = "<div style='text-align:center; padding:10px; color:#7f8c8d;'>Pas assez de données pour le moment.</div>";
                 }
