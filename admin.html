@@ -709,7 +709,8 @@ if (error) {
                                     let articleDb = mapArticles[item.ref];
                                     let prixAchatUnitaire = articleDb ? parseFloat(articleDb.prix_achat) || 0 : 0;
                                     let prixVenteUnitaire = parseFloat(item.prix_unitaire_vente) || parseFloat(item.prix) || 0;
-                                    let qte = parseFloat(item.qte) || 0;
+                                    let qte = parseFloat(item.quantite) || parseFloat(item.qte) || 0;
+                                    
 
                                     let coutAchatLigne = prixAchatUnitaire * qte;
                                     coutMarchandiseVendue += coutAchatLigne;
@@ -734,7 +735,7 @@ palmares[nomArt] += qte; // On additionne les quantités vendues !
                 dessinerGraphiqueComparatif(caBoutique, caAtelier, totalDepensesMois);
 
                 // Affichage du Palmarès Top 30
-let top30 = Object.entries(palmares).sort((a, b) => b[1] - a[1]).slice(0, 30);
+let top30 = Object.entries(palmares).filter(item => item[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 30);
 let palmaresHtml = "";
 if(top30.length > 0) {
     top30.forEach((item, index) => {
