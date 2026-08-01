@@ -496,6 +496,15 @@ document.addEventListener('click', function(event) {
             destDiv.style.display = (type === 'SORTIE') ? 'block' : 'none';
         }
 
+        // Fonction pour nettoyer et harmoniser le texte de la couleur
+function nettoyerCouleur(texte) {
+    if (!texte) return 'STANDARD';
+    return texte
+        .toUpperCase()              // Convertit en MAJUSCULES (ex: "rose 118" -> "ROSE 118")
+        .replace(/\s+/g, ' ')       // Remplace les espaces multiples par un seul espace
+        .trim();                    // Enlève les espaces au début et à la fin
+}
+        
         function ajouterAuBordereau() {
             const typeMvt = document.getElementById('mvt-type').value;
             const destination = typeMvt === 'SORTIE' ? document.getElementById('mvt-destination').value : 'Dépôt Principal';
@@ -505,13 +514,13 @@ document.addEventListener('click', function(event) {
             if (!idArticle) return alert("⚠️ Veuillez sélectionner un article.");
             const nomArticle = selectArt.options[selectArt.selectedIndex].text;
 
-            const couleur = document.getElementById('mvt-couleur').value.trim() || 'Standard';
+            const couleur = nettoyerCouleur(document.getElementById('mvt-couleur').value);
             const qte = parseFloat(document.getElementById('mvt-qte').value);
 
             if (isNaN(qte) || qte <= 0) return alert("⚠️ Veuillez saisir une quantité valide !");
 
             // LE FAMEUX SEUIL HYBRIDE : On vérifie si la couleur existe déjà dans le stock
-            let articleExistant = STOCK_DEPOT.find(s => s.article_id == idArticle && s.couleur_ref.toLowerCase() === couleur.toLowerCase());
+            let articleExistant = STOCK_DEPOT.find(s => s.article_id == idArticle && nettoyerCouleur(s.couleur_ref) === couleur);
             
             let seuilChoisi = 5; // Valeur par défaut
             if (!articleExistant) {
@@ -609,33 +618,49 @@ document.addEventListener('click', function(event) {
             return; 
         }            
                     
-                    // 2. Mise à jour du stock physique
-                    const { data: existData } = await clientSupabase.from('stock_depot')
-                        .select('id, quantite')
-                        .eq('article_id', item.article_id)
-                        .eq('couleur_ref', item.couleur);
+// 2. Mise à jour du stock physique
+// A. On récupère toutes les déclinaisons de cet article en base
+const { data: existData } = await clientSupabase
+    .from('stock_depot')
+    .select('*')
+    .eq('article_id', item.article_id);
 
-                    if (existData && existData.length > 0) {
-                        // LA LIGNE EXISTE : Voici ton système d'addition et de soustraction !
-                        let qteActuelle = parseFloat(existData[0].quantite);
-                        let nouvelleQte = item.type_mouvement === 'ENTREE' 
-                                          ? qteActuelle + item.qte 
-                                          : qteActuelle - item.qte;
-                        
-                        await clientSupabase.from('stock_depot')
-                            .update({ quantite: nouvelleQte })
-                            .eq('id', existData[0].id);
-                    } else {
-                        // LA LIGNE N'EXISTE PAS : On la crée avec le seuil choisi par le magasinier
-                        await clientSupabase.from('stock_depot').insert([{
-                            article_id: item.article_id,
-                            couleur_ref: item.couleur,
-                            quantite: item.qte,
-                            seuil_alerte: item.seuil
-                        }]);
-                    }
-                }
+// B. On cherche si la couleur nettoyée existe déjà
+let ligneTrouvee = existData 
+    ? existData.find(d => nettoyerCouleur(d.couleur_ref) === item.couleur) 
+    : null;
 
+if (ligneTrouvee) {
+    // LA LIGNE EXISTE : On fait l'addition ou la soustraction
+    let qteActuelle = parseFloat(ligneTrouvee.quantite);
+    let nouvelleQte = item.type_mouvement === 'ENTREE' 
+        ? qteActuelle + item.qte 
+        : qteActuelle - item.qte;
+
+    // Sécurité pour ne pas descendre en dessous de 0
+    if (nouvelleQte < 0) nouvelleQte = 0;
+
+    await clientSupabase
+        .from('stock_depot')
+        .update({ 
+            quantite: nouvelleQte,
+            couleur_ref: item.couleur // Réécrit la couleur proprement au passage
+        })
+        .eq('id', ligneTrouvee.id);
+} else {
+    // LA LIGNE N'EXISTE PAS ENCORE : On la crée (uniquement en cas d'ENTRÉE)
+    if (item.type_mouvement === 'ENTREE') {
+        await clientSupabase
+            .from('stock_depot')
+            .insert([{
+                article_id: item.article_id,
+                couleur_ref: item.couleur,
+                quantite: item.qte,
+                seuil_alerte: item.seuil
+            }]);
+    }
+}
+                    
                 alert("✅ Le bordereau a été enregistré avec succès !");
                 bordereau = []; 
                 localStorage.removeItem('nina_depot_bordereau');
