@@ -732,8 +732,8 @@ palmares[nomArt] += qte; // On additionne les quantités vendues !
                 document.getElementById('stat-benefice').innerText = beneficeNet.toLocaleString('fr-FR') + " F";
 
                 // Dessin du graphique
-                dessinerGraphiqueComparatif(caBoutique, caAtelier, totalDepensesMois);
-
+                dessinerGraphiqueComparatif(caBoutique, caAtelier, totalDepensesMois, beneficeNet);
+                
                 // Affichage du Palmarès Top 30
 let top30 = Object.entries(palmares).filter(item => item[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 30);
 let palmaresHtml = "";
@@ -753,25 +753,26 @@ if(top30.length > 0) {
             } catch (e) { console.error("Erreur Comptabilité:", e); }
         }
 
-        function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses) {
-            const ctx = document.getElementById('comptaChart');
-            if(!ctx) return;
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Boutique (Ventes)', 'Atelier (Prestations)', 'Dépenses Totales'],
-                    datasets: [{
-                        label: 'Flux du Mois (FCFA)',
-                        data: [caBoutique, caAtelier, depenses],
-                        backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c'],
-                        borderRadius: 4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
-
+function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses, benefice) {
+    const ctx = document.getElementById('comptaChart');
+    if(!ctx) return;
+    if(chartInstance) chartInstance.destroy();
+    
+    chartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Boutique (Ventes)', 'Atelier (Prestations)', 'Dépenses Totales', 'Bénéfice Net'],
+            datasets: [{
+                label: 'Flux du Mois (FCFA)',
+                data: [caBoutique, caAtelier, depenses, benefice],
+                backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c', '#27ae60'],
+                borderRadius: 4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+}
+        
         async function enregistrerDepenseComptable() {
             const motif = document.getElementById('compta-motif').value;
             const cat = document.getElementById('compta-cat').value;
