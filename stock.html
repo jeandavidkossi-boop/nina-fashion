@@ -371,7 +371,7 @@
                     let qte = parseFloat(ligne.quantite);
                     let seuil = parseFloat(ligne.seuil_alerte) || 5;
                     let couleurTexte = (qte <= seuil) ? 'var(--danger)' : 'var(--text-dark)';
-                    let nonCouleur = ligne.couleur_ref || 'Standard';
+                    let nomCouleur = String(ligne.couleur_ref || 'Standard');
                     
                     html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
                                 <td style="padding: 8px; width: 50%;">🎨 <b>${nonCouleur}</b></td>
