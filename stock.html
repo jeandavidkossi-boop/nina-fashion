@@ -378,6 +378,7 @@
                                 <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
                                 <td style="padding: 8px; width: 25%; text-align: right;">
     <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
+<button style="margin-left: 8px;" onclick="supprimerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}')">🗑️</button>
 </td>
                              </tr>`;
                 });
@@ -422,6 +423,29 @@
                 alert("🚨 Erreur de correction : " + err.message);
             }
         }
+
+        // --- FONCTION DE SUPPRESSION ---
+async function supprimerStock(idLigne) {
+  // 1. Demande de confirmation
+  let confirmation = confirm("Voulez-vous vraiment supprimer cet article de la base de données ?");
+  if (!confirmation) return;
+
+  try {
+    // 2. Suppression dans la table Supabase
+    const { error } = await supabaseClient
+      .from('stock_depot')
+      .delete()
+      .eq('id', idLigne);
+
+    if (error) throw error;
+
+    alert('✅ Article supprimé avec succès !');
+    chargerDonneesDepot(); // Rafraîchit l'affichage du tableau
+
+  } catch (err) {
+    alert('🚨 Erreur lors de la suppression : ' + err.message);
+  }
+}
         
         // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
         function filtrerStock() {
