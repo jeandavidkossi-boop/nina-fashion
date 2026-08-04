@@ -374,7 +374,7 @@
                     let nomCouleur = String(ligne.couleur_ref || 'Standard');
                     
                     html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
-                                <td style="padding: 8px; width: 50%;">🎨 <b>${nonCouleur}</b></td>
+                                <td style="padding: 8px; width: 50%;">🎨 <b>${nomCouleur}</b></td>
                                 <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
                                 <td style="padding: 8px; width: 25%; text-align: right;">
     <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
