@@ -430,13 +430,13 @@ async function supprimerStock(idLigne) {
   let confirmation = confirm("Voulez-vous vraiment supprimer cet article de la base de données ?");
   if (!confirmation) return;
 
-  try {
-    // 2. Suppression dans la table Supabase
-    const { error } = await supabaseClient
-      .from('stock_depot')
-      .delete()
-      .eq('id', idLigne);
-
+      try {
+        // 2. Suppression dans la table Supabase
+        const { error } = await clientSupabase // ✅ CORRECTION
+            .from('stock_depot')
+            .delete()
+            .eq('id', idLigne);
+          
     if (error) throw error;
 
     alert('✅ Article supprimé avec succès !');
