@@ -378,7 +378,6 @@
                                 <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
                                 <td style="padding: 8px; width: 25%; text-align: right;">
     <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
-    <button style="margin-left: 8px;" onclick="supprimerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}')">🗑️</button>
 </td>
                              </tr>`;
                 });
@@ -423,30 +422,6 @@
                 alert("🚨 Erreur de correction : " + err.message);
             }
         }
-
-           // --- NOUVEAUTÉ : LA FONCTION DE SUPPRESSION ---
-    async function supprimerStock(idLigne, nomCouleur) {
-        // 1. On demande confirmation au magasinier pour éviter les erreurs de manipulation
-        let confirmation = confirm(`⚠️ ATTENTION : Es-tu sûr de vouloir supprimer définitivement la couleur/l'article "${nomCouleur}" de la base de données ?`);
-        
-        if (!confirmation) return; // Si le magasinier clique sur Annuler, on arrête tout
-
-        try {
-            // 2. Suppression directe de la ligne correspondante dans Supabase
-            const { error } = await clientSupabase
-                .from('stock_depot')
-                .delete()
-                .eq('id', idLigne);
-
-            if (error) throw error;
-
-            alert('✅ Article supprimé avec succès !');
-            chargerDonneesDepot(); // On rafraîchit l'écran instantanément pour voir la modification
-
-        } catch (err) {
-            alert('🚨 Erreur lors de la suppression : ' + err.message);
-        }
-    }
         
         // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
         function filtrerStock() {
