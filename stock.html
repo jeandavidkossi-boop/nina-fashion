@@ -307,10 +307,10 @@
                 remplirSelectArticles();
                 construireAlertesCommande();
                 
-            } catch (err) {
-                console.error("Erreur de chargement réseau :", err);
-                document.getElementById('table-stock-body').innerHTML = `<tr><td colspan="4" style="color: var(--danger); text-align: center; font-weight: bold;">❌ Erreur réseau. Impossible de charger le stock.</td></tr>`;
-            }
+                } catch (err) {
+        alert("ERREUR : " + (err.message || JSON.stringify(err)));
+        document.getElementById('table-stock-body').innerHTML = `<td colspan="4" style="text-align: center; padding: 20px; color: #c62828;">❌ Erreur : ${err.message || err}</td>`;
+            }            
         }
             // --- 5. AFFICHAGE VISION GLOBALE (NOUVELLE VERSION TIROIRS) ---
         function afficherVisionGlobale() {
