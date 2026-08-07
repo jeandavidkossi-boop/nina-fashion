@@ -240,8 +240,22 @@ let nomCaissiere = roleActuel;
                 afficherFileDAttente();
             }
         }
-        setInterval(chargerCommandes, 3000); // L'ordinateur cherche les nouveaux tickets toutes les 3 secondes
 
+            // Charger les tickets une première fois au lancement
+chargerCommandes();
+
+// Écouter automatiquement les nouveautés en temps réel
+clientSupabase
+  .channel('suivi-caisse')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'commandes' },
+    (payload) => {
+      chargerCommandes();
+    }
+  )
+  .subscribe();
+            
         function afficherFileDAttente() {
             const liste = document.getElementById("queue-list");
             document.getElementById("queue-count").innerText = ticketsEnAttente.length;
