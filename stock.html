@@ -643,38 +643,34 @@ function nettoyerCouleur(texte) {
         }            
                     
 // 2. Mise à jour du stock physique
-// A. On récupère toutes les déclinaisons de cet article en base
-const { data: existData } = await clientSupabase
+const { data: existData, error: selectError } = await clientSupabase
     .from('stock_depot')
     .select('*')
     .eq('article_id', item.article_id);
 
-// B. On cherche si la couleur nettoyée existe déjà
-let ligneTrouvee = existData 
-    ? existData.find(d => nettoyerCouleur(d.couleur_ref) === item.couleur) 
-    : null;
+if (selectError) throw selectError; // On s'assure que la lecture a fonctionné
+
+// Sécurisation du find() au cas où existData serait vide/null
+let ligneTrouvee = (existData || []).find(d => nettoyerCouleur(d.couleur_ref) === item.couleur);
 
 if (ligneTrouvee) {
-    // LA LIGNE EXISTE : On fait l'addition ou la soustraction
     let qteActuelle = parseFloat(ligneTrouvee.quantite);
-    let nouvelleQte = item.type_mouvement === 'ENTREE' 
-        ? qteActuelle + item.qte 
-        : qteActuelle - item.qte;
-
-    // Sécurité pour ne pas descendre en dessous de 0
+    let nouvelleQte = item.type_mouvement === 'ENTREE' ? qteActuelle + item.qte : qteActuelle - item.qte;
     if (nouvelleQte < 0) nouvelleQte = 0;
 
-    await clientSupabase
+    const { error: updateError } = await clientSupabase
         .from('stock_depot')
-        .update({ 
+        .update({
             quantite: nouvelleQte,
-            couleur_ref: item.couleur // Réécrit la couleur proprement au passage
+            couleur_ref: item.couleur
         })
         .eq('id', ligneTrouvee.id);
+
+    if (updateError) throw updateError; // <-- L'erreur n'est plus ignorée
+
 } else {
-    // LA LIGNE N'EXISTE PAS ENCORE : On la crée (uniquement en cas d'ENTRÉE)
     if (item.type_mouvement === 'ENTREE') {
-        await clientSupabase
+        const { error: insertError } = await clientSupabase
             .from('stock_depot')
             .insert([{
                 article_id: item.article_id,
@@ -682,6 +678,8 @@ if (ligneTrouvee) {
                 quantite: item.qte,
                 seuil_alerte: item.seuil
             }]);
+
+        if (insertError) throw insertError; // <-- L'erreur n'est plus ignorée
     }
 }
                 }     
