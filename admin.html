@@ -105,6 +105,10 @@
                     <div class="stat-title">📱 Mobile Money</div>
                     <div class="stat-value" id="stat-momo">0 F</div>
                 </div>
+                <div class="stat-card" style="border-left-color: var(--primary);">
+    <div class="stat-title">🧵 Recettes Machiniste</div>
+    <div class="stat-value" id="stat-machiniste">0 F</div>
+                </div>   
                 <div class="stat-card danger">
                     <div class="stat-title">📉 Dépenses du Jour</div>
                     <div class="stat-value" id="stat-depenses-jour">0 F</div>
@@ -613,7 +617,11 @@ if (error) {
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-depenses-jour').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
-                        // AFFICHAGE DU BÉNÉFICE NET DU JOUR
+                document.getElementById('stat-machiniste').innerText = caAtelier.toLocaleString('fr-FR') + " F";
+// On cache la valeur mathématique pour la récupérer facilement à la clôture
+document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
+                
+                // AFFICHAGE DU BÉNÉFICE NET DU JOUR
         let beneficeNetJour = (caBoutique + caAtelier) - coutMarchandiseJour - totalDepenses;
         document.getElementById('stat-benefice-jour').innerText = beneficeNetJour.toLocaleString('fr-FR') + " F";
         
@@ -626,23 +634,29 @@ if (error) {
                  }
         
         async function cloturerJournee() {
-            if(!confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro pour demain.")) return;
-            let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
-            let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
-            let depenses = parseInt(document.getElementById('stat-depenses-jour').innerText.replace(/\D/g, '')) || 0;
+    if(confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro.")) {
+        let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
+        let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
+        let depenses = parseInt(document.getElementById('stat-depenses-jour').innerText.replace(/\D/g, '')) || 0;
+        
+        // Nouvelle ligne pour récupérer le montant du machiniste
+        let totalMachiniste = parseInt(document.getElementById('stat-machiniste').dataset.valeur) || 0;
 
-            try {
-                await clientSupabase.from('clotures_caisse').insert([{
-                    date_cloture: new Date().toISOString().split('T')[0],
-                    total_especes_attendu: cashAttendu,
-                    total_momo_attendu: momoAttendu,
-                    total_depenses: depenses,
-                    benefice_net_estime: parseFloat(document.getElementById('stat-benefice-jour').dataset.valeur) || 0
-                }]);
-                alert("✅ La journée est clôturée et archivée.");
-            } catch(err) { alert("❌ Erreur lors de la clôture."); }
+        try {
+            await clientSupabase.from('clotures_caisse').insert([{
+                date_cloture: new Date().toISOString().split('T')[0],
+                total_especes_attendu: cashAttendu,
+                total_momo_attendu: momoAttendu,
+                total_atelier: totalMachiniste, // Ajout du point journalier du machiniste
+                total_depenses: depenses,
+                benefice_net_estime: parseFloat(document.getElementById('stat-benefice-jour').dataset.valeur)
+            }]);
+            
+            alert("✅ La journée est clôturée et archivée.");
+        } catch(err) { alert("❌ Erreur lors de la clôture."); }
+    }
         }
-
+        
         // ==========================================
         // --- 4. LE CERVEAU : RENTABILITÉ & BILAN ---
         // ==========================================
