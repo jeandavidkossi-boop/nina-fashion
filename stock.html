@@ -613,92 +613,96 @@ function nettoyerCouleur(texte) {
         }
 
         // --- 7. VALIDATION ET ENVOI À SUPABASE (Le moteur mathématique sécurisé) ---
-        async function validerBordereau() {
-            if (bordereau.length === 0) return;
+        // 7. VALIDATION ET ENVOI À SUPABASE (Ordre sécurisé)
+async function validerBordereau() {
+    if (bordereau.length === 0) return;
 
-            const btn = document.getElementById('btn-valider');
-            btn.disabled = true;
-            btn.innerText = "⏳ Enregistrement en cours...";
+    const btn = document.getElementById("btn-valider");
+    btn.disabled = true;
+    btn.innerText = "⏳ Enregistrement en cours...";
 
-            try {
-                for (let item of bordereau) {
-        // 1. Historique (La trace pour l'administrateur)
-        const { error: erreurHistorique } = await clientSupabase.from('mouvements_stock').insert([{
-            // On utilise UNIQUEMENT les nouvelles colonnes créées par le magasinier
-            article_id: item.article_id,     
-            nom_article: item.nom_article,         
-            quantite: item.qte,                   
-            couleur: item.couleur,
-            type_mouvement: item.type_mouvement,
-            destination: item.destination,
-            utilisateur: 'Magasinier'
-        }]);
+    try {
+        for (let item of bordereau) {
+            
+            // ==========================================
+            // ETAPE 1 : MISE À JOUR DU STOCK PHYSIQUE D'ABORD
+            // ==========================================
+            const { data: existData, error: selectError } = await clientSupabase
+                .from('stock_depot')
+                .select('*')
+                .eq('article_id', item.article_id);
 
-        // LE DÉTECTEUR INFAILLIBLE : 
-        if (erreurHistorique) {
-            alert("🚨 REFUS DE SUPABASE : " + erreurHistorique.message);
-            btn.disabled = false;
-            btn.innerText = "💾 ENREGISTRER DANS LA BASE";
-            return; 
-        }            
-                    
-// 2. Mise à jour du stock physique
-const { data: existData, error: selectError } = await clientSupabase
-    .from('stock_depot')
-    .select('*')
-    .eq('article_id', item.article_id);
+            if (selectError) throw selectError;
 
-if (selectError) throw selectError; // On s'assure que la lecture a fonctionné
+            // Sécurisation de la recherche de la ligne
+            let ligneTrouvee = (existData || []).find(d => nettoyerCouleur(d.couleur_ref) === item.couleur);
 
-// Sécurisation du find() au cas où existData serait vide/null
-let ligneTrouvee = (existData || []).find(d => nettoyerCouleur(d.couleur_ref) === item.couleur);
-
-if (ligneTrouvee) {
-    let qteActuelle = parseFloat(ligneTrouvee.quantite);
-    let nouvelleQte = item.type_mouvement === 'ENTREE' ? qteActuelle + item.qte : qteActuelle - item.qte;
-    if (nouvelleQte < 0) nouvelleQte = 0;
-
-    const { error: updateError } = await clientSupabase
-        .from('stock_depot')
-        .update({
-            quantite: nouvelleQte,
-            couleur_ref: item.couleur
-        })
-        .eq('id', ligneTrouvee.id);
-
-    if (updateError) throw updateError; // <-- L'erreur n'est plus ignorée
-
-} else {
-    if (item.type_mouvement === 'ENTREE') {
-        const { error: insertError } = await clientSupabase
-            .from('stock_depot')
-            .insert([{
-                article_id: item.article_id,
-                couleur_ref: item.couleur,
-                quantite: item.qte,
-                seuil_alerte: item.seuil
-            }]);
-
-        if (insertError) throw insertError; // <-- L'erreur n'est plus ignorée
-    }
-}
-                }     
+            if (ligneTrouvee) {
+                // MISE A JOUR : L'article et la couleur existent déjà
+                let qteActuelle = parseFloat(ligneTrouvee.quantite) || 0; // Sécurité zéro intégrée
+                let nouvelleQte = item.type_mouvement === 'ENTREE' ? qteActuelle + item.qte : qteActuelle - item.qte;
                 
-                alert("✅ Le bordereau a été enregistré avec succès !");
-                bordereau = []; 
-                localStorage.removeItem('nina_depot_bordereau');
-                afficherBordereau();
-                chargerDonneesDepot(); // On rafraîchit l'onglet 1 instantanément
-                btn.innerText = "💾 ENREGISTRER DANS LA BASE";
+                const { error: updateError } = await clientSupabase
+                    .from('stock_depot')
+                    .update({ quantite: nouvelleQte })
+                    .eq('id', ligneTrouvee.id);
 
-            } catch (err) {
-                console.error(err);
-                alert("❌ Erreur de réseau. Vérifiez la connexion.");
-                btn.disabled = false;
-                btn.innerText = "🔄 RÉESSAYER";
+                if (updateError) throw updateError;
+                
+            } else {
+                // CREATION : L'article n'existe pas encore dans cette couleur
+                if (item.type_mouvement === 'ENTREE') {
+                    const { error: insertError } = await clientSupabase
+                        .from('stock_depot')
+                        .insert([{
+                            article_id: item.article_id,
+                            couleur_ref: item.couleur,
+                            quantite: item.qte,
+                            seuil_alerte: item.seuil
+                        }]);
+
+                    if (insertError) throw insertError;
+                }
             }
+
+            // ==========================================
+            // ETAPE 2 : HISTORIQUE POUR L'ADMINISTRATEUR
+            // ==========================================
+            // Ce bloc ne s'exécute QUE si le stock a bien été mis à jour sans erreur au-dessus.
+            const { error: erreurHistorique } = await clientSupabase
+                .from('mouvements_stock')
+                .insert([{
+                    article_id: item.article_id,
+                    nom_article: item.nom_article,
+                    quantite: item.qte,
+                    couleur: item.couleur,
+                    type_mouvement: item.type_mouvement,
+                    destination: item.destination,
+                    utilisateur: "Magasinier"
+                }]);
+
+            if (erreurHistorique) throw erreurHistorique;
         }
 
+        // ==========================================
+        // ETAPE 3 : FINALISATION SI TOUT EST OK
+        // ==========================================
+        alert("✅ Le bordereau a été enregistré avec succès !");
+        bordereau = [];
+        localStorage.removeItem("nina_depot_bordereau");
+        afficherBordereau();
+        chargerDonneesDepot(); // On rafraîchit l'onglet 1 instantanément
+        btn.innerText = "💾 ENREGISTRER DANS LA BASE";
+
+    } catch (err) {
+        console.error(err);
+        // On affiche un message d'erreur plus clair
+        alert("❌ Erreur lors de l'enregistrement. L'opération s'est arrêtée.\nDétail : " + (err.message || "Problème réseau"));
+        btn.disabled = false;
+        btn.innerText = "🔄 RÉESSAYER";
+    }
+}
+    
         // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
         function construireAlertesCommande() {
             const conteneur = document.getElementById('liste-alertes');
