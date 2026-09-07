@@ -616,7 +616,8 @@ function nettoyerCouleur(texte) {
         // 7. VALIDATION ET ENVOI À SUPABASE (Ordre sécurisé)
 async function validerBordereau() {
     if (bordereau.length === 0) return;
-
+alert("🚨 MOUCHARD : Le nouveau code sécurisé est bien actif !");
+    
     const btn = document.getElementById("btn-valider");
     btn.disabled = true;
     btn.innerText = "⏳ Enregistrement en cours...";
