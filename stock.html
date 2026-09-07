@@ -445,24 +445,38 @@ async function supprimerStock(idLigne) {
   } catch (err) {
     alert('🚨 Erreur lors de la suppression : ' + err.message);
   }
+}        
+    
+// --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
+function filtrerStock() {
+    let recherche = document.getElementById("search-stock").value.toLowerCase();
+    let lignes = document.querySelectorAll(".ligne-recherche");
+
+    lignes.forEach(ligne => {
+        // 1. On identifie le tiroir parent de cette ligne
+        let conteneurCouleurs = ligne.closest(".contenu-couleurs");
+        
+        // 2. On récupère le nom de l'article (qui est écrit juste au-dessus du tiroir)
+        let titreArticle = conteneurCouleurs.previousElementSibling.innerText.toLowerCase();
+        
+        // 3. On récupère le texte de la ligne (la couleur)
+        let texteCouleur = ligne.innerText.toLowerCase();
+
+        // 4. Le cerveau de la recherche : on vérifie l'article OU la couleur
+        if (titreArticle.includes(recherche) || texteCouleur.includes(recherche)) {
+            ligne.style.display = ""; // On affiche la ligne
+            
+            // BONUS : Si on cherche activement un mot, on ouvre les tiroirs tout seuls !
+            if (recherche !== "") {
+                conteneurCouleurs.classList.remove("cache"); // Ouvre l'article
+                conteneurCouleurs.parentElement.classList.remove("cache"); // Ouvre la famille (ex: BOUTONS)
+            }
+        } else {
+            ligne.style.display = "none"; // On cache la ligne
+        }
+    });
 }
         
-        // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
-        function filtrerStock() {
-            let recherche = document.getElementById('search-stock').value.toLowerCase();
-            let lignes = document.querySelectorAll('.ligne-recherche'); 
-
-            lignes.forEach(ligne => {
-                let texte = ligne.innerText.toLowerCase();
-                ligne.style.display = texte.includes(recherche) ? '' : 'none';
-                
-                // Petit bonus : si on trouve une couleur en cherchant, on ouvre son tiroir automatiquement !
-                if (texte.includes(recherche) && recherche !== "") {
-                    ligne.closest('.contenu-couleurs').classList.remove('cache');
-                }
-            });
-        }
-
 // --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
 function remplirSelectArticles() {
     const selectDiv = document.getElementById('custom-list');
