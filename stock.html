@@ -447,35 +447,63 @@ async function supprimerStock(idLigne) {
   }
 }        
     
-// --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
+   // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
 function filtrerStock() {
     let recherche = document.getElementById("search-stock").value.toLowerCase();
-    let lignes = document.querySelectorAll(".ligne-recherche");
+    let categories = document.querySelectorAll(".titre-famille");
 
-    lignes.forEach(ligne => {
-        // 1. On identifie le tiroir parent de cette ligne
-        let conteneurCouleurs = ligne.closest(".contenu-couleurs");
-        
-        // 2. On récupère le nom de l'article (qui est écrit juste au-dessus du tiroir)
-        let titreArticle = conteneurCouleurs.previousElementSibling.innerText.toLowerCase();
-        
-        // 3. On récupère le texte de la ligne (la couleur)
-        let texteCouleur = ligne.innerText.toLowerCase();
+    categories.forEach(titreFamille => {
+        let conteneurFamille = titreFamille.nextElementSibling;
+        let articles = conteneurFamille.querySelectorAll(".titre-article");
+        let familleVisible = false;
 
-        // 4. Le cerveau de la recherche : on vérifie l'article OU la couleur
-        if (titreArticle.includes(recherche) || texteCouleur.includes(recherche)) {
-            ligne.style.display = ""; // On affiche la ligne
+        articles.forEach(titreArticle => {
+            let conteneurCouleurs = titreArticle.nextElementSibling;
+            let lignesCouleurs = conteneurCouleurs.querySelectorAll(".ligne-recherche");
             
-            // BONUS : Si on cherche activement un mot, on ouvre les tiroirs tout seuls !
+            let nomArticle = titreArticle.innerText.toLowerCase();
+            let articleVisible = false;
+
+            lignesCouleurs.forEach(ligne => {
+                let texteCouleur = ligne.innerText.toLowerCase();
+                // On garde la ligne si le nom de l'article OU la couleur correspond
+                if (nomArticle.includes(recherche) || texteCouleur.includes(recherche)) {
+                    ligne.style.display = ""; // Affiche la couleur
+                    articleVisible = true;
+                } else {
+                    ligne.style.display = "none"; // Cache la couleur
+                }
+            });
+
+            // Gestion de l'affichage du titre de l'article
+            if (articleVisible) {
+                titreArticle.style.display = ""; 
+                familleVisible = true;
+                if (recherche !== "") {
+                    conteneurCouleurs.classList.remove("cache"); // Ouvre automatiquement
+                } else {
+                    conteneurCouleurs.classList.add("cache"); // Referme si barre vide
+                }
+            } else {
+                titreArticle.style.display = "none"; // Disparaît totalement
+                conteneurCouleurs.classList.add("cache");
+            }
+        });
+
+        // Gestion de l'affichage de la grande catégorie (ex: FINITION ET DÉCOR)
+        if (familleVisible) {
+            titreFamille.style.display = ""; 
             if (recherche !== "") {
-                conteneurCouleurs.classList.remove("cache"); // Ouvre l'article
-                conteneurCouleurs.parentElement.classList.remove("cache"); // Ouvre la famille (ex: BOUTONS)
+                conteneurFamille.classList.remove("cache"); // Ouvre automatiquement
+            } else {
+                conteneurFamille.classList.add("cache"); // Referme si barre vide
             }
         } else {
-            ligne.style.display = "none"; // On cache la ligne
+            titreFamille.style.display = "none"; // Disparaît totalement de l'écran
+            conteneurFamille.classList.add("cache");
         }
     });
-}
+                }
         
 // --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
 function remplirSelectArticles() {
