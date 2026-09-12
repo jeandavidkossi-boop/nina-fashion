@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rayon & Conseil - Nina Fashion</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8;
+            --border: #e2e8f0; --text-dark: #2c3e50;
+            --success: #27ae60; --danger: #e74c3c; --warning: #f39c12;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        /* Optimisation Mobile */
+        body { background-color: var(--bg-gray); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; }
+        header h1 { font-size: 1.1rem; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 0.85rem; }
+
+        /* Navigation par onglets (Touch-friendly) */
+        .tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 15px 0; border: none; background: transparent; font-size: 0.95rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--gold); }
+
+        /* Conteneur principal */
+        .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Barre de recherche (Large pour les doigts) */
+        .search-box { margin-bottom: 15px; position: sticky; top: 0; z-index: 5; background: var(--bg-gray); padding-bottom: 10px; }
+        .search-input { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-input:focus { border-color: var(--gold); outline: none; }
+
+        /* Cartes des articles en rayon */
+        .rayon-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .rayon-card.alerte { border-left: 5px solid var(--danger); background: #fff5f5; }
+        .rayon-info { flex: 1; }
+        .art-nom { font-weight: bold; font-size: 1rem; color: var(--primary); margin-bottom: 4px; }
+        .art-couleur { font-size: 0.85rem; color: #7f8c8d; background: #eee; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+        .art-prix { font-weight: bold; color: var(--gold); font-size: 0.95rem; }
+        
+        .rayon-action { text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 70px; }
+        .stock-badge { font-size: 1.2rem; font-weight: 900; color: var(--success); }
+        .stock-badge.alerte { color: var(--danger); }
+        .btn-maj { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+
+        /* Fenêtre Modale (Pop-up de saisie) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; width: 100%; max-width: 350px; border-radius: 12px; padding: 20px; }
+        .modal-header { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-input { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1.2rem; text-align: center; margin-bottom: 15px; font-weight: bold; }
+        .modal-input:focus { border-color: var(--gold); outline: none; }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-cancel { flex: 1; padding: 12px; border: none; background: #e2e8f0; color: #7f8c8d; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-confirm { flex: 1; padding: 12px; border: none; background: var(--success); color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .btn-add-new { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Accueil</button>
+            <h1>Nina Fashion</h1>
+        </div>
+        <div class="badge-role" id="badge-serveuse">💁‍♀️ Serveuse</div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('consultation')">🔍 En Rayon</button>
+        <button class="tab-btn" onclick="switchTab('alertes')">🚨 Alertes Rupture</button>
+    </div>
+
+    <div class="main-content">
+        
+        <!-- ONGLET 1 : CONSULTATION ET INVENTAIRE -->
+        <div id="tab-consultation" class="tab-content active">
+            <button class="btn-add-new" onclick="ouvrirModalNouveau()">➕ Déclarer un article en rayon</button>
+            <div class="search-box">
+                <input type="text" id="search-input" class="search-input" placeholder="🔍 Chercher un article ou une couleur..." oninput="filtrerRayon()">
+            </div>
+            <div id="liste-rayon">
+                <div style="text-align: center; color: #7f8c8d; padding: 30px;">⏳ Chargement des étagères...</div>
+            </div>
+        </div>
+
+        <!-- ONGLET 2 : ALERTES -->
+        <div id="tab-alertes" class="tab-content">
+            <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 15px; text-align: center;">Ces articles sont presque épuisés dans les rayons de la boutique. Demandez au magasinier de vous ravitailler.</p>
+            <div id="liste-alertes">
+                <!-- Les alertes rouges apparaîtront ici -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL 1 : CORRECTION DE LA QUANTITÉ -->
+    <div class="modal" id="modal-correction">
+        <div class="modal-content">
+            <div class="modal-header" id="mc-title">Mettre à jour l'étagère</div>
+            <p style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 10px; text-align: center;">Combien d'unités comptez-vous physiquement devant vous ?</p>
+            <input type="number" id="mc-qte" class="modal-input" placeholder="0">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fermerModal('modal-correction')">Annuler</button>
+                <button class="btn-confirm" id="btn-valider-correction" onclick="validerCorrection()">✅ Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2 : DÉCLARER UN NOUVEL ARTICLE DANS LE RAYON -->
+    <div class="modal" id="modal-nouveau">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">➕ Ajouter au rayon</div>
+            <p style="font-size: 0.8rem; color: #7f8c8d; margin-bottom: 10px;">Si un article est devant vous mais n'apparaît pas dans la liste, déclarez-le ici.</p>
+            
+            <label style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">1. Choisissez l'article du catalogue :</label>
+            <select id="mn-article" class="modal-input" style="font-size: 1rem; padding: 10px; text-align: left;">
+                <option value="">Chargement du catalogue...</option>
+            </select>
+
+            <label style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">2. Couleur / Motif :</label>
+            <input type="text" id="mn-couleur" class="modal-input" style="font-size: 1rem; padding: 10px; text-align: left;" placeholder="Ex: Rouge, Blanc, ou Standard">
+
+            <label style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">3. Quantité en rayon :</label>
+            <input type="number" id="mn-qte" class="modal-input" placeholder="Ex: 5" style="padding: 10px;">
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fermerModal('modal-nouveau')">Annuler</button>
+                <button class="btn-confirm" id="btn-valider-nouveau" onclick="validerNouveau()">✅ Ajouter</button>
+            </div>
+        </div>
+    </div>
+        <script>
+        // --- 1. CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- 2. SÉCURITÉ : VÉRIFICATION DU RÔLE ---
+        const roleActuel = localStorage.getItem('roleUtilisateur') || '';
+
+        (function verifierSecurite() {
+            const sessionActive = localStorage.getItem('sessionActive');
+            const roleMinuscule = roleActuel.toLowerCase();
+
+            // Ce fichier est réservé aux serveuses (vendeuses de rayon) et à l'administrateur
+            if (!sessionActive || (roleMinuscule !== 'serveuse' && roleMinuscule !== 'administrateur' && roleMinuscule !== 'vendeur')) {
+                localStorage.clear();
+                window.location.replace('index.html');
+                return;
+            }
+
+            // Gestion de l'inactivité (30 min)
+            let tempsInactivite;
+            function reinitialiserMinuteur() {
+                clearTimeout(tempsInactivite);
+                tempsInactivite = setTimeout(() => { localStorage.clear(); window.location.replace('index.html'); }, 30 * 60 * 1000);
+            }
+            window.onload = reinitialiserMinuteur; document.ontouchstart = reinitialiserMinuteur;
+        })();
+
+        document.getElementById('badge-serveuse').innerText = "💁‍♀️ " + roleActuel;
+
+        // --- 3. MÉMOIRE DE LA PAGE ---
+        let RAYON_DATA = [];
+        let CATALOGUE = [];
+        let stockEnEdition = null; // Mémorise l'ID de la ligne qu'on modifie
+
+        // --- 4. NAVIGATION ONGLETS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.querySelector(`button[onclick="switchTab('${tabId}')"]`).classList.add('active');
+        }
+
+        // --- 5. CHARGEMENT DES DONNÉES (Jointure Catalogue + Rayon) ---
+        async function chargerDonnees() {
+            try {
+                // On charge le catalogue pour avoir les noms et prix
+                const { data: catData, error: catErr } = await clientSupabase.from('articles_v2').select('*');
+                if (catErr) throw catErr;
+                CATALOGUE = catData || [];
+
+                // On charge le contenu actuel des étagères
+                const { data: rayonData, error: rayErr } = await clientSupabase.from('stock_rayon').select('*').order('updated_at', { ascending: false });
+                if (rayErr) throw rayErr;
+
+                // On fusionne les deux (On ajoute le nom et le prix aux données du rayon)
+                RAYON_DATA = rayonData.map(ligne => {
+                    let infoCat = CATALOGUE.find(c => c.id == ligne.article_id) || {};
+                    return {
+                        ...ligne,
+                        nom_article: infoCat.nom_article || 'Article introuvable',
+                        prix_vente: infoCat.prix_vente || 0
+                    };
+                });
+
+                preparerSelectCatalogue();
+                afficherRayon();
+
+            } catch (err) {
+                document.getElementById('liste-rayon').innerHTML = `<div style="color:red; text-align:center;">Erreur réseau : ${err.message}</div>`;
+            }
+        }
+
+        // --- 6. AFFICHAGE DES ARTICLES ---
+        function afficherRayon() {
+            const conteneurRayon = document.getElementById('liste-rayon');
+            const conteneurAlertes = document.getElementById('liste-alertes');
+            const recherche = document.getElementById('search-input').value.toLowerCase();
+
+            conteneurRayon.innerHTML = '';
+            conteneurAlertes.innerHTML = '';
+
+            let articlesFiltres = RAYON_DATA.filter(art => 
+                art.nom_article.toLowerCase().includes(recherche) || 
+                (art.couleur_ref && art.couleur_ref.toLowerCase().includes(recherche))
+            );
+
+            if (articlesFiltres.length === 0) {
+                conteneurRayon.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 20px;">Aucun article trouvé dans les rayons.</div>';
+            }
+
+            let nbAlertes = 0;
+
+            articlesFiltres.forEach(art => {
+                let qte = parseFloat(art.quantite);
+                let seuil = parseFloat(art.seuil_alerte) || 3;
+                let enRupture = (qte <= seuil);
+
+                // Design de la carte
+                let carteHtml = `
+                    <div class="rayon-card ${enRupture ? 'alerte' : ''}">
+                        <div class="rayon-info">
+                            <div class="art-nom">${art.nom_article}</div>
+                            <div class="art-couleur">🎨 ${art.couleur_ref}</div><br>
+                            <span class="art-prix">${art.prix_vente} F</span>
+                        </div>
+                        <div class="rayon-action">
+                            <span class="stock-badge ${enRupture ? 'alerte' : ''}">${qte}</span>
+                            <button class="btn-maj" onclick="ouvrirModalCorrection('${art.id}', '${art.nom_article}', '${art.couleur_ref}', ${qte})">✍️ Éditer</button>
+                        </div>
+                    </div>
+                `;
+
+                // On affiche tout dans l'onglet Consultation
+                conteneurRayon.innerHTML += carteHtml;
+
+                // Si c're en rupture, on l'affiche AUSSI dans l'onglet Alertes
+                if (enRupture) {
+                    conteneurAlertes.innerHTML += carteHtml;
+                    nbAlertes++;
+                }
+            });
+
+            if (nbAlertes === 0) {
+                conteneurAlertes.innerHTML = '<div style="text-align: center; color: var(--success); font-weight: bold; padding: 20px;">✅ Aucun article en alerte.</div>';
+            }
+        }
+
+        function filtrerRayon() { afficherRayon(); }
+
+        // --- 7. GESTION DES MODALES (Pop-ups) ---
+        function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // A. Correction d'un article déjà dans la liste
+        function ouvrirModalCorrection(idStock, nom, couleur, qteActuelle) {
+            stockEnEdition = idStock;
+            document.getElementById('mc-title').innerHTML = `${nom} <br><small style="color:#7f8c8d;">Couleur: ${couleur}</small>`;
+            document.getElementById('mc-qte').value = qteActuelle;
+            document.getElementById('modal-correction').style.display = 'flex';
+        }
+
+        async function validerCorrection() {
+            let nouvelleQte = parseFloat(document.getElementById('mc-qte').value);
+            if (isNaN(nouvelleQte) || nouvelleQte < 0) return alert("Quantité invalide.");
+
+            const btn = document.getElementById('btn-valider-correction');
+            btn.innerText = "⏳..."; btn.disabled = true;
+
+            try {
+                const { error } = await clientSupabase.from('stock_rayon').update({ quantite: nouvelleQte, updated_at: new Date().toISOString() }).eq('id', stockEnEdition);
+                if (error) throw error;
+                
+                fermerModal('modal-correction');
+                chargerDonnees(); // Rafraîchit l'écran
+            } catch (err) {
+                alert("❌ Erreur lors de la mise à jour : " + err.message);
+            } finally {
+                btn.innerText = "✅ Valider"; btn.disabled = false;
+            }
+        }
+
+        // B. Déclaration d'un article qui n'était pas dans la liste
+        function preparerSelectCatalogue() {
+            const select = document.getElementById('mn-article');
+            select.innerHTML = '<option value="">-- Choisissez un article --</option>';
+            // On trie le catalogue de A à Z
+            let catTrie = [...CATALOGUE].sort((a, b) => a.nom_article.localeCompare(b.nom_article));
+            catTrie.forEach(art => {
+                select.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
+            });
+        }
+
+        function ouvrirModalNouveau() {
+            document.getElementById('mn-article').value = "";
+            document.getElementById('mn-couleur').value = "";
+            document.getElementById('mn-qte').value = "";
+            document.getElementById('modal-nouveau').style.display = 'flex';
+        }
+
+        async function validerNouveau() {
+            let idArticle = document.getElementById('mn-article').value;
+            let couleur = document.getElementById('mn-couleur').value.trim().toUpperCase() || 'STANDARD';
+            let qte = parseFloat(document.getElementById('mn-qte').value);
+
+            if (!idArticle || isNaN(qte) || qte < 0) return alert("⚠️ Remplissez correctement l'article et la quantité.");
+
+            const btn = document.getElementById('btn-valider-nouveau');
+            btn.innerText = "⏳..."; btn.disabled = true;
+
+            try {
+                // Insert ou Update si on essaie de créer un doublon par accident
+                const { error } = await clientSupabase.from('stock_rayon').upsert([{ 
+                    article_id: idArticle, 
+                    couleur_ref: couleur, 
+                    quantite: qte,
+                    updated_at: new Date().toISOString()
+                }], { onConflict: 'article_id, couleur_ref' });
+
+                if (error) throw error;
+
+                fermerModal('modal-nouveau');
+                chargerDonnees();
+            } catch (err) {
+                alert("❌ Erreur d'ajout : " + err.message);
+            } finally {
+                btn.innerText = "✅ Ajouter"; btn.disabled = false;
+            }
+        }
+
+        // DÉMARRAGE
+        chargerDonnees();
+    </script>
+</body>
+</html>
