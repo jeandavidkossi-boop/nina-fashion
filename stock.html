@@ -625,13 +625,13 @@
             afficherBordereau();
         }
 
-        // --- 7. FONCTION : VALIDER BORDEREAU (Contournement de la contrainte) ---
+        // --- 7. FONCTION : VALIDER BORDEREAU (Corrigée et sécurisée) ---
         async function validerBordereau() {
             if (bordereau.length === 0) return;
             
-            // ANTI-PLANTAGE : On vide de force la mémoire si le magasinier a un vieux ticket bloqué
-            if (bordereau[0].article_id && bordereau[0].article_id.length < 20) {
-                alert("⚠️ Un vieux ticket incompatible a été détecté en mémoire. Le bordereau a été vidé pour protéger la base de données. Veuillez resaisir vos articles.");
+            // ANTI-PLANTAGE BLINDÉ : Un vrai identifiant Supabase (UUID) fait EXACTEMENT 36 caractères.
+            if (bordereau[0].article_id && String(bordereau[0].article_id).length !== 36) {
+                alert("⚠️ Un vieux ticket corrompu a été détecté en mémoire. Le bordereau a été vidé pour protéger la base de données. Veuillez resaisir vos articles.");
                 bordereau = [];
                 localStorage.removeItem("nina_depot_bordereau");
                 afficherBordereau();
@@ -681,12 +681,11 @@
                         }
                     }
 
-                    // ETAPE 2 : HISTORIQUE (Le contournement magique)
+                    // ETAPE 2 : HISTORIQUE (Sans l'ancienne colonne bloquante)
                     const { error: erreurHistorique } = await clientSupabase
                         .from('mouvements_stock')
                         .insert([{
-                            // ON NE TOUCHE PLUS À id_article POUR NE PAS RÉVEILLER L'ANCIENNE CONTRAINTE !
-                            article_id: item.article_id, // On utilise uniquement votre colonne texte libre
+                            article_id: item.article_id,
                             nom_article: item.nom_article,
                             nom_article_archive: item.nom_article,
                             quantite: item.qte,
@@ -713,9 +712,9 @@
                 btn.disabled = false;
                 btn.innerText = "🔄 RÉESSAYER";
             }
-                        }
+        }
             
-                    // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
+                          // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
         function construireAlertesCommande() {
             const conteneur = document.getElementById('liste-alertes');
             const btnWhatsApp = document.getElementById('btn-whatsapp');
