@@ -128,23 +128,23 @@
                 </select>
             </div>
 
-<div class="form-group">
-    <label>Article du Catalogue :</label>
-    
-    <div style="position: relative;">
-        <!-- La vraie barre de saisie interactive -->
-        <input type="text" id="search-mvt-article" placeholder="🔍 Taper ou cliquer ici pour choisir..." onkeyup="filtrerCustomList()" onclick="afficherCustomList()" autocomplete="off" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; background-color: white;">
-        
-        <!-- La liste déroulante qui va apparaître juste en dessous -->
-        <div id="custom-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid var(--border); border-top: none; max-height: 250px; overflow-y: auto; z-index: 1000; border-radius: 0 0 4px 4px; box-shadow: 0px 5px 15px rgba(0,0,0,0.15);">
-        </div>
-    </div>
+            <div class="form-group">
+                <label>Article du Catalogue :</label>
+                
+                <div style="position: relative;">
+                    <!-- La vraie barre de saisie interactive -->
+                    <input type="text" id="search-mvt-article" placeholder="🔍 Taper ou cliquer ici pour choisir..." onkeyup="filtrerCustomList()" onclick="afficherCustomList()" autocomplete="off" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; background-color: white;">
+                    
+                    <!-- La liste déroulante qui va apparaître juste en dessous -->
+                    <div id="custom-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid var(--border); border-top: none; max-height: 250px; overflow-y: auto; z-index: 1000; border-radius: 0 0 4px 4px; box-shadow: 0px 5px 15px rgba(0,0,0,0.15);">
+                    </div>
+                </div>
 
-    <!-- L'ancien select qu'on cache pour que le reste de votre application continue de fonctionner -->
-    <select id="mvt-article" style="display: none;">
-        <option value="">-- Sélectionner un article --</option>
-    </select>
-</div>
+                <!-- L'ancien select qu'on cache pour que le reste de votre application continue de fonctionner -->
+                <select id="mvt-article" style="display: none;">
+                    <option value="">-- Sélectionner un article --</option>
+                </select>
+            </div>
             
             <div class="form-group">
                 <label>Couleur / Motif :</label>
@@ -195,9 +195,8 @@
             </button>
         </div>
     </div>
-
-    <script>
-                        // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
+        <script>
+        // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
         (function verifierSecurite() {
             // 1. Vérification du badge
             const sessionActive = localStorage.getItem('sessionActive');
@@ -240,8 +239,7 @@
             });
         })();
         
-        // LA PARTIE 2 VIENDRA SE COLLER JUSTE ICI EN DESSOUS !
-                // --- 1. CONFIGURATION SUPABASE ---
+        // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -266,19 +264,14 @@
         };
 
         function switchTab(tabId) {
-            // 1. On cache tous les écrans
             document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
-            // 2. On enlève la couleur or de tous les boutons
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-            // 3. On affiche le bon écran
             document.getElementById('tab-' + tabId).classList.add('active');
 
-            // 4. On met la couleur or sur l'onglet cliqué
             let btnActif = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
             if (btnActif) btnActif.classList.add('active');
 
-            // 5. Si on revient sur la vision globale, on rafraîchit le stock pour être sûr
             if (tabId === 'vision') chargerDonneesDepot();
         }
 
@@ -307,14 +300,14 @@
                 remplirSelectArticles();
                 construireAlertesCommande();
                 
-                } catch (err) {
-        alert("ERREUR : " + (err.message || JSON.stringify(err)));
-        document.getElementById('table-stock-body').innerHTML = `<td colspan="4" style="text-align: center; padding: 20px; color: #c62828;">❌ Erreur : ${err.message || err}</td>`;
+            } catch (err) {
+                alert("ERREUR : " + (err.message || JSON.stringify(err)));
+                document.getElementById('table-stock-body').innerHTML = `<td colspan="4" style="text-align: center; padding: 20px; color: #c62828;">❌ Erreur : ${err.message || err}</td>`;
             }            
         }
-            // --- 5. AFFICHAGE VISION GLOBALE (NOUVELLE VERSION TIROIRS) ---
+
+        // --- 5. AFFICHAGE VISION GLOBALE (TIROIRS) ---
         function afficherVisionGlobale() {
-            // On cible tout le conteneur pour écraser l'ancien tableau plat
             const conteneur = document.querySelector('.table-responsive'); 
             let html = '';
 
@@ -323,84 +316,73 @@
                 return;
             }
 
-            // 1. LE REGROUPEMENT INTELLIGENT (Catégorie -> Article -> Couleurs)
             let donneesGroupees = {};
 
             STOCK_DEPOT.forEach(ligne => {
                 let infoArticle = CATALOGUE.find(a => a.id == ligne.article_id) || {};
                 let nomArticle = infoArticle.nom_article || 'Article inconnu';
-                // On récupère la colonne "famille" que j'ai vue sur ta capture !
                 let famille = infoArticle.famille || 'SANS CATÉGORIE'; 
 
-                // On crée les tiroirs s'ils n'existent pas encore
                 if (!donneesGroupees[famille]) donneesGroupees[famille] = {};
                 if (!donneesGroupees[famille][nomArticle]) donneesGroupees[famille][nomArticle] = [];
 
-                // On range la ligne dans le bon tiroir
                 donneesGroupees[famille][nomArticle].push(ligne);
             });
 
-                 // 2. DESSIN DE L'INTERFACE VISUELLE (Système de Tiroirs Imbriqués)
-        for (let famille in donneesGroupees) {
-            // Un ID unique pour le tiroir de cette grande catégorie
-            let idFamille = 'cat_' + Math.random().toString(36).substr(2, 9);
-            
-            // 1er Niveau : Le bouton de la Catégorie
-            html += `<div class="titre-famille" onclick="document.getElementById('${idFamille}').classList.toggle('cache')">
-                        <span>📦 ${famille.toUpperCase()}</span>
-                        <span style="color: var(--gold); font-size: 0.8rem;">▼ OUVRIR</span>
-                     </div>`;
-            
-            // Le grand conteneur caché qui contient tous les articles de cette catégorie
-            html += `<div id="${idFamille}" class="cache" style="padding-left: 15px; border-left: 2px solid var(--border); margin-left: 10px; margin-bottom: 20px;">`;
+            for (let famille in donneesGroupees) {
+                let idFamille = 'cat_' + Math.random().toString(36).substr(2, 9);
+                
+                html += `<div class="titre-famille" onclick="document.getElementById('${idFamille}').classList.toggle('cache')">
+                            <span>📦 ${famille.toUpperCase()}</span>
+                            <span style="color: var(--gold); font-size: 0.8rem;">▼ OUVRIR</span>
+                         </div>`;
+                
+                html += `<div id="${idFamille}" class="cache" style="padding-left: 15px; border-left: 2px solid var(--border); margin-left: 10px; margin-bottom: 20px;">`;
 
-            for (let article in donneesGroupees[famille]) {
-                let idUnique = 'art_' + Math.random().toString(36).substr(2, 9);
-                
-                // 2ème Niveau : L'en-tête cliquable de l'article
-                html += `<div class="titre-article" onclick="document.getElementById('${idUnique}').classList.toggle('cache')">
-                            <span>${article}</span>
-                            <span style="color: #888; font-size: 0.8rem;">▼</span>
-                         </div>`;
-                
-                // 3ème Niveau : Liste des couleurs et stock (cachée par défaut)
-                html += `<div id="${idUnique}" class="contenu-couleurs cache">
-                            <table style="width: 100%; border-collapse: collapse;">`;
-                
-                donneesGroupees[famille][article].forEach(ligne => {
-                    let qte = parseFloat(ligne.quantite);
-                    let seuil = parseFloat(ligne.seuil_alerte) || 5;
-                    let couleurTexte = (qte <= seuil) ? 'var(--danger)' : 'var(--text-dark)';
-                    let nomCouleur = String(ligne.couleur_ref || 'Standard');
+                for (let article in donneesGroupees[famille]) {
+                    let idUnique = 'art_' + Math.random().toString(36).substr(2, 9);
                     
-                    html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
-                                <td style="padding: 8px; width: 50%;">🎨 <b>${nomCouleur}</b></td>
-                                <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
-                                <td style="padding: 8px; width: 25%; text-align: right;">
-    <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
-<button style="margin-left: 8px;" onclick="supprimerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}')">🗑️</button>
-</td>
-                             </tr>`;
-                });
+                    html += `<div class="titre-article" onclick="document.getElementById('${idUnique}').classList.toggle('cache')">
+                                <span>${article}</span>
+                                <span style="color: #888; font-size: 0.8rem;">▼</span>
+                             </div>`;
+                    
+                    html += `<div id="${idUnique}" class="contenu-couleurs cache">
+                                <table style="width: 100%; border-collapse: collapse;">`;
+                    
+                    donneesGroupees[famille][article].forEach(ligne => {
+                        let qte = parseFloat(ligne.quantite);
+                        let seuil = parseFloat(ligne.seuil_alerte) || 5;
+                        let couleurTexte = (qte <= seuil) ? 'var(--danger)' : 'var(--text-dark)';
+                        let nomCouleur = String(ligne.couleur_ref || 'Standard');
+                        
+                        html += `<tr style="border-bottom: 1px dashed #ccc;" class="ligne-recherche">
+                                    <td style="padding: 8px; width: 50%;">🎨 <b>${nomCouleur}</b></td>
+                                    <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
+                                    <td style="padding: 8px; width: 25%; text-align: right;">
+                                        <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
+                                        <button style="margin-left: 8px;" onclick="supprimerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}')">🗑️</button>
+                                    </td>
+                                 </tr>`;
+                    });
+                    
+                    html += `   </table>
+                             </div>`;
+                }
                 
-                html += `   </table>
-                         </div>`;
+                html += `</div>`;
             }
             
-            // On referme le grand conteneur de la catégorie
-            html += `</div>`;
-                        }
-            
-            conteneur.innerHTML = html; // On injecte le nouveau design !
+            conteneur.innerHTML = html; 
         }
 
         // --- NOUVEAUTÉ : LA FONCTION DE CORRECTION RAPIDE ---
         async function corrigerStock(idLigne, ancienneCouleur, ancienneQte) {
             let nouvelleCouleur = prompt(`CORRECTION\nNouveau nom pour la couleur "${ancienneCouleur}" :`, ancienneCouleur);
-            if (nouvelleCouleur === null) return; // Si le magasinier annule
+            if (nouvelleCouleur === null) return; 
             
             let nouvelleQte = prompt(`Nouvelle quantité (actuellement ${ancienneQte}) :`, ancienneQte);
-            if (nouvelleQte === null) return; // Si le magasinier annule
+            if (nouvelleQte === null) return; 
             nouvelleQte = parseFloat(nouvelleQte);
 
             if (isNaN(nouvelleQte) || nouvelleQte < 0) {
@@ -408,7 +390,6 @@
             }
 
             try {
-                // On met à jour directement l'id précis dans Supabase
                 const { error } = await clientSupabase
                     .from('stock_depot')
                     .update({ couleur_ref: nouvelleCouleur.trim(), quantite: nouvelleQte })
@@ -417,7 +398,7 @@
                 if (error) throw error;
                 
                 alert("✅ Ligne corrigée avec succès !");
-                chargerDonneesDepot(); // On rafraîchit l'écran pour voir la modification
+                chargerDonneesDepot(); 
                 
             } catch (err) {
                 alert("🚨 Erreur de correction : " + err.message);
@@ -425,152 +406,138 @@
         }
 
         // --- FONCTION DE SUPPRESSION ---
-async function supprimerStock(idLigne) {
-  // 1. Demande de confirmation
-  let confirmation = confirm("Voulez-vous vraiment supprimer cet article de la base de données ?");
-  if (!confirmation) return;
+        async function supprimerStock(idLigne) {
+            let confirmation = confirm("Voulez-vous vraiment supprimer cet article de la base de données ?");
+            if (!confirmation) return;
 
-      try {
-        // 2. Suppression dans la table Supabase
-        const { error } = await clientSupabase // ✅ CORRECTION
-            .from('stock_depot')
-            .delete()
-            .eq('id', idLigne);
-          
-    if (error) throw error;
+            try {
+                const { error } = await clientSupabase 
+                    .from('stock_depot')
+                    .delete()
+                    .eq('id', idLigne);
+                  
+                if (error) throw error;
 
-    alert('✅ Article supprimé avec succès !');
-    chargerDonneesDepot(); // Rafraîchit l'affichage du tableau
+                alert('✅ Article supprimé avec succès !');
+                chargerDonneesDepot(); 
 
-  } catch (err) {
-    alert('🚨 Erreur lors de la suppression : ' + err.message);
-  }
-}        
-    
-   // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
-function filtrerStock() {
-    let recherche = document.getElementById("search-stock").value.toLowerCase();
-    let categories = document.querySelectorAll(".titre-famille");
+            } catch (err) {
+                alert('🚨 Erreur lors de la suppression : ' + err.message);
+            }
+        }        
 
-    categories.forEach(titreFamille => {
-        let conteneurFamille = titreFamille.nextElementSibling;
-        let articles = conteneurFamille.querySelectorAll(".titre-article");
-        let familleVisible = false;
+                // --- MISE À JOUR DE LA BARRE DE RECHERCHE ---
+        function filtrerStock() {
+            let recherche = document.getElementById("search-stock").value.toLowerCase();
+            let categories = document.querySelectorAll(".titre-famille");
 
-        articles.forEach(titreArticle => {
-            let conteneurCouleurs = titreArticle.nextElementSibling;
-            let lignesCouleurs = conteneurCouleurs.querySelectorAll(".ligne-recherche");
-            
-            let nomArticle = titreArticle.innerText.toLowerCase();
-            let articleVisible = false;
+            categories.forEach(titreFamille => {
+                let conteneurFamille = titreFamille.nextElementSibling;
+                let articles = conteneurFamille.querySelectorAll(".titre-article");
+                let familleVisible = false;
 
-            lignesCouleurs.forEach(ligne => {
-                let texteCouleur = ligne.innerText.toLowerCase();
-                // On garde la ligne si le nom de l'article OU la couleur correspond
-                if (nomArticle.includes(recherche) || texteCouleur.includes(recherche)) {
-                    ligne.style.display = ""; // Affiche la couleur
-                    articleVisible = true;
+                articles.forEach(titreArticle => {
+                    let conteneurCouleurs = titreArticle.nextElementSibling;
+                    let lignesCouleurs = conteneurCouleurs.querySelectorAll(".ligne-recherche");
+                    
+                    let nomArticle = titreArticle.innerText.toLowerCase();
+                    let articleVisible = false;
+
+                    lignesCouleurs.forEach(ligne => {
+                        let texteCouleur = ligne.innerText.toLowerCase();
+                        if (nomArticle.includes(recherche) || texteCouleur.includes(recherche)) {
+                            ligne.style.display = ""; 
+                            articleVisible = true;
+                        } else {
+                            ligne.style.display = "none"; 
+                        }
+                    });
+
+                    if (articleVisible) {
+                        titreArticle.style.display = ""; 
+                        familleVisible = true;
+                        if (recherche !== "") {
+                            conteneurCouleurs.classList.remove("cache"); 
+                        } else {
+                            conteneurCouleurs.classList.add("cache"); 
+                        }
+                    } else {
+                        titreArticle.style.display = "none"; 
+                        conteneurCouleurs.classList.add("cache");
+                    }
+                });
+
+                if (familleVisible) {
+                    titreFamille.style.display = ""; 
+                    if (recherche !== "") {
+                        conteneurFamille.classList.remove("cache"); 
+                    } else {
+                        conteneurFamille.classList.add("cache"); 
+                    }
                 } else {
-                    ligne.style.display = "none"; // Cache la couleur
+                    titreFamille.style.display = "none"; 
+                    conteneurFamille.classList.add("cache");
                 }
             });
+        }
+        
+        // --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
+        function remplirSelectArticles() {
+            const selectDiv = document.getElementById('custom-list');
+            const hiddenSelect = document.getElementById('mvt-article');
+            
+            selectDiv.innerHTML = '';
+            hiddenSelect.innerHTML = '<option value="">-- Sélectionner un article --</option>';
+            
+            CATALOGUE.forEach(art => {
+                hiddenSelect.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
+                const nomEchappe = art.nom_article.replace(/'/g, "\\'"); 
+                selectDiv.innerHTML += `<div class="custom-option" style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 0.9rem;" onclick="choisirArticle('${art.id}', '${nomEchappe}')">${art.nom_article}</div>`;
+            });
+        }
 
-            // Gestion de l'affichage du titre de l'article
-            if (articleVisible) {
-                titreArticle.style.display = ""; 
-                familleVisible = true;
-                if (recherche !== "") {
-                    conteneurCouleurs.classList.remove("cache"); // Ouvre automatiquement
-                } else {
-                    conteneurCouleurs.classList.add("cache"); // Referme si barre vide
+        function afficherCustomList() {
+            document.getElementById('custom-list').style.display = 'block';
+        }
+
+        function filtrerCustomList() {
+            const recherche = document.getElementById('search-mvt-article').value.toLowerCase();
+            const options = document.querySelectorAll('.custom-option');
+            
+            options.forEach(opt => {
+                const texte = opt.innerText.toLowerCase();
+                opt.style.display = texte.includes(recherche) ? 'block' : 'none';
+            });
+        }
+
+        function choisirArticle(id, nom) {
+            document.getElementById('search-mvt-article').value = nom;
+            document.getElementById('mvt-article').value = id;
+            document.getElementById('custom-list').style.display = 'none';
+        }
+
+        document.addEventListener('click', function(event) {
+            const searchInput = document.getElementById('search-mvt-article');
+            const customList = document.getElementById('custom-list');
+            if (searchInput && customList) {
+                if (event.target !== searchInput && !customList.contains(event.target)) {
+                    customList.style.display = 'none';
                 }
-            } else {
-                titreArticle.style.display = "none"; // Disparaît totalement
-                conteneurCouleurs.classList.add("cache");
             }
         });
-
-        // Gestion de l'affichage de la grande catégorie (ex: FINITION ET DÉCOR)
-        if (familleVisible) {
-            titreFamille.style.display = ""; 
-            if (recherche !== "") {
-                conteneurFamille.classList.remove("cache"); // Ouvre automatiquement
-            } else {
-                conteneurFamille.classList.add("cache"); // Referme si barre vide
-            }
-        } else {
-            titreFamille.style.display = "none"; // Disparaît totalement de l'écran
-            conteneurFamille.classList.add("cache");
-        }
-    });
-                }
-        
-// --- 6. GESTION DES MOUVEMENTS ET DU BORDEREAU ---
-function remplirSelectArticles() {
-    const selectDiv = document.getElementById('custom-list');
-    const hiddenSelect = document.getElementById('mvt-article');
-    
-    selectDiv.innerHTML = '';
-    hiddenSelect.innerHTML = '<option value="">-- Sélectionner un article --</option>';
-    
-    CATALOGUE.forEach(art => {
-        // Remplissage du champ caché
-        hiddenSelect.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
-        
-        // Remplissage de la nouvelle liste cliquable
-        const nomEchappe = art.nom_article.replace(/'/g, "\\'"); 
-        selectDiv.innerHTML += `<div class="custom-option" style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 0.9rem;" onclick="choisirArticle('${art.id}', '${nomEchappe}')">${art.nom_article}</div>`;
-    });
-}
-
-// Les 3 fonctions qui gèrent l'apparition et le filtre de la nouvelle liste
-function afficherCustomList() {
-    document.getElementById('custom-list').style.display = 'block';
-}
-
-function filtrerCustomList() {
-    const recherche = document.getElementById('search-mvt-article').value.toLowerCase();
-    const options = document.querySelectorAll('.custom-option');
-    
-    options.forEach(opt => {
-        const texte = opt.innerText.toLowerCase();
-        opt.style.display = texte.includes(recherche) ? 'block' : 'none';
-    });
-}
-
-function choisirArticle(id, nom) {
-    document.getElementById('search-mvt-article').value = nom;
-    document.getElementById('mvt-article').value = id;
-    document.getElementById('custom-list').style.display = 'none';
-}
-
-// Sécurité : On ferme la liste si on clique ailleurs sur l'écran
-document.addEventListener('click', function(event) {
-    const searchInput = document.getElementById('search-mvt-article');
-    const customList = document.getElementById('custom-list');
-    if (searchInput && customList) {
-        if (event.target !== searchInput && !customList.contains(event.target)) {
-            customList.style.display = 'none';
-        }
-    }
-});
         
         function toggleDestination() {
             const type = document.getElementById('mvt-type').value;
             const destDiv = document.getElementById('group-destination');
-            // On affiche le choix de la destination UNIQUEMENT si c'est une sortie
             destDiv.style.display = (type === 'SORTIE') ? 'block' : 'none';
         }
 
-        // Fonction pour nettoyer et harmoniser le texte de la couleur
-function nettoyerCouleur(texte) {
-    if (!texte) return 'STANDARD';
-    return texte
-        .toUpperCase()              // Convertit en MAJUSCULES (ex: "rose 118" -> "ROSE 118")
-        .replace(/\s+/g, ' ')       // Remplace les espaces multiples par un seul espace
-        .trim();                    // Enlève les espaces au début et à la fin
-}
+        function nettoyerCouleur(texte) {
+            if (!texte) return 'STANDARD';
+            return texte.toUpperCase().replace(/\s+/g, ' ').trim();
+        }
         
+        // --- FONCTION : AJOUTER AU BORDEREAU (Sécurisée contre le stock négatif) ---
         function ajouterAuBordereau() {
             const typeMvt = document.getElementById('mvt-type').value;
             const destination = typeMvt === 'SORTIE' ? document.getElementById('mvt-destination').value : 'Dépôt Principal';
@@ -585,20 +552,25 @@ function nettoyerCouleur(texte) {
 
             if (isNaN(qte) || qte <= 0) return alert("⚠️ Veuillez saisir une quantité valide !");
 
-            // LE FAMEUX SEUIL HYBRIDE : On vérifie si la couleur existe déjà dans le stock
             let articleExistant = STOCK_DEPOT.find(s => s.article_id == idArticle && nettoyerCouleur(s.couleur_ref) === couleur);
+            let seuilChoisi = 5; 
             
-            let seuilChoisi = 5; // Valeur par défaut
             if (!articleExistant) {
                 if (typeMvt === 'SORTIE') {
-                    // Sécurité anti-erreur
                     return alert("❌ Impossible ! Vous essayez de faire sortir une couleur (" + couleur + ") qui n'existe pas en stock.");
                 } else {
-                    // C'est une ENTRÉE d'une nouvelle couleur, on fait bosser le magasinier !
-                    let rep = prompt(`✨ Nouvelle couleur détectée : ${couleur} !\n\nÀ partir de combien d'unités restantes l'application doit-elle vous alerter de la rupture pour cette couleur précise ?\n\n(Laissez le chiffre par défaut ou modifiez-le) :`, "5");
-                    if (rep === null) return; // Le magasinier a cliqué sur Annuler
+                    let rep = prompt(`✨ Nouvelle couleur détectée : ${couleur} !\nÀ partir de combien d'unités restantes voulez-vous être alerté ?`, "5");
+                    if (rep === null) return; 
                     seuilChoisi = parseFloat(rep) || 5;
                 }
+            } else {
+                if (typeMvt === 'SORTIE') {
+                    let qteDisponible = parseFloat(articleExistant.quantite) || 0;
+                    if (qte > qteDisponible) {
+                        return alert(`❌ Stock insuffisant ! Il ne reste que ${qteDisponible} unités pour la couleur "${couleur}".\nVous ne pouvez pas en faire sortir ${qte}.`);
+                    }
+                }
+                seuilChoisi = parseFloat(articleExistant.seuil_alerte) || 5;
             }
 
             bordereau.push({
@@ -613,7 +585,6 @@ function nettoyerCouleur(texte) {
 
             localStorage.setItem('nina_depot_bordereau', JSON.stringify(bordereau));
             
-            // Vider les champs pour aller plus vite au prochain article
             document.getElementById('mvt-couleur').value = '';
             document.getElementById('mvt-qte').value = '';
             
@@ -654,99 +625,97 @@ function nettoyerCouleur(texte) {
             afficherBordereau();
         }
 
-        // --- 7. VALIDATION ET ENVOI À SUPABASE (Le moteur mathématique sécurisé) ---
-        // 7. VALIDATION ET ENVOI À SUPABASE (Ordre sécurisé)
-async function validerBordereau() {
-    if (bordereau.length === 0) return;
-alert("🚨 MOUCHARD : Le nouveau code sécurisé est bien actif !");
-    
-    const btn = document.getElementById("btn-valider");
-    btn.disabled = true;
-    btn.innerText = "⏳ Enregistrement en cours...";
-
-    try {
-        for (let item of bordereau) {
+        // --- 7. FONCTION : VALIDER BORDEREAU (Alignée avec tes colonnes Supabase) ---
+        async function validerBordereau() {
+            if (bordereau.length === 0) return;
             
-            // ==========================================
-            // ETAPE 1 : MISE À JOUR DU STOCK PHYSIQUE D'ABORD
-            // ==========================================
-            const { data: existData, error: selectError } = await clientSupabase
-                .from('stock_depot')
-                .select('*')
-                .eq('article_id', item.article_id);
-
-            if (selectError) throw selectError;
-
-            // Sécurisation de la recherche de la ligne
-            let ligneTrouvee = (existData || []).find(d => nettoyerCouleur(d.couleur_ref) === item.couleur);
-
-            if (ligneTrouvee) {
-                // MISE A JOUR : L'article et la couleur existent déjà
-                let qteActuelle = parseFloat(ligneTrouvee.quantite) || 0; // Sécurité zéro intégrée
-                let nouvelleQte = item.type_mouvement === 'ENTREE' ? qteActuelle + item.qte : qteActuelle - item.qte;
-                
-                const { error: updateError } = await clientSupabase
-                    .from('stock_depot')
-                    .update({ quantite: nouvelleQte })
-                    .eq('id', ligneTrouvee.id);
-
-                if (updateError) throw updateError;
-                
-            } else {
-                // CREATION : L'article n'existe pas encore dans cette couleur
-                if (item.type_mouvement === 'ENTREE') {
-                    const { error: insertError } = await clientSupabase
-                        .from('stock_depot')
-                        .insert([{
-                            article_id: item.article_id,
-                            couleur_ref: item.couleur,
-                            quantite: item.qte,
-                            seuil_alerte: item.seuil
-                        }]);
-
-                    if (insertError) throw insertError;
-                }
+            // ANTI-PLANTAGE : On vide de force la mémoire si le magasinier a un vieux ticket bloqué
+            if (bordereau[0].article_id && bordereau[0].article_id.length < 20) {
+                alert("⚠️ Un vieux ticket incompatible a été détecté en mémoire. Le bordereau a été vidé pour protéger la base de données. Veuillez resaisir vos articles.");
+                bordereau = [];
+                localStorage.removeItem("nina_depot_bordereau");
+                afficherBordereau();
+                return;
             }
 
-            // ==========================================
-            // ETAPE 2 : HISTORIQUE POUR L'ADMINISTRATEUR
-            // ==========================================
-            // Ce bloc ne s'exécute QUE si le stock a bien été mis à jour sans erreur au-dessus.
-            const { error: erreurHistorique } = await clientSupabase
-                .from('mouvements_stock')
-                .insert([{
-                    article_id: item.article_id,
-                    nom_article: item.nom_article,
-                    quantite: item.qte,
-                    couleur: item.couleur,
-                    type_mouvement: item.type_mouvement,
-                    destination: item.destination,
-                    utilisateur: "Magasinier"
-                }]);
+            const btn = document.getElementById("btn-valider");
+            btn.disabled = true;
+            btn.innerText = "⏳ Enregistrement en cours...";
 
-            if (erreurHistorique) throw erreurHistorique;
-        }
+            try {
+                for (let item of bordereau) {
+                    
+                    // ETAPE 1 : MISE À JOUR DU STOCK PHYSIQUE
+                    const { data: existData, error: selectError } = await clientSupabase
+                        .from('stock_depot')
+                        .select('*')
+                        .eq('article_id', item.article_id);
 
-        // ==========================================
-        // ETAPE 3 : FINALISATION SI TOUT EST OK
-        // ==========================================
-        alert("✅ Le bordereau a été enregistré avec succès !");
-        bordereau = [];
-        localStorage.removeItem("nina_depot_bordereau");
-        afficherBordereau();
-        chargerDonneesDepot(); // On rafraîchit l'onglet 1 instantanément
-        btn.innerText = "💾 ENREGISTRER DANS LA BASE";
+                    if (selectError) throw selectError;
 
-    } catch (err) {
-        console.error(err);
-        // On affiche un message d'erreur plus clair
-        alert("❌ Erreur lors de l'enregistrement. L'opération s'est arrêtée.\nDétail : " + (err.message || "Problème réseau"));
-        btn.disabled = false;
-        btn.innerText = "🔄 RÉESSAYER";
-    }
-}
-    
-        // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
+                    let ligneTrouvee = (existData || []).find(d => nettoyerCouleur(d.couleur_ref) === item.couleur);
+
+                    if (ligneTrouvee) {
+                        let qteActuelle = parseFloat(ligneTrouvee.quantite) || 0; 
+                        let nouvelleQte = item.type_mouvement === 'ENTREE' ? qteActuelle + item.qte : qteActuelle - item.qte;
+                        
+                        const { error: updateError } = await clientSupabase
+                            .from('stock_depot')
+                            .update({ quantite: nouvelleQte })
+                            .eq('id', ligneTrouvee.id);
+
+                        if (updateError) throw updateError;
+                        
+                    } else {
+                        if (item.type_mouvement === 'ENTREE') {
+                            const { error: insertError } = await clientSupabase
+                                .from('stock_depot')
+                                .insert([{
+                                    article_id: item.article_id,
+                                    couleur_ref: item.couleur,
+                                    quantite: item.qte,
+                                    seuil_alerte: item.seuil
+                                }]);
+
+                            if (insertError) throw insertError;
+                        }
+                    }
+
+                    // ETAPE 2 : HISTORIQUE (On remplit toutes tes colonnes)
+                    const { error: erreurHistorique } = await clientSupabase
+                        .from('mouvements_stock')
+                        .insert([{
+                            id_article: item.article_id,
+                            article_id: item.article_id,
+                            nom_article: item.nom_article,
+                            nom_article_archive: item.nom_article,
+                            quantite: item.qte,
+                            quantite_totale: item.qte,
+                            couleur: item.couleur,
+                            type_mouvement: item.type_mouvement,
+                            destination: item.destination,
+                            utilisateur: "Magasinier"
+                        }]);
+
+                    if (erreurHistorique) throw erreurHistorique;
+                }
+
+                alert("✅ Le bordereau a été enregistré avec succès !");
+                bordereau = [];
+                localStorage.removeItem("nina_depot_bordereau");
+                afficherBordereau();
+                chargerDonneesDepot(); 
+                btn.innerText = "💾 ENREGISTRER DANS LA BASE";
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ Erreur lors de l'enregistrement.\nDétail : " + (err.message || "Problème réseau"));
+                btn.disabled = false;
+                btn.innerText = "🔄 RÉESSAYER";
+            }
+            }
+
+                    // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
         function construireAlertesCommande() {
             const conteneur = document.getElementById('liste-alertes');
             const btnWhatsApp = document.getElementById('btn-whatsapp');
@@ -798,7 +767,7 @@ alert("🚨 MOUCHARD : Le nouveau code sécurisé est bien actif !");
 
             texte += "_Message envoyé depuis l'application logistique du dépôt._";
 
-            // L'URL universelle de WhatsApp (Le magasinier choisira lui-même à qui l'envoyer)
+            // L'URL universelle de WhatsApp
             const url = "https://wa.me/?text=" + encodeURIComponent(texte);
             window.open(url, '_blank');
         }
