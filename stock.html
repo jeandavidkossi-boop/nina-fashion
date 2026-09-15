@@ -625,7 +625,7 @@
             afficherBordereau();
         }
 
-        // --- 7. FONCTION : VALIDER BORDEREAU (Alignée avec tes colonnes Supabase) ---
+        // --- 7. FONCTION : VALIDER BORDEREAU (Contournement de la contrainte) ---
         async function validerBordereau() {
             if (bordereau.length === 0) return;
             
@@ -681,12 +681,12 @@
                         }
                     }
 
-                    // ETAPE 2 : HISTORIQUE (On remplit toutes tes colonnes)
+                    // ETAPE 2 : HISTORIQUE (Le contournement magique)
                     const { error: erreurHistorique } = await clientSupabase
                         .from('mouvements_stock')
                         .insert([{
-                            id_article: item.article_id,
-                            article_id: item.article_id,
+                            // ON NE TOUCHE PLUS À id_article POUR NE PAS RÉVEILLER L'ANCIENNE CONTRAINTE !
+                            article_id: item.article_id, // On utilise uniquement votre colonne texte libre
                             nom_article: item.nom_article,
                             nom_article_archive: item.nom_article,
                             quantite: item.qte,
@@ -713,8 +713,8 @@
                 btn.disabled = false;
                 btn.innerText = "🔄 RÉESSAYER";
             }
-            }
-
+                        }
+            
                     // --- 8. ALERTES ET GÉNÉRATEUR WHATSAPP ---
         function construireAlertesCommande() {
             const conteneur = document.getElementById('liste-alertes');
