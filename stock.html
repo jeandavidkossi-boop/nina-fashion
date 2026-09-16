@@ -626,21 +626,19 @@
         }
 
         // --- 7. FONCTION : VALIDER BORDEREAU (Corrigée et sécurisée) ---
-        async function validerBordereau() {
-            if (bordereau.length === 0) return;
-            
-            // ANTI-PLANTAGE BLINDÉ : Un vrai identifiant Supabase (UUID) fait EXACTEMENT 36 caractères.
-            if (bordereau[0].article_id && String(bordereau[0].article_id).length !== 36) {
-                alert("⚠️ Un vieux ticket corrompu a été détecté en mémoire. Le bordereau a été vidé pour protéger la base de données. Veuillez resaisir vos articles.");
-                bordereau = [];
-                localStorage.removeItem("nina_depot_bordereau");
-                afficherBordereau();
-                return;
-            }
+async function validerBordereau() {
+    if (bordereau.length === 0) return;
+    
+    // NOUVELLE VÉRIFICATION SIMPLE : On s'assure juste que l'ID n'est pas vide
+    if (!bordereau[0].article_id || bordereau[0].article_id === "") {
+        alert("⚠️ Erreur : L'article sélectionné est invalide. Veuillez vider le bordereau et réessayer.");
+        return;
+    }
 
-            const btn = document.getElementById("btn-valider");
-            btn.disabled = true;
-            btn.innerText = "⏳ Enregistrement en cours...";
+    const btn = document.getElementById("btn-valider");
+    btn.disabled = true;
+    btn.innerText = "⏳ Enregistrement en cours...";
+    
 
             try {
                 for (let item of bordereau) {
