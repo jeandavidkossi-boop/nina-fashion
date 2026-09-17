@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-guard.js"></script>
+    <script src="layout.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Styles spécifiques à rayon.html */
@@ -47,16 +48,6 @@
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="header-left">
-            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Accueil</button>
-            <h1>Nina Fashion</h1>
-        </div>
-        <div class="header-right">
-            <div class="badge-role" id="badge-serveuse">💁‍♀️ Serveuse</div>
-        </div>
-    </header>
 
     <div class="tabs-container">
         <div class="tabs">
@@ -128,7 +119,8 @@
         // --- 2. SÉCURITÉ : VÉRIFICATION DU RÔLE ---
         const roleActuel = verifierHabilitation(['serveuse', 'administrateur', 'vendeur']);
 
-        document.getElementById('badge-serveuse').innerText = "💁‍♀️ " + (roleActuel || '');
+        const badgeServeuse = document.getElementById('badge-serveuse');
+        if (badgeServeuse) badgeServeuse.innerText = "💁‍♀️ " + (roleActuel || '');
 
         // --- 3. MÉMOIRE DE LA PAGE ---
         let RAYON_DATA = [];

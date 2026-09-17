@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-guard.js"></script>
+    <script src="layout.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Styles spécifiques à machiniste.html */
@@ -73,16 +74,6 @@
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="header-left">
-            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
-            <h1>Nina Fashion</h1>
-        </div>
-        <div class="header-right">
-            <div class="badge-role" id="badge-machiniste">👨‍🔧 Machiniste...</div>
-        </div>
-    </header>
 
     <div class="main-layout">
         
@@ -184,7 +175,8 @@
         const roleActuel = verifierHabilitation(['machiniste', 'administrateur']);
             
 // On affiche le rôle validé en haut de l'écran :
-document.getElementById('badge-machiniste').innerText = "🧵 " + (roleActuel || '');
+const badgeMachiniste = document.getElementById('badge-machiniste');
+if (badgeMachiniste) badgeMachiniste.innerText = "🧵 " + (roleActuel || '');
 
 // CRUCIAL : On crée la variable pour éviter l'erreur réseau lors de la validation
 let nomMachiniste = roleActuel;

@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-guard.js"></script>
+    <script src="layout.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Styles spécifiques à vendeur.html */
@@ -75,16 +76,6 @@
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="header-left">
-            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
-            <h1>Nina Fashion</h1>
-        </div>
-        <div class="header-right">
-            <div class="badge-role" id="badge-vendeur">🕵️ Vendeur Inconnu</div>
-        </div>
-    </header>
 
     <div class="main-layout">
         <!-- ZONE CATALOGUE -->
@@ -193,7 +184,8 @@
             
 // On récupère le nom de l'employé depuis la base de données (si on veut l'afficher plus tard)
 // Pour l'instant, on affiche le rôle validé :
-document.getElementById('badge-vendeur').innerText = "👤 " + (roleActuel || '');
+const badgeVendeur = document.getElementById('badge-vendeur');
+if (badgeVendeur) badgeVendeur.innerText = "👤 " + (roleActuel || '');
  let nomVendeur = roleActuel;
             
         // --- 3. LE PANIER INCREVABLE (Mémoire locale) ---

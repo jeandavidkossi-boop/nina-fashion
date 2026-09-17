@@ -49,9 +49,22 @@ header h1 {
     letter-spacing: 1px;
 }
 
-.header-left, .header-right {
+.header-left, .header-center, .header-right {
     display: flex;
     align-items: center;
+    flex: 1;
+}
+
+.header-left {
+    justify-content: flex-start;
+}
+
+.header-center {
+    justify-content: center;
+}
+
+.header-right {
+    justify-content: flex-end;
     gap: 10px;
 }
 

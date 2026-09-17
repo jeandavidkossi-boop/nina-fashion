@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-guard.js"></script>
+    <script src="layout.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Styles spécifiques à caisse.html */
@@ -68,17 +69,6 @@
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="header-left">
-            <button class="btn-action-top" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Accueil</button>
-            <h1>Nina Fashion - Caisse</h1>
-        </div>
-        <div class="header-right">
-            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem;" onclick="ouvrirRemboursementSec()">💸 Rembourser un Reliquat</button>
-            <div class="badge-role" id="badge-caissiere">Caissière...</div>
-        </div>
-    </header>
 
     <div class="main-layout">
         <div class="queue-panel">
@@ -160,8 +150,9 @@
         // --- 2. SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
         const roleActuel = verifierHabilitation(['caissière', 'administrateur', 'vendeur']);
 
-// On affiche le rôle validé sur le badge en haut de l'écran
-document.getElementById('badge-caissiere').innerText = "👩‍💻 " + (roleActuel || '');
+// On affiche le rôle validé sur le badge en haut de l'écran (si le badge existe)
+const badgeEl = document.getElementById('badge-caissiere');
+if (badgeEl) badgeEl.innerText = "👩‍💻 " + (roleActuel || '');
 
 // On garde le rôle pour l'enregistrer dans les commandes validées
 let nomCaissiere = roleActuel; 

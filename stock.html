@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-guard.js"></script>
+    <script src="layout.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
         /* Styles spécifiques à stock.html */
@@ -23,17 +24,6 @@
     </style>
 </head>
 <body>
-
-    <!-- EN-TÊTE -->
-    <header>
-        <div class="header-left">
-            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
-            <h1>Nina Fashion</h1>
-        </div>
-        <div class="header-right">
-            <div class="badge-role" id="badge-magasinier">Logistique</div>
-        </div>
-    </header>
 
     <!-- ONGLETS -->
     <div class="tabs-container">
