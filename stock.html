@@ -6,76 +6,33 @@
     <title>Gestion du Dépôt - Mercerie Générale Nina Fashion</title>
     <!-- Chargement de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-      <style>
-        /* DESIGN INSTITUTIONNEL - LOGISTIQUE */
-        :root {
-            --primary: #111418;
-            --gold: #b38728;
-            --bg-light: #f8f9fa;
-            --border: #e5e7eb;
-            --text-dark: #333;
-            --danger: #c0392b;
-            --success: #27ae60;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-        body { background-color: var(--bg-light); color: var(--primary); min-height: 100vh; }
-
-        header {
-            background: white; border-bottom: 1px solid var(--border); padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        header h1 { font-family: 'Georgia', serif; font-size: 1.2rem; margin: 0; letter-spacing: 1px; }
-        .btn-retour { background: transparent; border: none; font-size: 0.75rem; color: #888; cursor: pointer; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        #badge-magasinier { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); font-weight: bold; }
-
-        .tabs-container { background: white; border-bottom: 1px solid var(--border); padding: 0 20px; }
-        .tabs { display: flex; gap: 25px; overflow-x: auto; scrollbar-width: none; }
-        .tabs::-webkit-scrollbar { display: none; }
-        .tab-btn { background: transparent; border: none; padding: 15px 0; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: 0.3s; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--gold); }
-
-        .container { padding: 20px; display: none; max-width: 800px; margin: 0 auto; width: 100%; animation: fadeIn 0.3s ease-in-out; }
-        .container.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .form-card { background: white; border-radius: 4px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
-        .form-card h2, .form-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .form-group label { font-size: 0.75rem; font-weight: bold; color: #888; text-transform: uppercase; }
+    <script src="supabase-config.js"></script>
+    <script src="auth-guard.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Styles spécifiques à stock.html */
+        .container { display: none; }
+        .container.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; background: #fafafa; outline: none; }
-        input:focus, select:focus { border-color: var(--gold); background: white; }
-
-        .btn-block { width: 100%; padding: 14px; border: none; border-radius: 4px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; }
-        .btn-gold { background: var(--primary); color: white; }
-        .btn-gold:active { background: #000; }
-        .btn-success { background: var(--gold); color: white; margin-top: 10px; }
-        .btn-danger { background: var(--danger); color: white; width: auto; padding: 8px 15px; font-size: 0.7rem; border-radius: 4px; }
-        .btn-block:disabled { background: #e0e0e0; cursor: not-allowed; color: #888; }
-
-        .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
-        td { padding: 12px; border-bottom: 1px solid var(--bg-light); font-size: 0.85rem; color: var(--primary); }
-
         .alerte-card { background: white; border: 1px solid var(--border); border-left: 3px solid var(--danger); padding: 15px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
         
         .cache { display: none !important; }
-        .titre-famille { color: var(--primary); padding: 15px 0 5px 0; border-bottom: 2px solid var(--primary); margin-top: 25px; font-family: 'Georgia', serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
+        .titre-famille { color: var(--primary); padding: 15px 0 5px 0; border-bottom: 2px solid var(--primary); margin-top: 25px; font-family: 'Georgia', serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; cursor: pointer;}
         .titre-article { background: white; color: var(--primary); padding: 14px; margin-top: 8px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem; }
-        .contenu-couleurs { background: white; border: 1px solid var(--border); border-top: none; padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 15px; }            
-      </style>
+        .contenu-couleurs { background: white; border: 1px solid var(--border); border-top: none; padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
 
     <!-- EN-TÊTE -->
     <header>
-       <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">◄ Quitter</button>
-        <h1>Nina Fashion</h1>
-        <div id="badge-magasinier">Logistique</div>
+        <div class="header-left">
+            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
+            <h1>Nina Fashion</h1>
+        </div>
+        <div class="header-right">
+            <div class="badge-role" id="badge-magasinier">Logistique</div>
+        </div>
     </header>
 
     <!-- ONGLETS -->
@@ -89,7 +46,7 @@
     
     <!-- ONGLET 1 : VISION GLOBALE -->
     <div id="tab-vision" class="container active">
-        <input type="text" id="search-stock" placeholder="🔍 Rechercher un article ou une couleur..." onkeyup="filtrerStock()">
+        <input type="text" id="search-stock" class="form-control" placeholder="🔍 Rechercher un article ou une couleur..." onkeyup="filtrerStock()" style="margin-bottom: 15px;">
         <div class="table-responsive">
             <table>
                 <thead>
@@ -110,11 +67,11 @@
     <!-- ONGLET 2 : MOUVEMENTS (Séparés Entrée / Sortie) -->
     <div id="tab-mouvement" class="container">
         <div class="form-card">
-            <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Enregistrer un mouvement</h2>
+            <h2>Enregistrer un mouvement</h2>
             
             <div class="form-group">
                 <label>1. Type de mouvement :</label>
-                <select id="mvt-type" onchange="toggleDestination()" style="background-color: #f8f9fa; font-weight: bold;">
+                <select id="mvt-type" class="form-control" onchange="toggleDestination()" style="background-color: #f8f9fa; font-weight: bold;">
                     <option value="ENTREE">📥 ENTRÉE (Arrivage Fournisseur)</option>
                     <option value="SORTIE">📤 SORTIE (Diminution du stock)</option>
                 </select>
@@ -122,7 +79,7 @@
 
             <div class="form-group" id="group-destination" style="display: none; background: #fffcf5; padding: 10px; border-radius: 6px; border: 1px solid var(--gold);">
                 <label style="color: var(--danger);">2. Destination de la marchandise :</label>
-                <select id="mvt-destination">
+                <select id="mvt-destination" class="form-control">
                     <option value="Rayon Boutique">🛍️ Transfert vers Rayons Boutique</option>
                     <option value="Atelier Interne">✂️ Consommation par les Machinistes</option>
                 </select>
@@ -133,7 +90,7 @@
                 
                 <div style="position: relative;">
                     <!-- La vraie barre de saisie interactive -->
-                    <input type="text" id="search-mvt-article" placeholder="🔍 Taper ou cliquer ici pour choisir..." onkeyup="filtrerCustomList()" onclick="afficherCustomList()" autocomplete="off" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; background-color: white;">
+                    <input type="text" id="search-mvt-article" class="form-control" placeholder="🔍 Taper ou cliquer ici pour choisir..." onkeyup="filtrerCustomList()" onclick="afficherCustomList()" autocomplete="off">
                     
                     <!-- La liste déroulante qui va apparaître juste en dessous -->
                     <div id="custom-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid var(--border); border-top: none; max-height: 250px; overflow-y: auto; z-index: 1000; border-radius: 0 0 4px 4px; box-shadow: 0px 5px 15px rgba(0,0,0,0.15);">
@@ -148,19 +105,19 @@
             
             <div class="form-group">
                 <label>Couleur / Motif :</label>
-                <input type="text" id="mvt-couleur" placeholder="Ex: Blanc, Bleu Nuit, Doré...">
+                <input type="text" id="mvt-couleur" class="form-control" placeholder="Ex: Blanc, Bleu Nuit, Doré...">
             </div>
 
             <div class="form-group">
                 <label>Quantité :</label>
-                <input type="number" id="mvt-qte" placeholder="Ex: 10" min="0">
+                <input type="number" id="mvt-qte" class="form-control" placeholder="Ex: 10" min="0">
             </div>
 
-            <button class="btn-block btn-gold" onclick="ajouterAuBordereau()">➕ AJOUTER AU BORDEREAU</button>
+            <button class="btn btn-primary btn-block" onclick="ajouterAuBordereau()">➕ AJOUTER AU BORDEREAU</button>
         </div>
 
         <div class="form-card">
-            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--primary);">📋 Bordereau en cours</h3>
+            <h3>📋 Bordereau en cours</h3>
             <div class="table-responsive" style="margin-bottom: 15px;">
                 <table>
                     <thead>
@@ -176,73 +133,28 @@
                     </tbody>
                 </table>
             </div>
-            <button id="btn-valider" class="btn-block btn-success" onclick="validerBordereau()" disabled>💾 ENREGISTRER DANS LA BASE</button>
+            <button id="btn-valider" class="btn btn-success btn-block" onclick="validerBordereau()" disabled>💾 ENREGISTRER DANS LA BASE</button>
         </div>
     </div>
 
     <!-- ONGLET 3 : ALERTES ET COMMANDES -->
     <div id="tab-commande" class="container">
         <div class="form-card">
-            <h2 style="color: var(--danger); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.1rem;">🚨 Articles en Rupture ou Alerte</h2>
+            <h2 style="color: var(--danger);">🚨 Articles en Rupture ou Alerte</h2>
             
             <div id="liste-alertes" style="margin-top: 15px; margin-bottom: 20px;">
                 <!-- Les alertes se mettront ici automatiquement -->
             </div>
 
             <!-- Le bouton magique pour envoyer sur WhatsApp peu importe le numéro -->
-            <button id="btn-whatsapp" class="btn-block btn-success" onclick="envoyerWhatsApp()" style="display: none; background-color: #25D366; gap: 10px;">
+            <button id="btn-whatsapp" class="btn btn-success btn-block" onclick="envoyerWhatsApp()" style="display: none; background-color: #25D366; gap: 10px; justify-content: center; align-items: center;">
                 💬 TRANSMETTRE LA LISTE VIA WHATSAPP
             </button>
         </div>
     </div>
         <script>
         // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
-        (function verifierSecurite() {
-            // 1. Vérification du badge
-            const sessionActive = localStorage.getItem('sessionActive');
-            const role = localStorage.getItem('roleUtilisateur') || ''; 
-            const roleMinuscule = role.toLowerCase();
-
-            // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
-            if (!sessionActive || (roleMinuscule !== 'magasinier' && roleMinuscule !== 'administrateur')) {
-                localStorage.clear(); 
-                window.location.replace('index.html');
-                return; 
-            }
-
-            // 2. Le radar d'inactivité (30 minutes)
-            let tempsInactivite;
-            const TEMPS_LIMITE = 30 * 60 * 1000; 
-
-            function deconnexionAutomatique() {
-                localStorage.clear();
-                window.location.replace('index.html');
-            }
-
-            function reinitialiserMinuteur() {
-                clearTimeout(tempsInactivite);
-                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
-            }
-
-            window.onload = reinitialiserMinuteur;
-            document.onmousemove = reinitialiserMinuteur;
-            document.onkeypress = reinitialiserMinuteur;
-            document.ontouchstart = reinitialiserMinuteur; 
-
-            // 3. LE DÉTECTEUR ANTI-RETOUR (Contre le cache du téléphone)
-            window.addEventListener('pageshow', function(event) {
-                // Si la page ressort de l'historique (event.persisted) ou si la session a disparu
-                if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
-                    window.location.replace('index.html');
-                }
-            });
-        })();
-        
-        // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        verifierHabilitation(['magasinier', 'administrateur']);
         
         // --- 2. VARIABLES GLOBALES (La mémoire du navigateur) ---
         let CATALOGUE = [];
@@ -360,8 +272,8 @@
                                     <td style="padding: 8px; width: 50%;">🎨 <b>${nomCouleur}</b></td>
                                     <td style="padding: 8px; width: 25%; color: ${couleurTexte}; font-weight: bold;">Qte: ${qte}</td>
                                     <td style="padding: 8px; width: 25%; text-align: right;">
-                                        <button onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
-                                        <button style="margin-left: 8px;" onclick="supprimerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}')">🗑️</button>
+                                        <button class="btn btn-info" style="padding: 4px 8px;" onclick="corrigerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}', ${qte})">✏️</button>
+                                        <button class="btn btn-danger" style="margin-left: 8px; padding: 4px 8px;" onclick="supprimerStock('${ligne.id}', '${nomCouleur.replace(/'/g, "\\'")}')">🗑️</button>
                                     </td>
                                  </tr>`;
                     });
@@ -613,7 +525,7 @@
                     <td style="color: ${couleurLigne}; font-weight: bold; font-size: 12px;">${icone} ${item.type_mouvement}</td>
                     <td><strong style="font-size: 13px;">${item.nom_article}</strong><br><span style="font-size:11px; color:#7f8c8d;">${item.couleur}</span></td>
                     <td style="font-weight: bold;">${item.qte}</td>
-                    <td><button class="btn-block btn-danger" style="margin-top:0;" onclick="supprimerDuBordereau(${index})">❌</button></td>
+                    <td><button class="btn btn-danger" style="padding: 6px 12px;" onclick="supprimerDuBordereau(${index})">❌</button></td>
                 `;
                 tbody.appendChild(tr);
             });

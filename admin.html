@@ -6,29 +6,13 @@
     <title>L'Œil de Moscou - Nina Fashion</title>
     <!-- Les librairies indispensables -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-guard.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8;
-            --border: #e2e8f0; --text-dark: #2c3e50;
-            --success: #27ae60; --danger: #e74c3c; --info: #2980b9;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-gray); color: var(--text-dark); padding-bottom: 50px; font-size: 16px; }
-
-        header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 1.4rem; color: var(--gold); font-family: 'Georgia', serif; }
-        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
-
-        .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; }
-        .tab-btn { padding: 15px 20px; border: none; background: none; font-size: 1rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 4px solid transparent; }
-        .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--gold); background: #fffcf5; }
-
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .tab-content { display: none; flex-direction: column; gap: 20px; }
-        .tab-content.active { display: flex; }
-
+        /* Styles spécifiques à admin.html */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .stat-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .stat-card.gold { border-left-color: var(--gold); }
@@ -37,31 +21,14 @@
         .stat-title { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
         .stat-value { font-size: 1.6rem; font-weight: 900; color: var(--text-dark); }
 
-        .data-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .data-section h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-
-        .table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #f8f9fa; padding: 12px; font-size: 0.9rem; color: #7f8c8d; text-align: left; border-bottom: 2px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95rem; vertical-align: middle; }
-
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-block; }
         .badge-cash { background: var(--success); }
         .badge-momo { background: var(--info); }
         .badge-reliquat { background: var(--gold); }
 
-        .btn { border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-align: center; text-decoration: none; display: inline-block; }
-        .btn-primary { background: var(--primary); }
-        .btn-gold { background: var(--gold); }
-        .btn-danger { background: var(--danger); }
         .btn-action { padding: 6px 12px; font-size: 0.85rem; }
 
         .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px; }
         @media (min-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group label { font-size: 0.95rem; font-weight: bold; color: var(--primary); }
-        .form-control { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 1rem; }
-        .form-control:focus { border-color: var(--gold); outline: none; }
         
         .chart-container { position: relative; height: 320px; width: 100%; margin-top: 10px; }
         
@@ -73,17 +40,23 @@
 <body>
 
     <header>
-        <h1>L'Œil de Moscou</h1>
-            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">Déconnexion</button>
+        <div class="header-left">
+            <h1>L'Œil de Moscou</h1>
+        </div>
+        <div class="header-right">
+            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Déconnexion</button>
+        </div>
     </header>
 
     <!-- NAVIGATION PRINCIPALE -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('caisse')">💰 Caisse (Aujourd'hui)</button>
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('caisse')">💰 Caisse (Aujourd'hui)</button>
         <button class="tab-btn" onclick="switchTab('compta')">📈 Comptabilité & Bilan</button>
         <button class="tab-btn" onclick="switchTab('catalogue')">📦 Fiches Articles</button>
-        <button class="tab-btn" onclick="switchTab('audit')">👁️ Audit Dépôt</button>
-        <button class="tab-btn" onclick="switchTab('securite')">🛡️ Équipe</button>
+            <button class="tab-btn" onclick="switchTab('audit')">👁️ Audit Dépôt</button>
+            <button class="tab-btn" onclick="switchTab('securite')">🛡️ Équipe</button>
+        </div>
     </div>
 
     <div class="container">
@@ -396,53 +369,9 @@
     <!-- ========================================== -->
     <script>
 
-                // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (ADMIN) ---
-        (function verifierSecurite() {
-            const sessionActive = localStorage.getItem('sessionActive');
-            const roleActuel = localStorage.getItem('roleUtilisateur') || '';
-            const roleMinuscule = roleActuel.toLowerCase();
-
-            // L'Œil de Moscou est strictement réservé à l'administrateur.
-            if (!sessionActive || roleMinuscule !== 'administrateur') {
-                localStorage.clear();
-                window.location.replace('index.html');
-                return;
-            }
-
-            // Le radar d'inactivité (30 minutes)
-            let tempsInactivite;
-            const TEMPS_LIMITE = 30 * 60 * 1000; 
-
-            function deconnexionAutomatique() {
-                localStorage.clear();
-                window.location.replace('index.html');
-            }
-
-            function reinitialiserMinuteur() {
-                clearTimeout(tempsInactivite);
-                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
-            }
-
-            // On surveille les mouvements
-            window.onload = reinitialiserMinuteur;
-            document.onmousemove = reinitialiserMinuteur;
-            document.onkeypress = reinitialiserMinuteur;
-            document.ontouchstart = reinitialiserMinuteur; 
-
-            // LE DÉTECTEUR ANTI-RETOUR
-            window.addEventListener('pageshow', function(event) {
-                if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
-                    window.location.replace('index.html');
-                }
-            });
-        })();
+        // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (ADMIN) ---
+        verifierHabilitation(['administrateur']);
         
-        // --- 1. CONFIGURATION SUPABASE (La vraie clé de la Caisse) ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         // --- 2. GESTION DE LA NAVIGATION ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
