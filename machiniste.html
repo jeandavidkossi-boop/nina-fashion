@@ -5,21 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atelier Machiniste - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-guard.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root { 
-            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8; 
-            --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; --warning: #e67e22; --danger: #e74c3c;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); font-size: 16px; }
-
-        /* EN-TÊTE */
-        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        header h1 { font-size: 1.1rem; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
-
-        /* STRUCTURE PRINCIPALE */
+        /* Styles spécifiques à machiniste.html */
         .main-layout { display: flex; flex-direction: column; flex: 1; }
         @media (min-width: 768px) { .main-layout { flex-direction: row; height: calc(100vh - 50px); overflow: hidden; } }
 
@@ -28,8 +18,8 @@
         @media (min-width: 768px) { .catalog-panel { border-bottom: none; border-right: 3px solid var(--primary); } }
         
         .category-tabs { display: flex; padding: 10px; background: #fafafa; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; gap: 10px; }
-        .tab-btn { padding: 8px 15px; border: 1px solid var(--border); background: white; border-radius: 20px; cursor: pointer; font-weight: bold; color: #7f8c8d; font-size: 0.9rem; }
-        .tab-btn.active { color: white; background: var(--gold); border-color: var(--gold); }
+        .category-tabs .tab-btn { padding: 8px 15px; border: 1px solid var(--border); background: white; border-radius: 20px; cursor: pointer; font-weight: bold; color: #7f8c8d; font-size: 0.9rem; text-transform: none; letter-spacing: normal;}
+        .category-tabs .tab-btn.active { color: white; background: var(--gold); border-color: var(--gold); }
 
         .services-grid { padding: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; overflow-y: auto; flex: 1; align-content: start; }
         .service-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.03); text-align: center; }
@@ -51,10 +41,8 @@
         .btn-delete { color: var(--danger); background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
 
         .ticket-form { padding: 15px; background: #f8f9fa; border-top: 2px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-        .input-group { display: flex; align-items: center; justify-content: space-between; }
-        .input-group label { font-size: 0.9rem; font-weight: bold; color: var(--primary); }
-        .custom-input { padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 1rem; width: 60%; font-weight: bold; text-align: right; }
-        .custom-input:focus { border-color: var(--gold); outline: none; }
+        .input-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+        .input-group label { font-size: 0.9rem; font-weight: bold; color: var(--primary); text-transform: none; }
 
         .totals-row { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; color: var(--primary); padding: 5px 0; }
         .total-rest { color: var(--danger); font-size: 1.3rem; }
@@ -87,11 +75,13 @@
 <body>
 
     <header>
-        <div style="display: flex; align-items: center; gap: 10px;">
-        <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
+        <div class="header-left">
+            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
             <h1>Nina Fashion</h1>
         </div>
-        <div class="badge-role" id="badge-machiniste">👨‍🔧 Machiniste...</div>
+        <div class="header-right">
+            <div class="badge-role" id="badge-machiniste">👨‍🔧 Machiniste...</div>
+        </div>
     </header>
 
     <div class="main-layout">
@@ -108,7 +98,7 @@
         <div class="ticket-panel">
             <div class="ticket-header">
                 <span style="color:var(--gold); font-weight:bold;"><span id="ticket-count">0</span> prestation(s)</span>
-                <button class="btn-carnet" onclick="ouvrirCarnet()">📋 Carnet d'Atelier</button>
+                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="ouvrirCarnet()">📋 Carnet d'Atelier</button>
             </div>
             
             <div class="ticket-items" id="ticket-items">
@@ -190,56 +180,11 @@
         </div>
     </div>
         <script>
-        // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
          // --- 2. SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (MACHINISTE) ---
-        const roleActuel = localStorage.getItem('roleUtilisateur') || '';
-
-        (function verifierSecurite() {
-            const sessionActive = localStorage.getItem('sessionActive');
-            const roleMinuscule = roleActuel.toLowerCase();
-
-            // Autorisé uniquement pour les Machinistes et l'Administrateur
-            if (!sessionActive || (roleMinuscule !== 'machiniste' && roleMinuscule !== 'administrateur')) {
-                localStorage.clear();
-                window.location.replace('index.html');
-                return;
-            }
-
-            // Le radar d'inactivité (30 minutes)
-            let tempsInactivite;
-            const TEMPS_LIMITE = 30 * 60 * 1000; 
-
-            function deconnexionAutomatique() {
-                localStorage.clear();
-                window.location.replace('index.html');
-            }
-
-            function reinitialiserMinuteur() {
-                clearTimeout(tempsInactivite);
-                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
-            }
-
-            // On surveille les mouvements de l'écran ou de la souris
-            window.onload = reinitialiserMinuteur;
-            document.onmousemove = reinitialiserMinuteur;
-            document.onkeypress = reinitialiserMinuteur;
-            document.ontouchstart = reinitialiserMinuteur; 
-
-            // LE DÉTECTEUR ANTI-RETOUR (Contre le bouton précédent et le cache)
-            window.addEventListener('pageshow', function(event) {
-                if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
-                    window.location.replace('index.html');
-                }
-            });
-        })();
+        const roleActuel = verifierHabilitation(['machiniste', 'administrateur']);
             
 // On affiche le rôle validé en haut de l'écran :
-document.getElementById('badge-machiniste').innerText = "🧵 " + roleActuel;
+document.getElementById('badge-machiniste').innerText = "🧵 " + (roleActuel || '');
 
 // CRUCIAL : On crée la variable pour éviter l'erreur réseau lors de la validation
 let nomMachiniste = roleActuel;

@@ -5,32 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rayon & Conseil - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-guard.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8;
-            --border: #e2e8f0; --text-dark: #2c3e50;
-            --success: #27ae60; --danger: #e74c3c; --warning: #f39c12;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        /* Styles spécifiques à rayon.html */
+        body { overflow: hidden; } /* Optimisation Mobile */
         
-        /* Optimisation Mobile */
-        body { background-color: var(--bg-gray); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-        header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; }
-        header h1 { font-size: 1.1rem; color: var(--gold); font-family: 'Georgia', serif; }
-        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; }
-        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 0.85rem; }
-
-        /* Navigation par onglets (Touch-friendly) */
-        .tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 15px 0; border: none; background: transparent; font-size: 0.95rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--gold); }
+        .tabs { border-bottom: 1px solid var(--border); }
+        .tabs .tab-btn { flex: 1; }
 
         /* Conteneur principal */
         .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Barre de recherche (Large pour les doigts) */
         .search-box { margin-bottom: 15px; position: sticky; top: 0; z-index: 5; background: var(--bg-gray); padding-bottom: 10px; }
@@ -48,14 +34,11 @@
         .rayon-action { text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 70px; }
         .stock-badge { font-size: 1.2rem; font-weight: 900; color: var(--success); }
         .stock-badge.alerte { color: var(--danger); }
-        .btn-maj { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
 
         /* Fenêtre Modale (Pop-up de saisie) */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 15px; }
         .modal-content { background: white; width: 100%; max-width: 350px; border-radius: 12px; padding: 20px; }
         .modal-header { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .modal-input { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1.2rem; text-align: center; margin-bottom: 15px; font-weight: bold; }
-        .modal-input:focus { border-color: var(--gold); outline: none; }
         .modal-actions { display: flex; gap: 10px; }
         .btn-cancel { flex: 1; padding: 12px; border: none; background: #e2e8f0; color: #7f8c8d; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-confirm { flex: 1; padding: 12px; border: none; background: var(--success); color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -66,16 +49,20 @@
 <body>
 
     <header>
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="header-left">
             <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Accueil</button>
             <h1>Nina Fashion</h1>
         </div>
-        <div class="badge-role" id="badge-serveuse">💁‍♀️ Serveuse</div>
+        <div class="header-right">
+            <div class="badge-role" id="badge-serveuse">💁‍♀️ Serveuse</div>
+        </div>
     </header>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('consultation')">🔍 En Rayon</button>
-        <button class="tab-btn" onclick="switchTab('alertes')">🚨 Alertes Rupture</button>
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('consultation')">🔍 En Rayon</button>
+            <button class="tab-btn" onclick="switchTab('alertes')">🚨 Alertes Rupture</button>
+        </div>
     </div>
 
     <div class="main-content">
@@ -138,35 +125,10 @@
         </div>
     </div>
         <script>
-        // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         // --- 2. SÉCURITÉ : VÉRIFICATION DU RÔLE ---
-        const roleActuel = localStorage.getItem('roleUtilisateur') || '';
+        const roleActuel = verifierHabilitation(['serveuse', 'administrateur', 'vendeur']);
 
-        (function verifierSecurite() {
-            const sessionActive = localStorage.getItem('sessionActive');
-            const roleMinuscule = roleActuel.toLowerCase();
-
-            // Ce fichier est réservé aux serveuses (vendeuses de rayon) et à l'administrateur
-            if (!sessionActive || (roleMinuscule !== 'serveuse' && roleMinuscule !== 'administrateur' && roleMinuscule !== 'vendeur')) {
-                localStorage.clear();
-                window.location.replace('index.html');
-                return;
-            }
-
-            // Gestion de l'inactivité (30 min)
-            let tempsInactivite;
-            function reinitialiserMinuteur() {
-                clearTimeout(tempsInactivite);
-                tempsInactivite = setTimeout(() => { localStorage.clear(); window.location.replace('index.html'); }, 30 * 60 * 1000);
-            }
-            window.onload = reinitialiserMinuteur; document.ontouchstart = reinitialiserMinuteur;
-        })();
-
-        document.getElementById('badge-serveuse').innerText = "💁‍♀️ " + roleActuel;
+        document.getElementById('badge-serveuse').innerText = "💁‍♀️ " + (roleActuel || '');
 
         // --- 3. MÉMOIRE DE LA PAGE ---
         let RAYON_DATA = [];
@@ -246,7 +208,7 @@
                         </div>
                         <div class="rayon-action">
                             <span class="stock-badge ${enRupture ? 'alerte' : ''}">${qte}</span>
-                            <button class="btn-maj" onclick="ouvrirModalCorrection('${art.id}', '${art.nom_article}', '${art.couleur_ref}', ${qte})">✍️ Éditer</button>
+                            <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="ouvrirModalCorrection('${art.id}', '${art.nom_article}', '${art.couleur_ref}', ${qte})">✍️ Éditer</button>
                         </div>
                     </div>
                 `;
