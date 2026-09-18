@@ -72,7 +72,7 @@
 </head>
 <body>
 
-    <header>
+       <header>
         <h1>L'Œil de Moscou</h1>
             <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">Déconnexion</button>
     </header>
@@ -162,7 +162,7 @@
                     </div>
         </div>
 
-        <!-- ========================================== -->
+                <!-- ========================================== -->
         <!-- 2. ONGLET COMPTABILITÉ & BILAN (Le Cerveau) -->
         <!-- ========================================== -->
         <div id="tab-compta" class="tab-content">
@@ -391,7 +391,7 @@
 
     </div> <!-- FIN DU CONTAINER PRINCIPAL -->
 
-    <!-- ========================================== -->
+        <!-- ========================================== -->
     <!-- DÉBUT DU MOTEUR JAVASCRIPT                 -->
     <!-- ========================================== -->
     <script>
@@ -656,8 +656,8 @@ document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
         } catch(err) { alert("❌ Erreur lors de la clôture."); }
     }
         }
-        
-        // ==========================================
+
+                // ==========================================
         // --- 4. LE CERVEAU : RENTABILITÉ & BILAN ---
         // ==========================================
         let chartInstance = null;
@@ -1014,7 +1014,7 @@ async function ajouterArticleManuel() {
         complete: function(results) {
             articlesPourImport = results.data;
             const btn = document.getElementById('btn-import');
-            btn.style.display = 'inline-block';
+                    btn.style.display = 'inline-block';
             btn.innerText = `🚀 Injecter ${articlesPourImport.length} articles`;
         }
     });
