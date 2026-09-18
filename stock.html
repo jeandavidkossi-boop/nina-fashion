@@ -7,76 +7,52 @@
     <!-- Chargement de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-      <style>
-        /* DESIGN INSTITUTIONNEL - LOGISTIQUE */
-        :root {
-            --primary: #111418;
-            --gold: #b38728;
-            --bg-light: #f8f9fa;
-            --border: #e5e7eb;
-            --text-dark: #333;
-            --danger: #c0392b;
-            --success: #27ae60;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-        body { background-color: var(--bg-light); color: var(--primary); min-height: 100vh; }
-
-        header {
-            background: white; border-bottom: 1px solid var(--border); padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        header h1 { font-family: 'Georgia', serif; font-size: 1.2rem; margin: 0; letter-spacing: 1px; }
-        .btn-retour { background: transparent; border: none; font-size: 0.75rem; color: #888; cursor: pointer; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-        #badge-magasinier { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); font-weight: bold; }
-
-        .tabs-container { background: white; border-bottom: 1px solid var(--border); padding: 0 20px; }
-        .tabs { display: flex; gap: 25px; overflow-x: auto; scrollbar-width: none; }
-        .tabs::-webkit-scrollbar { display: none; }
-        .tab-btn { background: transparent; border: none; padding: 15px 0; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: 0.3s; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--gold); }
-
-        .container { padding: 20px; display: none; max-width: 800px; margin: 0 auto; width: 100%; animation: fadeIn 0.3s ease-in-out; }
-        .container.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .form-card { background: white; border-radius: 4px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
-        .form-card h2, .form-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .form-group label { font-size: 0.75rem; font-weight: bold; color: #888; text-transform: uppercase; }
-        
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; background: #fafafa; outline: none; }
-        input:focus, select:focus { border-color: var(--gold); background: white; }
-
-        .btn-block { width: 100%; padding: 14px; border: none; border-radius: 4px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; }
-        .btn-gold { background: var(--primary); color: white; }
-        .btn-gold:active { background: #000; }
-        .btn-success { background: var(--gold); color: white; margin-top: 10px; }
-        .btn-danger { background: var(--danger); color: white; width: auto; padding: 8px 15px; font-size: 0.7rem; border-radius: 4px; }
-        .btn-block:disabled { background: #e0e0e0; cursor: not-allowed; color: #888; }
-
-        .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); color: #888; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
-        td { padding: 12px; border-bottom: 1px solid var(--bg-light); font-size: 0.85rem; color: var(--primary); }
-
-        .alerte-card { background: white; border: 1px solid var(--border); border-left: 3px solid var(--danger); padding: 15px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        
-        .cache { display: none !important; }
-        .titre-famille { color: var(--primary); padding: 15px 0 5px 0; border-bottom: 2px solid var(--primary); margin-top: 25px; font-family: 'Georgia', serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
-        .titre-article { background: white; color: var(--primary); padding: 14px; margin-top: 8px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem; }
-        .contenu-couleurs { background: white; border: 1px solid var(--border); border-top: none; padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 15px; }            
-      </style>
+    <link rel="stylesheet" href="styles.css">
+    <script src="supabase-config.js"></script>
+    <script src="auth-guard.js"></script>
+    <script src="layout.js"></script>
+<style>
+.tabs-container { background: white; border-bottom: 1px solid var(--border); padding: 0 20px; }
+.tabs { display: flex; gap: 25px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { background: transparent; border: none; padding: 15px 0; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: 0.3s; }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--gold); }
+.container { padding: 20px; display: none; max-width: 800px; margin: 0 auto; width: 100%; animation: fadeIn 0.3s ease-in-out; }
+.container.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: bold; color: #555; margin-bottom: 5px; text-transform: uppercase; }
+.form-control { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; background: #fff; transition: 0.2s; }
+.form-control:focus { border-color: var(--gold); outline: none; }
+.btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+.btn:active { transform: scale(0.98); }
+.btn-danger { background: var(--danger); }
+.search-box { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; margin-bottom: 20px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.stat-card { background: white; padding: 15px; border-radius: 6px; border: 1px solid var(--border); border-left: 4px solid var(--primary); text-align: center; }
+.stat-value { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+.stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+th { background: #f8f9fa; color: #888; text-transform: uppercase; }
+td strong { color: var(--primary); }
+.qty-good { color: var(--success); font-weight: bold; }
+.qty-low { color: var(--danger); font-weight: bold; }
+.qty-zero { color: #888; font-weight: bold; }
+.cache { display: none !important; }
+.titre-famille { color: var(--primary); padding: 15px 0 5px 0; border-bottom: 2px solid var(--primary); margin-top: 25px; font-family: Georgia, serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
+.titre-article { background: white; color: var(--primary); padding: 14px; margin-top: 8px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem; }
+.contenu-couleurs { background: white; border: 1px solid var(--border); border-top: none; padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 15px; }
+</style>
 </head>
 <body>
 
     <!-- EN-TÊTE -->
-    <header>
-       <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">◄ Quitter</button>
-        <h1>Nina Fashion</h1>
-        <div id="badge-magasinier">Logistique</div>
-    </header>
+    <!-- ACTION BAR POUR BOUTONS SPECIFIQUES -->
+    <div id="action-bar-container" class="action-bar">
+        <div class="badge-role" id="badge-magasinier">Logistique</div>
+    </div>
 
     <!-- ONGLETS -->
     <div class="tabs-container">
@@ -197,52 +173,10 @@
     </div>
         <script>
         // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
-        (function verifierSecurite() {
-            // 1. Vérification du badge
-            const sessionActive = localStorage.getItem('sessionActive');
-            const role = localStorage.getItem('roleUtilisateur') || ''; 
-            const roleMinuscule = role.toLowerCase();
-
-            // Si le ticket est invalide ou que le rôle n'est pas le bon, on expulse.
-            if (!sessionActive || (roleMinuscule !== 'magasinier' && roleMinuscule !== 'administrateur')) {
-                localStorage.clear(); 
-                window.location.replace('index.html');
-                return; 
-            }
-
-            // 2. Le radar d'inactivité (30 minutes)
-            let tempsInactivite;
-            const TEMPS_LIMITE = 30 * 60 * 1000; 
-
-            function deconnexionAutomatique() {
-                localStorage.clear();
-                window.location.replace('index.html');
-            }
-
-            function reinitialiserMinuteur() {
-                clearTimeout(tempsInactivite);
-                tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
-            }
-
-            window.onload = reinitialiserMinuteur;
-            document.onmousemove = reinitialiserMinuteur;
-            document.onkeypress = reinitialiserMinuteur;
-            document.ontouchstart = reinitialiserMinuteur; 
-
-            // 3. LE DÉTECTEUR ANTI-RETOUR (Contre le cache du téléphone)
-            window.addEventListener('pageshow', function(event) {
-                // Si la page ressort de l'historique (event.persisted) ou si la session a disparu
-                if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
-                    window.location.replace('index.html');
-                }
-            });
-        })();
+        // --- SECURITE ET CONFIGURATION ---
+        verifierHabilitation(["magasinier", "administrateur"]);
         
         // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         // --- 2. VARIABLES GLOBALES (La mémoire du navigateur) ---
         let CATALOGUE = [];

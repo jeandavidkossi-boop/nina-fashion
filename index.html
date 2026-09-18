@@ -5,111 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portail Sécurisé - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* DESIGN INSTITUTIONNEL ET LUXE */
-        :root {
-            --primary: #111418;
-            --gold: #b38728;
-            --bg-light: #f8f9fa;
-        }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-        body {
-            background-color: var(--bg-light);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-card {
-            background: white;
-            padding: 50px 40px;
-            border-radius: 4px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.06);
-            text-align: center;
-            width: 90%;
-            max-width: 380px;
-            border-top: 3px solid var(--gold);
-        }
-
-        .logo-officiel {
-            width: 140px;
-            height: auto;
-            border-radius: 4px;
-            box-shadow: 0 10px 25px rgba(179, 135, 40, 0.2);
-            margin-bottom: 25px;
-        }
-
-        .titre-institution {
-            font-family: 'Georgia', serif;
-            color: var(--primary);
-            font-size: 1.3rem;
-            margin-bottom: 5px;
-            letter-spacing: 0.5px;
-        }
-
-        .sous-titre {
-            font-size: 0.7rem;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 35px;
-        }
-
-        .input-group {
-            margin-bottom: 30px;
-        }
-
-        /* Champ de saisie minimaliste façon Banque */
-        .code-input {
-            width: 70%;
-            padding: 10px 5px;
-            border: none;
-            border-bottom: 2px solid #e0e0e0;
-            font-size: 1.6rem;
-            text-align: center;
-            letter-spacing: 12px;
-            color: var(--primary);
-            background: transparent;
-            outline: none;
-            transition: all 0.3s;
-            border-radius: 0;
-        }
-
-        .code-input:focus {
-            border-bottom: 2px solid var(--gold);
-        }
-
-        /* Bouton statutaire */
-        .btn-submit {
-            width: 100%;
-            padding: 15px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .btn-submit:active {
-            background: #000;
-        }
-
-        #message-erreur {
-            color: #c0392b;
-            font-size: 0.8rem;
-            margin-top: 20px;
-            display: none;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <script src="supabase-config.js"></script>
 </head>
 <body>
 
@@ -129,9 +26,6 @@
 
     <script>
         // --- 1. CONFIGURATION SUPABASE ---
-        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
-        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- 2. LE MOTEUR DE REDIRECTION INTELLIGENT ---
         async function verifierCodeAcces() {
