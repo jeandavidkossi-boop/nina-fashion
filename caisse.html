@@ -90,7 +90,7 @@
         </div>
     </header>
 
-    <div class="main-layout">
+        <div class="main-layout">
         <div class="queue-panel">
             <div class="panel-header">
                 <span>🛒 Tickets en attente</span>
@@ -228,7 +228,7 @@ let nomCaissiere = roleActuel;
         let reliquatValideMontant = 0;
         let reliquatValideId = null;
 
-        // --- 3. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
+                // --- 3. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
         async function chargerCommandes() {
             const { data, error } = await clientSupabase.from('commandes')
                 .select('*')
