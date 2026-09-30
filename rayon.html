@@ -5,64 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rayon & Conseil - Nina Fashion</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="styles.css">
-    <script src="supabase-config.js"></script>
-    <script src="auth-guard.js"></script>
-    <script src="layout.js"></script>
-<style>
-.main-layout { display: flex; flex-direction: column; height: calc(100vh - 60px); }
-.tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; }
-.tab-btn { padding: 15px 20px; border: none; background: none; font-size: 1rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 4px solid transparent; }
-.tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--gold); background: #fffcf5; }
-.tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
-.tab-content.active { display: block; }
-.search-bar { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; gap: 10px; }
-.search-bar input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
-.search-bar select { padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: white; font-size: 1rem; }
-.grid-articles { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
-.article-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-.article-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-.article-title { font-size: 1.1rem; font-weight: bold; color: var(--primary); line-height: 1.3; }
-.article-ref { font-size: 0.8rem; color: #7f8c8d; font-family: monospace; }
-.stock-info { display: flex; justify-content: space-between; align-items: center; background: var(--bg-gray); padding: 10px; border-radius: 6px; margin-bottom: 15px; }
-.stock-qty { font-size: 1.2rem; font-weight: 900; }
-.stock-qty.good { color: var(--success); }
-.stock-qty.low { color: var(--warning); }
-.stock-qty.empty { color: var(--danger); }
-.price { font-weight: 900; color: var(--gold); font-size: 1.1rem; }
-.btn-action-small { background: var(--primary); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; display: block; width: 100%; }
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: flex-end; z-index: 1000; }
-.modal-overlay.active { display: flex; }
-@media (min-width: 768px) { .modal-overlay { align-items: center; } }
-.modal-content { background: white; width: 100%; max-width: 500px; padding: 20px; border-radius: 20px 20px 0 0; animation: slideUp 0.3s ease-out; }
-@media (min-width: 768px) { .modal-content { border-radius: 12px; animation: none; } }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-.modal-input { width: 100%; padding: 15px; font-size: 1.2rem; text-align: center; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 15px; }
-.modal-input:focus { border-color: var(--gold); outline: none; }
-.modal-actions { display: flex; gap: 10px; }
-.btn-cancel { flex: 1; padding: 12px; border: none; background: #e2e8f0; color: #7f8c8d; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.btn-confirm { flex: 1; padding: 12px; border: none; background: var(--success); color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
-.btn-add-new { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; }
-</style>
+    <style>
+        :root {
+            --primary: #1a1c1e; --gold: #b38728; --bg-gray: #f4f6f8;
+            --border: #e2e8f0; --text-dark: #2c3e50; --success: #27ae60; --warning: #e67e22; --danger: #e74c3c;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-gray); color: var(--text-dark); font-size: 16px; }
+
+        header { background: var(--primary); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header h1 { font-size: 1.1rem; color: var(--gold); font-family: 'Georgia', serif; }
+        .badge-role { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .btn-retour { background: transparent; border: none; color: white; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+
+        .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; }
+        .tab-btn { padding: 15px 18px; border: none; background: none; font-size: 0.95rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 4px solid transparent; position: relative; }
+        .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--gold); background: #fffcf5; }
+        .badge-count { background: var(--danger); color: white; border-radius: 10px; font-size: 0.7rem; padding: 1px 6px; margin-left: 5px; }
+
+        .main-content { flex: 1; overflow-y: auto; }
+        .tab-content { display: none; padding: 15px; }
+        .tab-content.active { display: block; }
+
+        .search-box { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
+
+        .btn-add-new { width: 100%; padding: 15px; background: var(--gold); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: pointer; }
+
+        .rayon-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); gap: 10px; }
+        .rayon-card.alerte { border-left: 4px solid var(--danger); }
+        .art-nom { font-weight: bold; color: var(--primary); font-size: 1rem; }
+        .art-couleur { font-size: 0.85rem; color: #7f8c8d; }
+        .art-prix { font-weight: bold; color: var(--gold); font-size: 0.95rem; }
+        .rayon-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .stock-badge { font-size: 1.3rem; font-weight: 900; color: var(--success); }
+        .stock-badge.alerte { color: var(--danger); }
+        .btn-maj { background: var(--primary); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .btn-machiniste { background: var(--warning); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+
+        .arrivage-card { background: white; border-left: 4px solid var(--gold); border-radius: 8px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .arrivage-meta { font-size: 0.8rem; color: #7f8c8d; margin-top: 4px; }
+        .btn-recevoir { background: var(--success); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-refuser { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: flex-end; z-index: 1000; }
+        .modal.active { display: flex; }
+        @media (min-width: 768px) { .modal { align-items: center; } }
+        .modal-content { background: white; width: 100%; max-width: 480px; padding: 20px; border-radius: 20px 20px 0 0; max-height: 90vh; overflow-y: auto; }
+        @media (min-width: 768px) { .modal-content { border-radius: 12px; } }
+        .modal-header { font-size: 1.15rem; font-weight: bold; margin-bottom: 15px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .modal-input { width: 100%; padding: 13px; font-size: 1.1rem; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+        .modal-input:focus { border-color: var(--gold); outline: none; }
+        label.modal-label { font-size: 0.85rem; font-weight: bold; color: var(--primary); display: block; margin-bottom: 6px; }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-cancel { flex: 1; padding: 12px; border: none; background: #e2e8f0; color: #7f8c8d; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-confirm { flex: 1; padding: 12px; border: none; background: var(--success); color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-    <!-- ACTION BAR POUR BOUTONS SPECIFIQUES -->
-    <div id="action-bar-container" class="action-bar">
-        <div class="badge-role" id="badge-serveuse">💁‍♀️ Serveuse</div>
-    </div>
+    <header>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-retour" onclick="deconnexionPropre(); window.location.replace('index.html')">🚪 Quitter</button>
+            <h1>Nina Fashion</h1>
+        </div>
+        <div class="badge-role" id="badge-serveuse">💁‍♀️ Serveuse...</div>
+    </header>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('consultation')">🔍 En Rayon</button>
-        <button class="tab-btn" onclick="switchTab('alertes')">🚨 Alertes Rupture</button>
+        <button class="tab-btn" onclick="switchTab('arrivages')">📥 Arrivages <span class="badge-count" id="badge-arrivages" style="display:none;">0</span></button>
+        <button class="tab-btn" onclick="switchTab('alertes')">🚨 Alertes <span class="badge-count" id="badge-alertes" style="display:none;">0</span></button>
     </div>
 
     <div class="main-content">
-        
-        <!-- ONGLET 1 : CONSULTATION ET INVENTAIRE -->
+
+        <!-- ONGLET 1 : CONSULTATION -->
         <div id="tab-consultation" class="tab-content active">
-            <button class="btn-add-new" onclick="ouvrirModalNouveau()">➕ Déclarer un article en rayon</button>
+            <button class="btn-add-new" onclick="ouvrirModalNouveau()">➕ Déclarer / Compter un article en rayon</button>
             <div class="search-box">
                 <input type="text" id="search-input" class="search-input" placeholder="🔍 Chercher un article ou une couleur..." oninput="filtrerRayon()">
             </div>
@@ -71,17 +91,23 @@
             </div>
         </div>
 
-        <!-- ONGLET 2 : ALERTES -->
+        <!-- ONGLET 2 : ARRIVAGES DU DÉPÔT -->
+        <div id="tab-arrivages" class="tab-content">
+            <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 15px;">Ce que le magasinier a envoyé et qui attend d'être rangé en rayon. Comptez ce que vous recevez vraiment avant de valider.</p>
+            <div id="liste-arrivages">
+                <div style="text-align: center; color: #7f8c8d; padding: 20px;">⏳ Chargement...</div>
+            </div>
+        </div>
+
+        <!-- ONGLET 3 : ALERTES -->
         <div id="tab-alertes" class="tab-content">
             <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 15px; text-align: center;">Ces articles sont presque épuisés dans les rayons de la boutique. Demandez au magasinier de vous ravitailler.</p>
-            <div id="liste-alertes">
-                <!-- Les alertes rouges apparaîtront ici -->
-            </div>
+            <div id="liste-alertes"></div>
         </div>
 
     </div>
 
-    <!-- MODAL 1 : CORRECTION DE LA QUANTITÉ -->
+    <!-- MODAL 1 : CORRECTION / INVENTAIRE DE LA QUANTITÉ -->
     <div class="modal" id="modal-correction">
         <div class="modal-content">
             <div class="modal-header" id="mc-title">Mettre à jour l'étagère</div>
@@ -94,44 +120,91 @@
         </div>
     </div>
 
-    <!-- MODAL 2 : DÉCLARER UN NOUVEL ARTICLE DANS LE RAYON -->
+    <!-- MODAL 2 : DÉCLARER / COMPTER UN ARTICLE -->
     <div class="modal" id="modal-nouveau">
-        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">➕ Ajouter au rayon</div>
-            <p style="font-size: 0.8rem; color: #7f8c8d; margin-bottom: 10px;">Si un article est devant vous mais n'apparaît pas dans la liste, déclarez-le ici.</p>
-            
-            <label style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">1. Choisissez l'article du catalogue :</label>
-            <select id="mn-article" class="modal-input" style="font-size: 1rem; padding: 10px; text-align: left;">
+        <div class="modal-content">
+            <div class="modal-header">➕ Ajouter / Compter au rayon</div>
+            <p style="font-size: 0.8rem; color: #7f8c8d; margin-bottom: 10px;">Utilisez ceci pour votre premier inventaire, ou pour tout article présent en rayon mais absent de cette liste.</p>
+
+            <label class="modal-label">1. Article du catalogue :</label>
+            <select id="mn-article" class="modal-input">
                 <option value="">Chargement du catalogue...</option>
             </select>
 
-            <label style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">2. Couleur / Motif :</label>
-            <input type="text" id="mn-couleur" class="modal-input" style="font-size: 1rem; padding: 10px; text-align: left;" placeholder="Ex: Rouge, Blanc, ou Standard">
+            <label class="modal-label">2. Couleur / Motif :</label>
+            <input type="text" id="mn-couleur" class="modal-input" placeholder="Ex: Rouge, Blanc, ou Standard">
 
-            <label style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">3. Quantité en rayon :</label>
-            <input type="number" id="mn-qte" class="modal-input" placeholder="Ex: 5" style="padding: 10px;">
+            <label class="modal-label">3. Quantité comptée en rayon :</label>
+            <input type="number" id="mn-qte" class="modal-input" placeholder="Ex: 5">
 
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="fermerModal('modal-nouveau')">Annuler</button>
-                <button class="btn-confirm" id="btn-valider-nouveau" onclick="validerNouveau()">✅ Ajouter</button>
+                <button class="btn-confirm" id="btn-valider-nouveau" onclick="validerNouveau()">✅ Enregistrer</button>
             </div>
         </div>
     </div>
-        <script>
+
+    <!-- MODAL 3 : DONNER À LA MACHINISTE -->
+    <div class="modal" id="modal-machiniste">
+        <div class="modal-content">
+            <div class="modal-header" id="mm-title">Donner à la machiniste</div>
+            <label class="modal-label">Quantité à remettre :</label>
+            <input type="number" id="mm-qte" class="modal-input" placeholder="0">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fermerModal('modal-machiniste')">Annuler</button>
+                <button class="btn-confirm" id="btn-valider-machiniste" onclick="validerDonMachiniste()">✂️ Confirmer la remise</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function deconnexionPropre() {
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('roleUtilisateur');
+            localStorage.removeItem('nomEmploye');
+        }
+
         // --- 1. CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
+        const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- 2. SÉCURITÉ : VÉRIFICATION DU RÔLE ---
+        // --- 2. SÉCURITÉ ---
         const roleActuel = localStorage.getItem('roleUtilisateur') || '';
+        const nomEmploye = localStorage.getItem('nomEmploye') || roleActuel;
 
-        // --- SECURITE ET CONFIGURATION ---
-        verifierHabilitation(["serveuse", "administrateur", "vendeur"]);
+        (function verifierSecurite() {
+            const sessionActive = localStorage.getItem('sessionActive');
+            const roleMinuscule = roleActuel.toLowerCase();
+            if (!sessionActive || (roleMinuscule !== 'serveuse' && roleMinuscule !== 'administrateur' && roleMinuscule !== 'vendeur')) {
+                deconnexionPropre();
+                window.location.replace('index.html');
+                return;
+            }
+            let tempsInactivite;
+            const TEMPS_LIMITE = 30 * 60 * 1000;
+            function deconnexionAutomatique() { deconnexionPropre(); window.location.replace('index.html'); }
+            function reinitialiserMinuteur() { clearTimeout(tempsInactivite); tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE); }
+            window.onload = reinitialiserMinuteur;
+            document.onmousemove = reinitialiserMinuteur;
+            document.onkeypress = reinitialiserMinuteur;
+            document.ontouchstart = reinitialiserMinuteur;
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted || !localStorage.getItem('sessionActive')) {
+                    deconnexionPropre();
+                    window.location.replace('index.html');
+                }
+            });
+        })();
 
-        document.getElementById('badge-serveuse').innerText = "💁‍♀️ " + roleActuel;
+        document.getElementById('badge-serveuse').innerText = "💁‍♀️ " + nomEmploye;
 
         // --- 3. MÉMOIRE DE LA PAGE ---
         let RAYON_DATA = [];
         let CATALOGUE = [];
-        let stockEnEdition = null; // Mémorise l'ID de la ligne qu'on modifie
+        let ARRIVAGES = [];
+        let stockEnEdition = null;
+        let articleEnDon = null;
 
         // --- 4. NAVIGATION ONGLETS ---
         function switchTab(tabId) {
@@ -139,22 +212,20 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             document.querySelector(`button[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            if (tabId === 'arrivages') chargerArrivages();
         }
 
-        // --- 5. CHARGEMENT DES DONNÉES (Jointure Catalogue + Rayon) ---
+        // --- 5. CHARGEMENT DU RAYON ---
         async function chargerDonnees() {
             try {
-                // On charge le catalogue pour avoir les noms et prix
                 const { data: catData, error: catErr } = await clientSupabase.from('articles_v2').select('*');
                 if (catErr) throw catErr;
                 CATALOGUE = catData || [];
 
-                // On charge le contenu actuel des étagères
                 const { data: rayonData, error: rayErr } = await clientSupabase.from('stock_rayon').select('*').order('updated_at', { ascending: false });
                 if (rayErr) throw rayErr;
 
-                // On fusionne les deux (On ajoute le nom et le prix aux données du rayon)
-                RAYON_DATA = rayonData.map(ligne => {
+                RAYON_DATA = (rayonData || []).map(ligne => {
                     let infoCat = CATALOGUE.find(c => c.id == ligne.article_id) || {};
                     return {
                         ...ligne,
@@ -165,7 +236,6 @@
 
                 preparerSelectCatalogue();
                 afficherRayon();
-
             } catch (err) {
                 document.getElementById('liste-rayon').innerHTML = `<div style="color:red; text-align:center;">Erreur réseau : ${err.message}</div>`;
             }
@@ -180,10 +250,12 @@
             conteneurRayon.innerHTML = '';
             conteneurAlertes.innerHTML = '';
 
-            let articlesFiltres = RAYON_DATA.filter(art => 
-                art.nom_article.toLowerCase().includes(recherche) || 
-                (art.couleur_ref && art.couleur_ref.toLowerCase().includes(recherche))
-            );
+            let articlesFiltres = RAYON_DATA
+                .map((art, idx) => ({ art, idx }))
+                .filter(({ art }) =>
+                    art.nom_article.toLowerCase().includes(recherche) ||
+                    (art.couleur_ref && art.couleur_ref.toLowerCase().includes(recherche))
+                );
 
             if (articlesFiltres.length === 0) {
                 conteneurRayon.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 20px;">Aucun article trouvé dans les rayons.</div>';
@@ -191,30 +263,28 @@
 
             let nbAlertes = 0;
 
-            articlesFiltres.forEach(art => {
-                let qte = parseFloat(art.quantite);
+            articlesFiltres.forEach(({ art, idx }) => {
+                let qte = parseFloat(art.quantite) || 0;
                 let seuil = parseFloat(art.seuil_alerte) || 3;
                 let enRupture = (qte <= seuil);
 
-                // Design de la carte
                 let carteHtml = `
                     <div class="rayon-card ${enRupture ? 'alerte' : ''}">
                         <div class="rayon-info">
-                            <div class="art-nom">${art.nom_article}</div>
-                            <div class="art-couleur">🎨 ${art.couleur_ref}</div><br>
+                            <div class="art-nom">${escHtml(art.nom_article)}</div>
+                            <div class="art-couleur">🎨 ${escHtml(art.couleur_ref)}</div>
                             <span class="art-prix">${art.prix_vente} F</span>
                         </div>
                         <div class="rayon-action">
                             <span class="stock-badge ${enRupture ? 'alerte' : ''}">${qte}</span>
-                            <button class="btn-maj" onclick="ouvrirModalCorrection('${art.id}', '${art.nom_article}', '${art.couleur_ref}', ${qte})">✍️ Éditer</button>
+                            <button class="btn-maj" onclick="ouvrirModalCorrection(${idx})">✍️ Éditer</button>
+                            <button class="btn-machiniste" onclick="ouvrirModalMachiniste(${idx})">✂️ Donner</button>
                         </div>
                     </div>
                 `;
 
-                // On affiche tout dans l'onglet Consultation
                 conteneurRayon.innerHTML += carteHtml;
 
-                // Si c're en rupture, on l'affiche AUSSI dans l'onglet Alertes
                 if (enRupture) {
                     conteneurAlertes.innerHTML += carteHtml;
                     nbAlertes++;
@@ -224,19 +294,89 @@
             if (nbAlertes === 0) {
                 conteneurAlertes.innerHTML = '<div style="text-align: center; color: var(--success); font-weight: bold; padding: 20px;">✅ Aucun article en alerte.</div>';
             }
+
+            const badgeAlertes = document.getElementById('badge-alertes');
+            if (nbAlertes > 0) { badgeAlertes.style.display = 'inline-block'; badgeAlertes.innerText = nbAlertes; }
+            else { badgeAlertes.style.display = 'none'; }
+        }
+
+        function escHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
         function filtrerRayon() { afficherRayon(); }
 
-        // --- 7. GESTION DES MODALES (Pop-ups) ---
-        function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
+        // --- 7. ARRIVAGES DU DÉPÔT ---
+        async function chargerArrivages() {
+            const conteneur = document.getElementById('liste-arrivages');
+            const badge = document.getElementById('badge-arrivages');
+            const { data, error } = await clientSupabase
+                .from('transferts')
+                .select('*')
+                .eq('destination', 'RAYON')
+                .eq('statut', 'en_attente')
+                .order('created_at', { ascending: true });
 
-        // A. Correction d'un article déjà dans la liste
-        function ouvrirModalCorrection(idStock, nom, couleur, qteActuelle) {
-            stockEnEdition = idStock;
-            document.getElementById('mc-title').innerHTML = `${nom} <br><small style="color:#7f8c8d;">Couleur: ${couleur}</small>`;
-            document.getElementById('mc-qte').value = qteActuelle;
-            document.getElementById('modal-correction').style.display = 'flex';
+            if (error) {
+                conteneur.innerHTML = `<div style="color:red;">Erreur : ${error.message}</div>`;
+                return;
+            }
+
+            ARRIVAGES = data || [];
+            badge.style.display = ARRIVAGES.length > 0 ? 'inline-block' : 'none';
+            badge.innerText = ARRIVAGES.length;
+
+            if (ARRIVAGES.length === 0) {
+                conteneur.innerHTML = '<div style="text-align:center; color: var(--success); font-weight:bold; padding:20px;">✅ Rien en attente, tout est rangé.</div>';
+                return;
+            }
+
+            conteneur.innerHTML = ARRIVAGES.map((t, idx) => `
+                <div class="arrivage-card">
+                    <div class="art-nom">${escHtml(t.nom_article)}</div>
+                    <div class="art-couleur">🎨 ${escHtml(t.couleur_ref)} — ${t.quantite} unité(s)</div>
+                    <div class="arrivage-meta">Envoyé par ${escHtml(t.envoye_par || 'le magasinier')}</div>
+                    <button class="btn-recevoir" onclick="confirmerArrivage(${idx})">✅ J'ai bien rangé (compter à nouveau si différent)</button>
+                    <button class="btn-refuser" onclick="refuserArrivage(${idx})">❌ Je n'ai rien reçu</button>
+                </div>
+            `).join('');
+        }
+
+        async function confirmerArrivage(idx) {
+            const t = ARRIVAGES[idx];
+            let saisie = prompt(`Combien d'unités de "${t.nom_article}" (${t.couleur_ref}) avez-vous réellement reçues ?`, t.quantite);
+            if (saisie === null) return;
+            let qteRecue = parseFloat(saisie);
+            if (isNaN(qteRecue) || qteRecue <= 0 || qteRecue > t.quantite) {
+                return alert("⚠️ Quantité invalide (si vous n'avez rien reçu, cliquez sur 'Je n'ai rien reçu').");
+            }
+
+            const { error } = await clientSupabase.rpc('recevoir_transfert', {
+                p_id: t.id, p_quantite_recue: qteRecue, p_recu_par: nomEmploye
+            });
+            if (error) return alert("❌ Erreur : " + error.message);
+
+            chargerArrivages();
+            chargerDonnees();
+        }
+
+        async function refuserArrivage(idx) {
+            const t = ARRIVAGES[idx];
+            if (!confirm(`Confirmez-vous n'avoir rien reçu pour "${t.nom_article}" ? La quantité sera recréditée au dépôt.`)) return;
+            const { error } = await clientSupabase.rpc('refuser_transfert', {
+                p_id: t.id, p_recu_par: nomEmploye, p_note: 'Refusé depuis le rayon'
+            });
+            if (error) return alert("❌ Erreur : " + error.message);
+            chargerArrivages();
+        }
+
+        // --- 8. CORRECTION / INVENTAIRE D'UN ARTICLE DÉJÀ LISTÉ ---
+        function ouvrirModalCorrection(idx) {
+            const art = RAYON_DATA[idx];
+            stockEnEdition = art.id;
+            document.getElementById('mc-title').innerHTML = `${escHtml(art.nom_article)} <br><small style="color:#7f8c8d;">Couleur: ${escHtml(art.couleur_ref)}</small>`;
+            document.getElementById('mc-qte').value = art.quantite;
+            document.getElementById('modal-correction').classList.add('active');
         }
 
         async function validerCorrection() {
@@ -247,11 +387,14 @@
             btn.innerText = "⏳..."; btn.disabled = true;
 
             try {
-                const { error } = await clientSupabase.from('stock_rayon').update({ quantite: nouvelleQte, updated_at: new Date().toISOString() }).eq('id', stockEnEdition);
+                const art = RAYON_DATA.find(a => a.id === stockEnEdition);
+                const { error } = await clientSupabase.rpc('saisir_inventaire', {
+                    p_lieu: 'RAYON', p_article_id: art.article_id, p_couleur: art.couleur_ref,
+                    p_quantite: nouvelleQte, p_utilisateur: nomEmploye
+                });
                 if (error) throw error;
-                
                 fermerModal('modal-correction');
-                chargerDonnees(); // Rafraîchit l'écran
+                chargerDonnees();
             } catch (err) {
                 alert("❌ Erreur lors de la mise à jour : " + err.message);
             } finally {
@@ -259,14 +402,13 @@
             }
         }
 
-        // B. Déclaration d'un article qui n'était pas dans la liste
+        // --- 9. DÉCLARER / COMPTER UN ARTICLE ---
         function preparerSelectCatalogue() {
             const select = document.getElementById('mn-article');
             select.innerHTML = '<option value="">-- Choisissez un article --</option>';
-            // On trie le catalogue de A à Z
             let catTrie = [...CATALOGUE].sort((a, b) => a.nom_article.localeCompare(b.nom_article));
             catTrie.forEach(art => {
-                select.innerHTML += `<option value="${art.id}">${art.nom_article}</option>`;
+                select.innerHTML += `<option value="${art.id}">${escHtml(art.nom_article)}</option>`;
             });
         }
 
@@ -274,7 +416,7 @@
             document.getElementById('mn-article').value = "";
             document.getElementById('mn-couleur').value = "";
             document.getElementById('mn-qte').value = "";
-            document.getElementById('modal-nouveau').style.display = 'flex';
+            document.getElementById('modal-nouveau').classList.add('active');
         }
 
         async function validerNouveau() {
@@ -288,27 +430,66 @@
             btn.innerText = "⏳..."; btn.disabled = true;
 
             try {
-                // Insert ou Update si on essaie de créer un doublon par accident
-                const { error } = await clientSupabase.from('stock_rayon').upsert([{ 
-                    article_id: idArticle, 
-                    couleur_ref: couleur, 
-                    quantite: qte,
-                    updated_at: new Date().toISOString()
-                }], { onConflict: 'article_id, couleur_ref' });
-
+                const { error } = await clientSupabase.rpc('saisir_inventaire', {
+                    p_lieu: 'RAYON', p_article_id: idArticle, p_couleur: couleur, p_quantite: qte, p_utilisateur: nomEmploye
+                });
                 if (error) throw error;
-
                 fermerModal('modal-nouveau');
                 chargerDonnees();
             } catch (err) {
                 alert("❌ Erreur d'ajout : " + err.message);
             } finally {
-                btn.innerText = "✅ Ajouter"; btn.disabled = false;
+                btn.innerText = "✅ Enregistrer"; btn.disabled = false;
             }
         }
 
-        // DÉMARRAGE
+        // --- 10. DONNER À LA MACHINISTE ---
+        function ouvrirModalMachiniste(idx) {
+            const art = RAYON_DATA[idx];
+            articleEnDon = { article_id: art.article_id, couleur: art.couleur_ref, nom: art.nom_article, dispo: parseFloat(art.quantite) || 0 };
+            document.getElementById('mm-title').innerHTML = `Donner "${escHtml(art.nom_article)}" (${escHtml(art.couleur_ref)}) <br><small style="color:#7f8c8d;">Disponible : ${articleEnDon.dispo}</small>`;
+            document.getElementById('mm-qte').value = '';
+            document.getElementById('modal-machiniste').classList.add('active');
+        }
+
+        async function validerDonMachiniste() {
+            let qte = parseFloat(document.getElementById('mm-qte').value);
+            if (isNaN(qte) || qte <= 0) return alert("Quantité invalide.");
+            if (qte > articleEnDon.dispo) return alert("Il n'y a pas assez de stock en rayon pour cette remise.");
+
+            const btn = document.getElementById('btn-valider-machiniste');
+            btn.innerText = "⏳..."; btn.disabled = true;
+
+            try {
+                const { error } = await clientSupabase.rpc('creer_transfert', {
+                    p_source: 'RAYON', p_destination: 'ATELIER',
+                    p_article_id: articleEnDon.article_id, p_couleur: articleEnDon.couleur,
+                    p_quantite: qte, p_envoye_par: nomEmploye
+                });
+                if (error) throw error;
+                fermerModal('modal-machiniste');
+                chargerDonnees();
+                alert("✅ La machiniste verra cette remise dans son onglet « Mes Fournitures » et devra la confirmer.");
+            } catch (err) {
+                alert("❌ Erreur : " + err.message);
+            } finally {
+                btn.innerText = "✂️ Confirmer la remise"; btn.disabled = false;
+            }
+        }
+
+        function fermerModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // DÉMARRAGE ET ÉCOUTE EN TEMPS RÉEL (SANS SETINTERVAL)
         chargerDonnees();
+        chargerArrivages();
+
+        clientSupabase
+            .channel('suivi-arrivages-rayon')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'transferts' }, () => {
+                chargerArrivages();
+                chargerDonnees();
+            })
+            .subscribe();
     </script>
 </body>
 </html>
