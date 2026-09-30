@@ -84,12 +84,11 @@
         .btn-reprendre { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: bold; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
-
-    <body>
+<body>
 
     <header>
         <div style="display: flex; align-items: center; gap: 10px;">
-        <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Quitter</button>
+            <button class="btn-retour" onclick="deconnexionPropre(); window.location.replace('index.html')">🚪 Quitter</button>
             <h1>Nina Fashion</h1>
         </div>
         <div class="badge-role" id="badge-machiniste">👨‍🔧 Machiniste...</div>
@@ -109,7 +108,10 @@
         <div class="ticket-panel">
             <div class="ticket-header">
                 <span style="color:var(--gold); font-weight:bold;"><span id="ticket-count">0</span> prestation(s)</span>
-                <button class="btn-carnet" onclick="ouvrirCarnet()">📋 Carnet d'Atelier</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-carnet" style="position:relative;" onclick="ouvrirFournitures()">📦 Mes Fournitures<span id="badge-fournitures" style="display:none; background:var(--danger); color:white; border-radius:10px; font-size:0.7rem; padding:1px 6px; margin-left:5px;">0</span></button>
+                    <button class="btn-carnet" onclick="ouvrirCarnet()">📋 Carnet d'Atelier</button>
+                </div>
             </div>
             
             <div class="ticket-items" id="ticket-items">
@@ -123,10 +125,10 @@
                     <label>Client / Apprenti :</label>
                     <input type="text" id="input-client" class="custom-input" placeholder="Ex: Apprenti Koffi" oninput="sauvegarderTicketLocal()">
                 </div>
-                        <div class="input-group">
-            <label>Téléphone :</label>
-            <input type="tel" id="input-tel" class="custom-input" placeholder="Ex: 0102030405" oninput="mettreAjourUI()">
-                        </div>
+                <div class="input-group">
+                    <label>Téléphone :</label>
+                    <input type="tel" id="input-tel" class="custom-input" placeholder="Ex: 0102030405" oninput="mettreAJourUI()">
+                </div>
                 
                 <div class="input-group">
                     <label style="color:var(--success);">Avance (Cash perçu) :</label>
@@ -156,24 +158,68 @@
         </div>
     </div>
 
-    <!-- MODAL : SAISIE DE PRESTATION (Prix Libre ou Quantité) -->
+    <!-- MODAL : SAISIE DE PRESTATION -->
     <div id="modal-prestation" class="modal">
         <div class="modal-content">
             <div class="modal-title" id="mp-title">Nom Prestation</div>
-            
             <div class="modal-group" id="mp-group-prix">
                 <label>💰 Prix unitaire négocié (FCFA) :</label>
                 <input type="number" id="mp-prix" class="modal-input" placeholder="Ex: 500">
             </div>
-            
             <div class="modal-group" id="mp-group-qte">
                 <label id="mp-label-qte">📏 Quantité :</label>
                 <input type="number" id="mp-qte" class="modal-input" placeholder="1" step="0.5">
             </div>
-
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="fermerModal('modal-prestation')">Annuler</button>
                 <button class="btn-confirm" onclick="validerPrestation()">Ajouter au ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL : MES FOURNITURES -->
+    <div id="modal-fournitures" class="modal">
+        <div class="modal-content" style="max-width:500px; max-height:85vh; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <h3 style="color:var(--primary); font-size:1.1rem;">📦 Mes Fournitures</h3>
+                <button onclick="fermerModal('modal-fournitures')" style="background:transparent; border:none; font-size:1.5rem; cursor:pointer; color:var(--danger);">✖</button>
+            </div>
+
+            <div style="display:flex; gap:8px; margin:10px 0;">
+                <button class="tab-btn active" id="ff-tab-recues" onclick="switchFournitures('recues')" style="flex:1;">À confirmer</button>
+                <button class="tab-btn" id="ff-tab-historique" onclick="switchFournitures('historique')" style="flex:1;">🕒 Historique</button>
+                <button class="tab-btn" id="ff-tab-inventaire" onclick="switchFournitures('inventaire')" style="flex:1;">📝 Déclarer / Inventaire</button>
+            </div>
+
+            <div id="ff-panel-recues" style="overflow-y:auto; flex:1;">
+                <div id="liste-fournitures"><div style="text-align:center; padding:20px;">⏳ Chargement...</div></div>
+            </div>
+
+            <div id="ff-panel-historique" style="display:none; overflow-y:auto; flex:1;">
+                <div id="liste-historique-fournitures"><div style="text-align:center; padding:20px;">⏳ Chargement...</div></div>
+            </div>
+
+            <div id="ff-panel-inventaire" style="display:none; overflow-y:auto; flex:1;">
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                    <button class="tab-btn active" id="ff-mode-inventaire" style="flex:1; font-size:0.75rem;" onclick="switchModeFourniture('inventaire')">📋 Premier inventaire</button>
+                    <button class="tab-btn" id="ff-mode-rayon" style="flex:1; font-size:0.75rem;" onclick="switchModeFourniture('rayon')">✂️ Je prends au rayon</button>
+                </div>
+                <p id="ff-mode-explication" style="font-size:0.8rem; color:#7f8c8d; margin-bottom:10px;">Déclarez ici ce que vous avez déjà dans l'atelier (une seule fois, au démarrage). Cela remplace la quantité enregistrée.</p>
+                <label class="modal-group" style="display:block; margin-bottom:10px;">
+                    <span style="display:block; font-size:0.85rem; font-weight:bold; color:#7f8c8d; margin-bottom:5px;">Article :</span>
+                    <select id="ff-article" class="modal-input">
+                        <option value="">Chargement du catalogue...</option>
+                    </select>
+                </label>
+                <label class="modal-group" style="display:block; margin-bottom:10px;">
+                    <span style="display:block; font-size:0.85rem; font-weight:bold; color:#7f8c8d; margin-bottom:5px;">Couleur / Motif :</span>
+                    <input type="text" id="ff-couleur" class="modal-input" placeholder="Ex: Blanc, Standard">
+                </label>
+                <label class="modal-group" style="display:block; margin-bottom:10px;">
+                    <span id="ff-qte-label" style="display:block; font-size:0.85rem; font-weight:bold; color:#7f8c8d; margin-bottom:5px;">Quantité en atelier :</span>
+                    <input type="number" id="ff-qte" class="modal-input" placeholder="0">
+                </label>
+                <button class="btn-confirm" style="width:100%;" id="ff-btn-valider" onclick="validerInventaireAtelier()">✅ Enregistrer</button>
             </div>
         </div>
     </div>
@@ -185,38 +231,39 @@
                 <h3 style="color:var(--primary); font-size:1.1rem;">📋 Tickets Sauvegardés</h3>
                 <button onclick="fermerModal('modal-carnet')" style="background:transparent; border:none; font-size:1.5rem; cursor:pointer; color:var(--danger);">✖</button>
             </div>
-            <div id="liste-carnet">
-                <!-- Les tickets en pause apparaîtront ici -->
-            </div>
+            <div id="liste-carnet"></div>
         </div>
     </div>
+        <script>
+        function deconnexionPropre() {
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('roleUtilisateur');
+            localStorage.removeItem('nomEmploye');
+        }
 
-               <script>
         // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-         // --- 2. SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (MACHINISTE) ---
+        // --- 2. SÉCURITÉ INSTITUTIONNELLE ---
         const roleActuel = localStorage.getItem('roleUtilisateur') || '';
 
         (function verifierSecurite() {
             const sessionActive = localStorage.getItem('sessionActive');
             const roleMinuscule = roleActuel.toLowerCase();
 
-            // Autorisé uniquement pour les Machinistes et l'Administrateur
             if (!sessionActive || (roleMinuscule !== 'machiniste' && roleMinuscule !== 'administrateur')) {
-                localStorage.clear();
+                deconnexionPropre();
                 window.location.replace('index.html');
                 return;
             }
 
-            // Le radar d'inactivité (30 minutes)
             let tempsInactivite;
             const TEMPS_LIMITE = 30 * 60 * 1000; 
 
             function deconnexionAutomatique() {
-                localStorage.clear();
+                deconnexionPropre();
                 window.location.replace('index.html');
             }
 
@@ -225,41 +272,36 @@
                 tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
             }
 
-            // On surveille les mouvements de l'écran ou de la souris
             window.onload = reinitialiserMinuteur;
             document.onmousemove = reinitialiserMinuteur;
             document.onkeypress = reinitialiserMinuteur;
             document.ontouchstart = reinitialiserMinuteur; 
 
-            // LE DÉTECTEUR ANTI-RETOUR (Contre le bouton précédent et le cache)
             window.addEventListener('pageshow', function(event) {
                 if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
+                    deconnexionPropre();
                     window.location.replace('index.html');
                 }
             });
         })();
             
-// On affiche le rôle validé en haut de l'écran :
-document.getElementById('badge-machiniste').innerText = "🧵 " + roleActuel;
-
-// CRUCIAL : On crée la variable pour éviter l'erreur réseau lors de la validation
-let nomMachiniste = roleActuel;
+        const nomEmploye = localStorage.getItem('nomEmploye') || roleActuel;
+        let nomMachiniste = nomEmploye;
+        document.getElementById('badge-machiniste').innerText = "🧵 " + nomEmploye;
             
-        // --- 3. LE PANIER INCREVABLE (Mémoire locale de l'atelier) ---
+        // --- 3. MÉMOIRE LOCALE DE L'ATELIER ---
         let SERVICES = [];
         let categorieActive = '';
-        let ticketOuvertId = null; // Mémorise si on modifie un vieux ticket
-        let serviceEnCours = null; // Mémorise la prestation cliquée pour le popup
+        let ticketOuvertId = null;
+        let serviceEnCours = null;
 
-        // Restauration du brouillon en cas de coupure
         let ticket = JSON.parse(localStorage.getItem('nina_atelier_ticket')) || [];
-        
-        // Restauration des champs texte si existants
         let cacheClient = localStorage.getItem('nina_atelier_client') || '';
         let cacheAvance = localStorage.getItem('nina_atelier_avance') || '';
+        let cacheTel = localStorage.getItem('nina_atelier_tel') || '';
         document.getElementById('input-client').value = cacheClient;
         document.getElementById('input-avance').value = cacheAvance;
+        if (document.getElementById('input-tel')) document.getElementById('input-tel').value = cacheTel;
 
         // --- 4. CHARGEMENT DES PRESTATIONS ---
         async function chargerServices() {
@@ -276,7 +318,7 @@ let nomMachiniste = roleActuel;
                     genererOnglets(categories);
                     afficherServices();
                 }
-                mettreAJourUI(); // Restaure l'affichage du ticket
+                mettreAJourUI();
             } catch (err) {
                 document.getElementById('loader').innerHTML = "❌ Erreur de connexion.";
             }
@@ -291,7 +333,7 @@ let nomMachiniste = roleActuel;
                 btn.innerText = cat;
                 btn.onclick = () => {
                     categorieActive = cat;
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('#category-tabs .tab-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     afficherServices();
                 };
@@ -320,11 +362,193 @@ let nomMachiniste = roleActuel;
             });
         }
 
-        // --- 5. GESTION DU POPUP DE SAISIE (Fini les prompts) ---
+        // --- 5. GESTION DES MODALES ET DES FOURNITURES ---
         function fermerModal(id) { 
             document.getElementById(id).style.display = 'none'; 
             serviceEnCours = null;
         }
+
+        let FOURNITURES_ATTENTE = [];
+        let CATALOGUE_ATELIER = [];
+
+        function switchFournitures(panel) {
+            document.getElementById('ff-tab-recues').classList.toggle('active', panel === 'recues');
+            document.getElementById('ff-tab-historique').classList.toggle('active', panel === 'historique');
+            document.getElementById('ff-tab-inventaire').classList.toggle('active', panel === 'inventaire');
+            document.getElementById('ff-panel-recues').style.display = panel === 'recues' ? 'block' : 'none';
+            document.getElementById('ff-panel-historique').style.display = panel === 'historique' ? 'block' : 'none';
+            document.getElementById('ff-panel-inventaire').style.display = panel === 'inventaire' ? 'block' : 'none';
+            if (panel === 'inventaire' && CATALOGUE_ATELIER.length === 0) chargerCatalogueAtelier();
+            if (panel === 'historique') chargerHistoriqueFournitures();
+        }
+
+        async function chargerHistoriqueFournitures() {
+            const conteneur = document.getElementById('liste-historique-fournitures');
+            conteneur.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Chargement...</div>';
+            try {
+                const { data, error } = await clientSupabase.from('transferts')
+                    .select('*').eq('destination', 'ATELIER').eq('statut', 'recu')
+                    .order('recu_le', { ascending: false }).limit(30);
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    conteneur.innerHTML = '<div style="text-align:center; color:#7f8c8d; padding:20px;">Aucune fourniture reçue pour l\'instant.</div>';
+                    return;
+                }
+                conteneur.innerHTML = data.map(t => {
+                    const date = new Date(t.recu_le).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                    const ecart = t.quantite - t.quantite_recue;
+                    return `<div style="border-bottom:1px dashed #eee; padding:8px 0;">
+                        <b>${t.quantite_recue}x ${t.nom_article}</b> (${t.couleur_ref}) — <span style="color:#7f8c8d;">${t.source === 'DEPOT' ? 'du dépôt' : 'du rayon'}</span>
+                        <div style="font-size:0.75rem; color:#95a5a6;">${date}${ecart > 0 ? ` — ⚠️ écart de ${ecart} signalé` : ''}</div>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                conteneur.innerHTML = '<div style="color:var(--danger); padding:20px;">❌ Erreur de chargement.</div>';
+            }
+        }
+
+        async function ouvrirFournitures() {
+            document.getElementById('modal-fournitures').style.display = 'flex';
+            switchFournitures('recues');
+            await chargerFournituresEnAttente();
+        }
+
+        async function chargerFournituresEnAttente() {
+            const conteneur = document.getElementById('liste-fournitures');
+            conteneur.innerHTML = '<div style="text-align:center; padding:20px;">⏳ Chargement...</div>';
+
+            const { data, error } = await clientSupabase
+                .from('transferts')
+                .select('*')
+                .eq('destination', 'ATELIER')
+                .eq('statut', 'en_attente')
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                conteneur.innerHTML = `<div style="color:red;">Erreur : ${error.message}</div>`;
+                return;
+            }
+
+            FOURNITURES_ATTENTE = data || [];
+            const badge = document.getElementById('badge-fournitures');
+            badge.style.display = FOURNITURES_ATTENTE.length > 0 ? 'inline-block' : 'none';
+            badge.innerText = FOURNITURES_ATTENTE.length;
+
+            if (FOURNITURES_ATTENTE.length === 0) {
+                conteneur.innerHTML = '<div style="text-align:center; color:var(--success); font-weight:bold; padding:20px;">✅ Rien en attente.</div>';
+                return;
+            }
+
+            conteneur.innerHTML = FOURNITURES_ATTENTE.map((t, idx) => `
+                <div style="border:1px solid var(--border); border-left:4px solid var(--gold); border-radius:8px; padding:12px; margin-bottom:10px;">
+                    <strong>${t.nom_article}</strong> — ${t.couleur_ref}, ${t.quantite} u.
+                    <div style="font-size:0.8rem; color:#7f8c8d; margin-top:4px;">
+                        ${t.source === 'DEPOT' ? '📥 Envoyé par le magasinier' : '📥 Envoyé par la rayoniste'}
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="btn-confirm" style="flex:1;" onclick="confirmerFourniture(${idx})">✅ Oui, j'ai pris</button>
+                        <button class="btn-cancel" style="flex:1; color:var(--danger);" onclick="refuserFourniture(${idx})">❌ Refuser</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function confirmerFourniture(idx) {
+            const t = FOURNITURES_ATTENTE[idx];
+            let saisie = prompt(`Combien d'unités de "${t.nom_article}" (${t.couleur_ref}) avez-vous réellement reçues ?`, t.quantite);
+            if (saisie === null) return;
+            let qteRecue = parseFloat(saisie);
+            if (isNaN(qteRecue) || qteRecue <= 0 || qteRecue > t.quantite) {
+                return alert("⚠️ Quantité invalide (si vous n'avez rien reçu, cliquez sur 'Refuser').");
+            }
+
+            const { error } = await clientSupabase.rpc('recevoir_transfert', {
+                p_id: t.id, p_quantite_recue: qteRecue, p_recu_par: nomEmploye
+            });
+            if (error) return alert("❌ Erreur : " + error.message);
+            chargerFournituresEnAttente();
+        }
+
+        async function refuserFourniture(idx) {
+            const t = FOURNITURES_ATTENTE[idx];
+            if (!confirm(`Confirmez-vous ne pas avoir reçu "${t.nom_article}" ? La quantité sera recréditée à la source.`)) return;
+            const { error } = await clientSupabase.rpc('refuser_transfert', {
+                p_id: t.id, p_recu_par: nomEmploye, p_note: 'Refusé depuis l\'atelier'
+            });
+            if (error) return alert("❌ Erreur : " + error.message);
+            chargerFournituresEnAttente();
+        }
+
+        async function chargerCatalogueAtelier() {
+            const select = document.getElementById('ff-article');
+            const { data, error } = await clientSupabase.from('articles_v2').select('id, nom_article').order('nom_article');
+            if (error) {
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                return;
+            }
+            CATALOGUE_ATELIER = data || [];
+            select.innerHTML = '<option value="">-- Choisissez un article --</option>' +
+                CATALOGUE_ATELIER.map(a => `<option value="${a.id}">${a.nom_article}</option>`).join('');
+        }
+
+        let modeFourniture = 'inventaire';
+        function switchModeFourniture(mode) {
+            modeFourniture = mode;
+            document.getElementById('ff-mode-inventaire').classList.toggle('active', mode === 'inventaire');
+            document.getElementById('ff-mode-rayon').classList.toggle('active', mode === 'rayon');
+            if (mode === 'inventaire') {
+                document.getElementById('ff-mode-explication').innerText = "Déclarez ici ce que vous avez déjà dans l'atelier (une seule fois, au démarrage). Cela remplace la quantité enregistrée.";
+                document.getElementById('ff-qte-label').innerText = "Quantité en atelier :";
+                document.getElementById('ff-btn-valider').innerText = "✅ Enregistrer";
+            } else {
+                document.getElementById('ff-mode-explication').innerText = "Vous prenez une fourniture directement sur l'étagère du rayon, sans passer par la rayoniste. Ceci retire la quantité du rayon et l'ajoute à votre stock atelier.";
+                document.getElementById('ff-qte-label').innerText = "Quantité prise :";
+                document.getElementById('ff-btn-valider').innerText = "✂️ Je prends ceci";
+            }
+        }
+
+        async function validerInventaireAtelier() {
+            const idArticle = document.getElementById('ff-article').value;
+            const couleur = document.getElementById('ff-couleur').value.trim().toUpperCase() || 'STANDARD';
+            const qte = parseFloat(document.getElementById('ff-qte').value);
+
+            if (!idArticle || isNaN(qte) || qte <= 0) return alert("⚠️ Remplissez correctement l'article et la quantité.");
+
+            if (modeFourniture === 'inventaire') {
+                const { error } = await clientSupabase.rpc('saisir_inventaire', {
+                    p_lieu: 'ATELIER', p_article_id: idArticle, p_couleur: couleur, p_quantite: qte, p_utilisateur: nomEmploye
+                });
+                if (error) return alert("❌ Erreur : " + error.message);
+                alert("✅ Enregistré dans le stock de l'atelier.");
+            } else {
+                try {
+                    const { data: idTransfert, error: err1 } = await clientSupabase.rpc('creer_transfert', {
+                        p_source: 'RAYON', p_destination: 'ATELIER', p_article_id: idArticle,
+                        p_couleur: couleur, p_quantite: qte, p_envoye_par: nomEmploye
+                    });
+                    if (err1) throw err1;
+                    const { error: err2 } = await clientSupabase.rpc('recevoir_transfert', {
+                        p_id: idTransfert, p_quantite_recue: qte, p_recu_par: nomEmploye
+                    });
+                    if (err2) throw err2;
+                    alert("✅ Article retiré du rayon et ajouté à votre stock atelier.");
+                } catch (err) {
+                    return alert("❌ Erreur : " + err.message + "\n(Vérifiez que cette couleur existe bien en quantité suffisante au rayon)");
+                }
+            }
+
+            document.getElementById('ff-couleur').value = '';
+            document.getElementById('ff-qte').value = '';
+        }
+
+        // Écouteur en temps réel (zéro consommation de quota inutile)
+        chargerFournituresEnAttente();
+        clientSupabase
+            .channel('suivi-fournitures-atelier')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'transferts' }, () => {
+                chargerFournituresEnAttente();
+            })
+            .subscribe();
 
         function ouvrirModalPrestation(srv) {
             serviceEnCours = srv;
@@ -334,7 +558,6 @@ let nomMachiniste = roleActuel;
             let inputPrix = document.getElementById('mp-prix');
             let inputQte = document.getElementById('mp-qte');
             
-            // Gestion du prix (Libre ou Fixe)
             if (prixDeBase === 0) {
                 document.getElementById('mp-group-prix').style.display = 'block';
                 inputPrix.value = "";
@@ -343,7 +566,6 @@ let nomMachiniste = roleActuel;
                 inputPrix.value = prixDeBase;
             }
 
-            // Gestion de la quantité (Mètre ou Pièce)
             if (srv.type_mesure === 'metre') {
                 document.getElementById('mp-label-qte').innerText = "📏 Nombre de mètres :";
             } else {
@@ -375,18 +597,18 @@ let nomMachiniste = roleActuel;
             mettreAJourUI();
         }
 
-                           // --- 6. GESTION DU TICKET (Brouillon) ---
+                    // --- 6. GESTION DU TICKET (Brouillon) ---
         function supprimerDuTicket(index) {
             ticket.splice(index, 1);
             mettreAJourUI();
         }
 
-            function sauvegarderTicketLocal() {
-        localStorage.setItem('nina_atelier_ticket', JSON.stringify(ticket));
-        localStorage.setItem('nina_atelier_client', document.getElementById('input-client').value);
-        localStorage.setItem('nina_atelier_tel', document.getElementById('input-tel') ? document.getElementById('input-tel').value : "");
-        localStorage.setItem('nina_atelier_avance', document.getElementById('input-avance').value);
-            }
+        function sauvegarderTicketLocal() {
+            localStorage.setItem('nina_atelier_ticket', JSON.stringify(ticket));
+            localStorage.setItem('nina_atelier_client', document.getElementById('input-client').value);
+            localStorage.setItem('nina_atelier_tel', document.getElementById('input-tel') ? document.getElementById('input-tel').value : "");
+            localStorage.setItem('nina_atelier_avance', document.getElementById('input-avance').value);
+        }
             
         function mettreAJourUI() {
             sauvegarderTicketLocal();
@@ -394,7 +616,7 @@ let nomMachiniste = roleActuel;
             const container = document.getElementById('ticket-items');
             
             if (ticket.length === 0) {
-                ticketOuvertId = null; // On oublie le vieux ticket si on vide tout
+                ticketOuvertId = null;
                 container.innerHTML = '<div style="text-align: center; color: #95a5a6; padding: 30px 10px; font-size: 0.9rem;">Touchez une prestation pour l\'ajouter.</div>';
                 document.getElementById('btn-save').disabled = true;
                 document.getElementById('btn-send').disabled = true;
@@ -442,8 +664,7 @@ let nomMachiniste = roleActuel;
         }
 
         // --- 7. GESTION DU CARNET D'ATELIER (Tickets en pause) ---
-        
-        let memoireCarnet = []; // On crée une mémoire temporaire sécurisée
+        let memoireCarnet = [];
 
         async function ouvrirCarnet() {
             document.getElementById('modal-carnet').style.display = 'flex';
@@ -453,7 +674,7 @@ let nomMachiniste = roleActuel;
                 const { data, error } = await clientSupabase.from('commandes').select('*').eq('statut', 'en_atelier').order('created_at', { ascending: false });
                 if (error) throw error;
                 
-                memoireCarnet = data; // On stocke les données ici, pas dans le bouton !
+                memoireCarnet = data;
                 
                 if (data.length === 0) {
                     document.getElementById('liste-carnet').innerHTML = '<div style="text-align:center; padding:20px;">Aucun ticket en pause.</div>';
@@ -465,7 +686,6 @@ let nomMachiniste = roleActuel;
                     let nomAffiche = cmd.client_nom || 'Client Anonyme';
                     let telAffiche = cmd.client_numero ? ` (${cmd.client_numero})` : '';
                     
-                    // LE BOUTON EST MAINTENANT SÉCURISÉ (Il ne passe que l'ID)
                     html += `
                     <div class="saved-ticket" style="display:flex; justify-content:space-between; margin-bottom:10px; padding:10px; border:1px solid #ccc; background:#f9f9f9;">
                         <div>
@@ -473,7 +693,7 @@ let nomMachiniste = roleActuel;
                             <span style="font-size:0.85rem; color:#7f8c8d;">${cmd.num_panier || '-'}</span><br>
                             <span style="font-size:0.9rem;">Total: <strong>${cmd.total} F</strong> | Avance: <strong style="color:var(--danger);">${cmd.avance || 0} F</strong></span>
                         </div>
-                        <button class="btn-reprendre" onclick="reprendreTicketPropre('${cmd.id}')" style="background:var(--warning); color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">REPRENDRE</button>
+                        <button class="btn-reprendre" onclick="reprendreTicketPropre('${cmd.id}')" style="background:var(--warning); color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer; width:auto;">REPRENDRE</button>
                     </div>
                     `;
                 });
@@ -484,146 +704,128 @@ let nomMachiniste = roleActuel;
             }
         }
 
-             async function reprendreTicketPropre(idTicket) {
-        // 1. LA CORRECTION EST ICI : On force la comparaison pour éviter le bug texte/chiffre
-        const cmd = memoireCarnet.find(t => String(t.id) === String(idTicket));
-        
-        if (!cmd) {
-            alert("❌ Erreur : Le ticket n'a pas pu être retrouvé dans la mémoire.");
-            return;
-        }
-
-        try {
-            // 2. On cherche les articles détaillés
-            const { data: lignes } = await clientSupabase.from('lignes_commandes').select('*').eq('commande_id', cmd.id);
+        async function reprendreTicketPropre(idTicket) {
+            const cmd = memoireCarnet.find(t => String(t.id) === String(idTicket));
             
-            let nouveauTicket = [];
-            if (lignes && lignes.length > 0) {
-                nouveauTicket = lignes.map(l => ({
-                    ref: l.article_ref,
-                    nom: l.nom_article,
-                    prix: l.prix_unitaire_vente,
-                    qte: l.quantite,
-                    type: l.quantite % 1 === 0 ? 'piece' : 'metre'
-                }));
-            } else {
-                // Si c'est un ancien ticket sans détails
-                if (typeof cmd.details === 'string') {
+            if (!cmd) {
+                alert("❌ Erreur : Le ticket n'a pas pu être retrouvé dans la mémoire.");
+                return;
+            }
+
+            try {
+                const { data: lignes } = await clientSupabase.from('lignes_commandes').select('*').eq('commande_id', cmd.id);
+                
+                let nouveauTicket = [];
+                if (lignes && lignes.length > 0) {
+                    nouveauTicket = lignes.map(l => ({
+                        ref: l.article_ref,
+                        nom: l.nom_article,
+                        prix: l.prix_unitaire_vente,
+                        qte: l.quantite,
+                        type: l.quantite % 1 === 0 ? 'piece' : 'metre'
+                    }));
+                } else if (typeof cmd.details === 'string') {
                     try { nouveauTicket = JSON.parse(cmd.details); } catch(e) {}
                 }
-            }
-            
-            // 3. On charge l'écran
-            ticket = nouveauTicket || [];
-            ticketOuvertId = cmd.id; 
-            
-            document.getElementById('input-client').value = cmd.client_nom || "";
-            if (document.getElementById('input-tel')) document.getElementById('input-tel').value = cmd.client_numero || "";
-            if (document.getElementById('input-avance')) document.getElementById('input-avance').value = cmd.avance || 0;
-            
-            fermerModal('modal-carnet');
-            
-            // 4. On rafraîchit l'interface avec ta fonction qui marche
-            mettreAJourUI();
-            
-        } catch (err) {
-            alert("❌ Erreur technique : " + err.message);
-            ticketOuvertId = null; 
-        }
-             }
-            
-    // --- 8. ENVOI À SUPABASE (L'Œil de Moscou actif) ---
-    async function validerTicket(statutChoisi) {
-        if (ticket.length === 0) return;
-
-        // Le client n'est plus obligatoire, on ne bloque plus !
-        let nomClient = document.getElementById('input-client').value.trim();
-        let telClient = document.getElementById('input-tel') ? document.getElementById('input-tel').value.trim() : "";
-
-        const { totalBrut, avance, reste } = calculerTicket();
-
-        document.getElementById('btn-save').disabled = true;
-        document.getElementById('btn-send').disabled = true;
-
-        try {
-            let payload = {
-                total: Math.round(totalBrut),
-                details: JSON.stringify(ticket), // Conservé temporairement par sécurité
-                statut: statutChoisi === 'en_atelier' ? 'en_atelier' : 'en_attente',
-                avance: avance,
-                reste_a_payer: reste,
-                origine: 'atelier',
-                client_nom: nomClient,
-                client_numero: telClient,
-                vendeur_nom: nomMachiniste // Signature du machiniste
-            };
-
-            let commandeIdToUse = ticketOuvertId;
-            let messageSucces = "";
-
-            if (ticketOuvertId) {
-                // 1. MISE À JOUR (ANTI-DOUBLON)
-                const { error } = await clientSupabase.from('commandes').update(payload).eq('id', ticketOuvertId);
-                if (error) throw error;
                 
-                // On efface les anciennes lignes pour mettre les nouvelles
-                await clientSupabase.from('lignes_commandes').delete().eq('commande_id', ticketOuvertId);
-                messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET TERMINÉ ET ENVOYÉ À LA CAISSE !" : "✅ TICKET SAUVEGARDÉ EN ATELIER !";
-            } else {
-                // 2. NOUVEAU TICKET
-                let dateObj = new Date();
-                let numTicket = "M-" + dateObj.getHours().toString().padStart(2, '0') + dateObj.getMinutes().toString().padStart(2, '0') + dateObj.getSeconds().toString().padStart(2, '0');
-                payload.num_panier = numTicket;
-
-                const { data, error } = await clientSupabase.from('commandes').insert([payload]).select();
-                if (error) throw error;
-                commandeIdToUse = data[0].id;
-                messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET ENVOYÉ À LA CAISSE ! \nNuméro : " + numTicket : "✅ NOUVEAU TICKET SAUVEGARDÉ !";
+                ticket = nouveauTicket || [];
+                ticketOuvertId = cmd.id; 
+                
+                document.getElementById('input-client').value = cmd.client_nom || "";
+                if (document.getElementById('input-tel')) document.getElementById('input-tel').value = cmd.client_numero || "";
+                if (document.getElementById('input-avance')) document.getElementById('input-avance').value = cmd.avance || 0;
+                
+                fermerModal('modal-carnet');
+                mettreAJourUI();
+                
+            } catch (err) {
+                alert("❌ Erreur technique : " + err.message);
+                ticketOuvertId = null; 
             }
-
-                        // 3. INSERTION DES LIGNES DÉTAILLÉES
-            const lignesAInserer = ticket.map(item => ({
-                commande_id: commandeIdToUse,
-                article_ref: item.ref || 'SRV_ATELIER',
-                nom_article: item.nom,
-                quantite: item.qte,
-                prix_unitaire_vente: item.prix
-            }));
-            
-            // On écoute la réponse de Supabase
-            const { error: erreurLignes } = await clientSupabase.from('lignes_commandes').insert(lignesAInserer);
-            
-            // Si Supabase refuse, on bloque tout et on affiche le vrai problème !
-            if (erreurLignes) {
-                alert("❌ REFUS DE LA BASE DE DONNÉES : " + erreurLignes.message);
-                throw erreurLignes; // On arrête l'exécution ici
-            }
-
-            // Si tout s'est bien passé dans les DEUX tables, alors on crie victoire
-            alert(messageSucces);
-            
-            // 4. RÉINITIALISATION
-            ticket = [];
-            ticketOuvertId = null;
-            document.getElementById('input-client').value = "";
-            if (document.getElementById('input-tel')) document.getElementById('input-tel').value = "";
-            document.getElementById('input-avance').value = "";
-            
-            localStorage.removeItem('nina_atelier_ticket');
-            localStorage.removeItem('nina_atelier_client');
-            localStorage.removeItem('nina_atelier_tel');
-            localStorage.removeItem('nina_atelier_avance');
-            
-            mettreAJourUI();
-
-        } catch (err) {
-            alert("❌ ERREUR SUPABASE : " + err.message);
-            console.error(err);
-        } finally {
-            document.getElementById('btn-save').disabled = false;
-            document.getElementById('btn-send').disabled = false;
         }
-                         }
+            
+        // --- 8. ENVOI À SUPABASE ---
+        async function validerTicket(statutChoisi) {
+            if (ticket.length === 0) return;
+
+            let nomClient = document.getElementById('input-client').value.trim();
+            let telClient = document.getElementById('input-tel') ? document.getElementById('input-tel').value.trim() : "";
+
+            const { totalBrut, avance, reste } = calculerTicket();
+
+            document.getElementById('btn-save').disabled = true;
+            document.getElementById('btn-send').disabled = true;
+
+            try {
+                let payload = {
+                    total: Math.round(totalBrut),
+                    details: JSON.stringify(ticket),
+                    statut: statutChoisi === 'en_atelier' ? 'en_atelier' : 'en_attente',
+                    avance: avance,
+                    reste_a_payer: reste,
+                    origine: 'atelier',
+                    client_nom: nomClient,
+                    client_numero: telClient,
+                    vendeur_nom: nomMachiniste
+                };
+
+                let commandeIdToUse = ticketOuvertId;
+                let messageSucces = "";
+
+                if (ticketOuvertId) {
+                    const { error } = await clientSupabase.from('commandes').update(payload).eq('id', ticketOuvertId);
+                    if (error) throw error;
+                    
+                    await clientSupabase.from('lignes_commandes').delete().eq('commande_id', ticketOuvertId);
+                    messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET TERMINÉ ET ENVOYÉ À LA CAISSE !" : "✅ TICKET SAUVEGARDÉ EN ATELIER !";
+                } else {
+                    let dateObj = new Date();
+                    let numTicket = "M-" + dateObj.getHours().toString().padStart(2, '0') + dateObj.getMinutes().toString().padStart(2, '0') + dateObj.getSeconds().toString().padStart(2, '0');
+                    payload.num_panier = numTicket;
+
+                    const { data, error } = await clientSupabase.from('commandes').insert([payload]).select();
+                    if (error) throw error;
+                    commandeIdToUse = data[0].id;
+                    messageSucces = statutChoisi === 'en_attente' ? "✅ TICKET ENVOYÉ À LA CAISSE ! \nNuméro : " + numTicket : "✅ NOUVEAU TICKET SAUVEGARDÉ !";
+                }
+
+                const lignesAInserer = ticket.map(item => ({
+                    commande_id: commandeIdToUse,
+                    article_ref: item.ref || 'SRV_ATELIER',
+                    nom_article: item.nom,
+                    quantite: item.qte,
+                    prix_unitaire_vente: item.prix
+                }));
+                
+                const { error: erreurLignes } = await clientSupabase.from('lignes_commandes').insert(lignesAInserer);
+                if (erreurLignes) {
+                    alert("❌ REFUS DE LA BASE DE DONNÉES : " + erreurLignes.message);
+                    throw erreurLignes;
+                }
+
+                alert(messageSucces);
+                
+                ticket = [];
+                ticketOuvertId = null;
+                document.getElementById('input-client').value = "";
+                if (document.getElementById('input-tel')) document.getElementById('input-tel').value = "";
+                document.getElementById('input-avance').value = "";
+                
+                localStorage.removeItem('nina_atelier_ticket');
+                localStorage.removeItem('nina_atelier_client');
+                localStorage.removeItem('nina_atelier_tel');
+                localStorage.removeItem('nina_atelier_avance');
+                
+                mettreAJourUI();
+
+            } catch (err) {
+                alert("❌ ERREUR SUPABASE : " + err.message);
+                console.error(err);
+            } finally {
+                document.getElementById('btn-save').disabled = false;
+                document.getElementById('btn-send').disabled = false;
+            }
+        }
                     
         // Lancement initial
         chargerServices();
