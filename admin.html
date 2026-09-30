@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L'Œil de Moscou - Nina Fashion</title>
-    <!-- Les librairies indispensables -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,7 +18,7 @@
 
         header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 1.4rem; color: var(--gold); font-family: 'Georgia', serif; }
-        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
+        .btn-retour { background: transparent; border: 1px solid var(--gold); color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; cursor: pointer; }
 
         .tabs { display: flex; background: white; border-bottom: 2px solid var(--border); overflow-x: auto; white-space: nowrap; }
         .tab-btn { padding: 15px 20px; border: none; background: none; font-size: 1rem; font-weight: bold; color: #7f8c8d; cursor: pointer; border-bottom: 4px solid transparent; }
@@ -64,17 +63,20 @@
         .form-control:focus { border-color: var(--gold); outline: none; }
         
         .chart-container { position: relative; height: 320px; width: 100%; margin-top: 10px; }
-        
-        /* Style spécifique pour le palmarès */
         .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .rank-number { font-weight: bold; color: var(--gold); font-size: 1.2rem; margin-right: 10px; }
+        .ticket-jour { background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        .ticket-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+        .ticket-details { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
+        .ticket-details.ouvert { display: block; }
+        .resume-finances { display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.9rem; color: #7f8c8d; }
     </style>
 </head>
 <body>
 
-       <header>
+    <header>
         <h1>L'Œil de Moscou</h1>
-            <button class="btn-retour" onclick="localStorage.clear(); window.location.replace('index.html')">Déconnexion</button>
+        <button class="btn-retour" onclick="deconnexionPropre(); window.location.replace('index.html')">Déconnexion</button>
     </header>
 
     <!-- NAVIGATION PRINCIPALE -->
@@ -87,9 +89,7 @@
     </div>
 
     <div class="container">
-                <!-- ========================================== -->
-        <!-- 1. ONGLET CAISSE (Trésorerie du Jour J)    -->
-        <!-- ========================================== -->
+        <!-- 1. ONGLET CAISSE (Trésorerie du Jour J) -->
         <div id="tab-caisse" class="tab-content active">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 <h2>💵 Équilibre du Jour (Recettes d'Aujourd'hui)</h2>
@@ -106,17 +106,21 @@
                     <div class="stat-value" id="stat-momo">0 F</div>
                 </div>
                 <div class="stat-card" style="border-left-color: var(--primary);">
-    <div class="stat-title">🧵 Recettes Machiniste</div>
-    <div class="stat-value" id="stat-machiniste">0 F</div>
+                    <div class="stat-title">🧵 Recettes Machiniste</div>
+                    <div class="stat-value" id="stat-machiniste">0 F</div>
                 </div>   
+                <div class="stat-card" style="border-left-color: #e67e22;">
+                    <div class="stat-title">🔶 Avances Atelier (chez la machiniste, hors tiroir)</div>
+                    <div class="stat-value" id="stat-avances-atelier">0 F</div>
+                </div>
                 <div class="stat-card danger">
                     <div class="stat-title">📉 Dépenses du Jour</div>
                     <div class="stat-value" id="stat-depenses-jour">0 F</div>
                 </div>
-                        <div class="stat-card gold">
-            <div class="stat-title">💎 Bénéfice Net (Jour)</div>
-            <div class="stat-value" id="stat-benefice-jour">0 F</div>
-                        </div>
+                <div class="stat-card gold">
+                    <div class="stat-title">💎 Bénéfice Net (Jour)</div>
+                    <div class="stat-value" id="stat-benefice-jour">0 F</div>
+                </div>
             </div>
 
             <div class="data-section">
@@ -124,7 +128,7 @@
                 <div class="table-responsive">
                     <table>
                         <thead>
-                                                        <tr>
+                            <tr>
                                 <th>Heure</th>
                                 <th>Ticket / Source</th>
                                 <th>Client</th>
@@ -132,39 +136,59 @@
                                 <th>Caissière</th>
                                 <th>Paiement & Reliquats</th>
                                 <th>Statut</th>
-                                                        </tr>
-                            
+                            </tr>
                         </thead>
                         <tbody id="table-ventes-directes">
+                            <tr><td colspan="7" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="data-section" style="margin-top: 20px; border-left: 5px solid #e67e22;">
+                <h2>⏳ Tickets actuellement en attente en Caisse</h2>
+                <p style="font-size:0.85rem; color:#7f8c8d; margin:-5px 0 10px;">Ni le vendeur ni la caissière ne peuvent supprimer un ticket. Si un client repart sans payer ou qu'un ticket a été envoyé par erreur, c'est ici, et seulement ici, qu'il peut être annulé.</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Heure</th>
+                                <th>Ticket / Source</th>
+                                <th>Client</th>
+                                <th>Par</th>
+                                <th>Montant</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-tickets-attente">
                             <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-                    <div class="data-section" style="margin-top: 20px; border-left: 5px solid var(--danger);">
-            <h2 id="titre-radar-reliquat">⚠️ Dettes (Reliquats) Créées Aujourd'hui : 0 F</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Heure</th>
-                            <th>Client</th>
-                            <th>Code Reçu</th>
-                            <th>Montant</th>
-                            <th>Statut</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-reliquats-jour">
-                        <tr><td colspan="5" style="text-align:center;">Chargement...</td></tr>
-                    </tbody>
-                </table>
+
+            <div class="data-section" style="margin-top: 20px; border-left: 5px solid var(--danger);">
+                <h2 id="titre-radar-reliquat">⚠️ Dettes (Reliquats) Créées Aujourd'hui : 0 F</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Heure</th>
+                                <th>Client</th>
+                                <th>Code Reçu</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-reliquats-jour">
+                            <tr><td colspan="5" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-                    </div>
         </div>
 
-                <!-- ========================================== -->
-        <!-- 2. ONGLET COMPTABILITÉ & BILAN (Le Cerveau) -->
-        <!-- ========================================== -->
+        <!-- 2. ONGLET COMPTABILITÉ & BILAN -->
         <div id="tab-compta" class="tab-content">
             <h2>📈 Santé Financière du Mois en Cours</h2>
             
@@ -181,10 +205,13 @@
                     <div class="stat-title">💸 Reliquats (Monnaie due aux clients)</div>
                     <div class="stat-value" id="stat-reliquats">0 F</div>
                 </div>
+                <div class="stat-card" style="border-left-color: #e67e22;">
+                    <div class="stat-title">🔶 Avances Atelier collectées ce mois (tickets pas forcément finalisés)</div>
+                    <div class="stat-value" id="stat-avances-atelier-mois">0 F</div>
+                </div>
             </div>
 
             <div class="form-grid">
-                <!-- LE GRAPHIQUE COMPARATIF -->
                 <div class="data-section">
                     <h2>📊 Flux Financiers (Boutique vs Atelier)</h2>
                     <div class="chart-container">
@@ -192,17 +219,15 @@
                     </div>
                 </div>
 
-                <!-- LE NOUVEAU PALMARÈS DE RENTABILITÉ (Top 5) -->
                 <div class="data-section">
-                   <h2>🏆 Top 30 des Articles les Plus Vendus</h2>
-                    <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Les articles qui génèrent le plus de bénéfice net ce mois-ci.</p>
+                    <h2>🏆 Top 30 des Articles les Plus Vendus</h2>
+                    <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Les articles qui génèrent le plus de ventes ce mois-ci.</p>
                     <div id="palmares-list">
                         <div style="text-align:center; color:#7f8c8d; padding:20px;">Calcul en cours...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- ENREGISTREMENT DES DÉPENSES COMPTABLES -->
             <div class="data-section">
                 <h2>📑 Enregistrer une Dépense (Loyer, Salaire, etc.)</h2>
                 <div class="form-grid">
@@ -236,12 +261,7 @@
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Catégorie</th>
-                                <th>Motif</th>
-                                <th>Montant</th>
-                            </tr>
+                            <tr><th>Date</th><th>Catégorie</th><th>Motif</th><th>Montant</th></tr>
                         </thead>
                         <tbody id="table-depenses-compta">
                             <tr><td colspan="4" style="text-align:center;">Chargement...</td></tr>
@@ -249,26 +269,16 @@
                     </table>
                 </div>
             </div>
-                   <!-- NOUVELLE SECTION : HISTORIQUE DES JOURNÉES (Pour Nina) -->
-        <style>
-            .ticket-jour { background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 20px; }
-            .ticket-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
-            .ticket-details { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; }
-            .ticket-details.ouvert { display: block; }
-            .resume-finances { display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.9rem; color: #7f8c8d; }
-        </style>
-        <div class="data-section" style="border-left: 5px solid #b38728; margin-top: 20px;">
-            <h2>📅 Historique des Journées (Tickets de Caisse)</h2>
-            <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Cliquez sur un jour pour ouvrir son ticket virtuel et voir les articles vendus.</p>
-            <div id="liste-archives-jours">
-                <div style="text-align:center; color:#7f8c8d; padding:20px;">⏳ Chargement des archives...</div>
+
+            <div class="data-section" style="border-left: 5px solid #b38728; margin-top: 20px;">
+                <h2>📅 Historique des Journées (Tickets de Caisse)</h2>
+                <p style="font-size:0.85rem; color:#7f8c8d; margin-bottom:15px;">Cliquez sur un jour pour ouvrir son ticket virtuel et voir les articles vendus.</p>
+                <div id="liste-archives-jours">
+                    <div style="text-align:center; color:#7f8c8d; padding:20px;">⏳ Chargement des archives...</div>
+                </div>
             </div>
-        </div>
-            
-        </div>
-                <!-- ========================================== -->
-        <!-- 3. ONGLET CATALOGUE (Fiches Mères)         -->
-        <!-- ========================================== -->
+                </div>
+                <!-- 3. ONGLET CATALOGUE (Fiches Mères) -->
         <div id="tab-catalogue" class="tab-content">
             <div class="data-section" style="background: #fffcf5;">
                 <h2>📥 Injection Massive (CSV)</h2>
@@ -292,8 +302,8 @@
                     <div class="form-group"><label>Prix Vente conseillé :</label><input type="number" id="art-pv" class="form-control" placeholder="0"></div>
                     <div class="form-group"><label>Prix Achat (Gros) :</label><input type="number" id="art-pa" class="form-control" placeholder="0"></div>
                     <div class="form-group">
-    <label style="color: #e74c3c; font-weight: bold;">🚨 Seuil d'Alerte Dépôt :</label>
-    <input type="number" id="art-seuil" class="form-control" placeholder="Ex: 5" value="5">
+                        <label style="color: #e74c3c; font-weight: bold;">🚨 Seuil d'Alerte Dépôt :</label>
+                        <input type="number" id="art-seuil" class="form-control" placeholder="Ex: 5" value="5">
                     </div>
                 </div>
                 <button class="btn btn-gold" onclick="ajouterArticleManuel()">✨ Ajouter au Catalogue</button>
@@ -301,20 +311,13 @@
 
             <div class="data-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-    <h2>📦 Le Catalogue Global (Fiches Mères)</h2>
-    <input type="text" id="recherche-catalogue" class="form-control" placeholder="🔍 Chercher par nom ou réf..." style="width: 250px; max-width: 100%;" onkeyup="filtrerCatalogue()">
+                    <h2>📦 Le Catalogue Global (Fiches Mères)</h2>
+                    <input type="text" id="recherche-catalogue" class="form-control" placeholder="🔍 Chercher par nom ou réf..." style="width: 250px; max-width: 100%;" onkeyup="filtrerCatalogue()">
                 </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Réf</th>
-                                <th>Nom / Famille</th>
-                                <th>Cible</th>
-                                <th>Prix Vente</th>
-                                <th>Prix Achat</th>
-                                <th>Action</th>
-                            </tr>
+                            <tr><th>Réf</th><th>Nom / Famille</th><th>Cible</th><th>Prix Vente</th><th>Prix Achat</th><th>Action</th></tr>
                         </thead>
                         <tbody id="table-articles">
                             <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
@@ -324,24 +327,28 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 4. ONGLET AUDIT DÉPÔT                      -->
-        <!-- ========================================== -->
+        <!-- 4. ONGLET AUDIT DÉPÔT -->
         <div id="tab-audit" class="tab-content">
             <h2>👁️ Surveillance Logistique de la Réserve</h2>
-            <div class="data-section">
-                <h2>🔄 Historique des Mouvements Magasinier</h2>
+            <div class="data-section" style="border-left: 5px solid #e67e22;">
+                <h2>🔄 Transferts Dépôt / Rayon → Rayon / Atelier</h2>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Date / Heure</th>
-                                <th>Article</th>
-                                <th>Couleur / Numéro</th>
-                                <th>Mouvement</th>
-                                <th>Quantité</th>
-                                <th>Auteur</th>
-                            </tr>
+                            <tr><th>Date</th><th>Article</th><th>Trajet</th><th>Envoyé</th><th>Statut</th><th>Reçu par</th></tr>
+                        </thead>
+                        <tbody id="table-transferts-audit">
+                            <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="data-section">
+                <h2>🔄 Historique des Mouvements & Corrections de Stock</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Date / Heure</th><th>Article</th><th>Couleur / Numéro</th><th>Mouvement / Destination</th><th>Quantité</th><th>Auteur</th></tr>
                         </thead>
                         <tbody id="table-mouvements-audit">
                             <tr><td colspan="6" style="text-align:center;">Chargement...</td></tr>
@@ -351,9 +358,7 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 5. ONGLET ÉQUIPE & SÉCURITÉ                -->
-        <!-- ========================================== -->
+        <!-- 5. ONGLET ÉQUIPE & SÉCURITÉ -->
         <div id="tab-securite" class="tab-content">
             <div class="data-section">
                 <h2>👤 Créer un Profil Employé</h2>
@@ -366,6 +371,7 @@
                             <option value="Vendeur">Vendeur</option>
                             <option value="Machiniste">Machiniste</option>
                             <option value="Magasinier">Magasinier</option>
+                            <option value="Serveuse">Serveuse (Rayon)</option>
                             <option value="Administrateur">Administrateur</option>
                         </select>
                     </div>
@@ -391,30 +397,30 @@
 
     </div> <!-- FIN DU CONTAINER PRINCIPAL -->
 
-        <!-- ========================================== -->
-    <!-- DÉBUT DU MOTEUR JAVASCRIPT                 -->
-    <!-- ========================================== -->
     <script>
+        function deconnexionPropre() {
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('roleUtilisateur');
+            localStorage.removeItem('nomEmploye');
+        }
 
-                // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (ADMIN) ---
+        // --- SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES (ADMIN) ---
         (function verifierSecurite() {
             const sessionActive = localStorage.getItem('sessionActive');
             const roleActuel = localStorage.getItem('roleUtilisateur') || '';
             const roleMinuscule = roleActuel.toLowerCase();
 
-            // L'Œil de Moscou est strictement réservé à l'administrateur.
             if (!sessionActive || roleMinuscule !== 'administrateur') {
-                localStorage.clear();
+                deconnexionPropre();
                 window.location.replace('index.html');
                 return;
             }
 
-            // Le radar d'inactivité (30 minutes)
             let tempsInactivite;
             const TEMPS_LIMITE = 30 * 60 * 1000; 
 
             function deconnexionAutomatique() {
-                localStorage.clear();
+                deconnexionPropre();
                 window.location.replace('index.html');
             }
 
@@ -423,22 +429,20 @@
                 tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
             }
 
-            // On surveille les mouvements
             window.onload = reinitialiserMinuteur;
             document.onmousemove = reinitialiserMinuteur;
             document.onkeypress = reinitialiserMinuteur;
             document.ontouchstart = reinitialiserMinuteur; 
 
-            // LE DÉTECTEUR ANTI-RETOUR
             window.addEventListener('pageshow', function(event) {
                 if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
+                    deconnexionPropre();
                     window.location.replace('index.html');
                 }
             });
         })();
         
-        // --- 1. CONFIGURATION SUPABASE (La vraie clé de la Caisse) ---
+        // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -449,20 +453,18 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             
             document.getElementById('tab-' + tabId).classList.add('active');
-            
-            // Activer le bouton cliqué
             document.querySelectorAll('.tab-btn').forEach(b => {
                 if(b.getAttribute('onclick').includes(tabId)) b.classList.add('active');
             });
 
-            // Rechargement des données selon l'onglet
             if(tabId === 'caisse') { chargerCaisse(); }
             if(tabId === 'compta') { chargerComptabilite(); chargerReliquats(); chargerArchivesJours(); }
             if(tabId === 'catalogue') { chargerCatalogue(); }
             if(tabId === 'audit') { chargerAuditDepot(); }
             if(tabId === 'securite') { chargerEquipe(); }
         }
-                    // ==========================================
+        
+        // ==========================================
         // --- 3. CAISSE CENTRALE (Aujourd'hui)   ---
         // ==========================================
         async function chargerCaisse() {
@@ -470,37 +472,41 @@
                 const debutJournee = new Date();
                 debutJournee.setHours(0, 0, 0, 0);
 
-                // Remplace tout le bloc de la ligne 380 à 384 par ceci :
-const { data: ventes, error } = await clientSupabase
-    .from('commandes')
-    .select('*')
-    .gte('created_at', debutJournee.toISOString())
-    .eq('statut', 'paye')
-    .order('created_at', { ascending: false });
-if (error) {
-    alert("❌ ERREUR SUPABASE : " + error.message);
-    throw error;
-}
+                const { data: ventes, error } = await clientSupabase
+                    .from('commandes')
+                    .select('*')
+                    .gte('paye_le', debutJournee.toISOString())
+                    .eq('statut', 'paye')
+                    .order('paye_le', { ascending: false });
+                if (error) {
+                    alert("❌ ERREUR SUPABASE : " + error.message);
+                    throw error;
+                }
+
+                const { data: commandesAtelierCrees } = await clientSupabase
+                    .from('commandes')
+                    .select('avance, origine, created_at')
+                    .gte('created_at', debutJournee.toISOString())
+                    .eq('origine', 'atelier');
+                const totalAvancesAujourdHui = (commandesAtelierCrees || []).reduce((s, c) => s + (parseFloat(c.avance) || 0), 0);
 
                 const { data: depenses } = await clientSupabase
                     .from('depenses_boutique')
                     .select('*')
                     .gte('created_at', debutJournee.toISOString());
 
-                     let totalCash = 0, totalMomo = 0;
-    let totalDepenses = depenses ? depenses.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
-    
-    // NOUVELLES VARIABLES POUR LE BÉNÉFICE
-    let caBoutique = 0;
-    let caAtelier = 0;
-    let coutMarchandiseJour = 0;
+                let totalCash = 0, totalMomo = 0;
+                let totalDepenses = depenses ? depenses.reduce((sum, d) => sum + parseFloat(d.montant), 0) : 0;
+                
+                let caBoutique = 0;
+                let caAtelier = 0;
+                let coutMarchandiseJour = 0;
 
-    // CHARGEMENT DU CATALOGUE (Pour lire les prix d'achat en cachette)
-    const { data: articlesDb } = await clientSupabase.from('articles_v2').select('ref, prix_achat');
-    let mapArticles = {};
-    if (articlesDb) {
-        articlesDb.forEach(a => { mapArticles[a.ref] = a; });
-    }
+                const { data: articlesDb } = await clientSupabase.from('articles_v2').select('ref, prix_achat');
+                let mapArticles = {};
+                if (articlesDb) {
+                    articlesDb.forEach(a => { mapArticles[a.ref] = a; });
+                }
                 
                 const tbody = document.getElementById('table-ventes-directes');
                 tbody.innerHTML = '';
@@ -510,151 +516,204 @@ if (error) {
                         let cash = parseFloat(v.montant_cash) || 0;
                         let momo = parseFloat(v.montant_momo) || 0;
                         totalCash += cash; totalMomo += momo;
-        let cmdTotal = parseFloat(v.total) || 0;
-        if (v.origine === 'atelier') caAtelier += cmdTotal;
-        else caBoutique += cmdTotal;
+                        let cmdTotal = parseFloat(v.total) || 0;
+                        if (v.origine === 'atelier') { caAtelier += cmdTotal; }
+                        else { caBoutique += cmdTotal; }
                         
-                                            let dateObj = new Date(v.created_at);
-                    let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
-                    let badgeSource = v.origine === 'atelier' ? '<span class="badge" style="background:#8e44ad; color:white;">Atelier</span>' : '<span class="badge" style="background:#2980b9; color:white;">Boutique</span>';
-                    let paiement = cash > 0 && momo > 0 ? `Mixte (${cash+momo} F)` : (cash > 0 ? `Espèces : ${cash} F` : `Mobile Money : ${momo} F`);
+                        let dateObj = new Date(v.paye_le || v.created_at);
+                        let heureStr = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
+                        let badgeSource = v.origine === 'atelier' ? '<span class="badge" style="background:#8e44ad; color:white;">Atelier</span>' : '<span class="badge" style="background:#2980b9; color:white;">Boutique</span>';
+                        let paiement = cash > 0 && momo > 0 ? `Mixte (${cash+momo} F)` : (cash > 0 ? `Espèces : ${cash} F` : `Mobile Money : ${momo} F`);
 
-                    // 1. DÉTECTION DU CLIENT
-                    let clientInfo = (v.client_nom || 'Anonyme') + (v.client_numero ? `<br><small style="color:#7f8c8d;">${v.client_numero}</small>` : '');
+                        let clientInfo = (v.client_nom || 'Anonyme') + (v.client_numero ? `<br><small style="color:#7f8c8d;">${v.client_numero}</small>` : '');
 
-                            // 2. DETECTION DES ARTICLES ET CALCUL DU COUT D'ACHAT
-        let detailsHtml = "";
-        try {
-            let articles = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
-            if (articles && articles.length > 0) {
-                
-                // La boucle secrète de rentabilité
-                articles.forEach(item => {
-                    let articleCatalogue = mapArticles[item.ref];
-                    let prixAchat = articleCatalogue ? parseFloat(articleCatalogue.prix_achat) || 0 : 0;
-                    let qte = parseFloat(item.quantite) || parseFloat(item.qte) || 0;
-                    coutMarchandiseJour += (prixAchat * qte);
-                });
-
-                detailsHtml = articles.map(a => `<span style="font-size:0.75rem; background:#eee; padding:2px 4px; border-radius:3px; margin-right:5px;">${a.quantite || a.qte}x ${a.nom_article || a.nom}</span>`).join('');
-            } else { detailsHtml = "-"; }
-        } catch(e) { detailsHtml = "-"; }
+                        let detailsHtml = "";
+                        try {
+                            let articles = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
+                            if (articles && articles.length > 0) {
+                                articles.forEach(item => {
+                                    let articleCatalogue = mapArticles[item.ref];
+                                    let prixAchat = articleCatalogue ? parseFloat(articleCatalogue.prix_achat) || 0 : 0;
+                                    let qte = parseFloat(item.quantite) || parseFloat(item.qte) || 0;
+                                    coutMarchandiseJour += (prixAchat * qte);
+                                });
+                                detailsHtml = articles.map(a => `<span style="font-size:0.75rem; background:#eee; padding:2px 4px; border-radius:3px; margin-right:5px;">${a.quantite || a.qte}x ${a.nom_article || a.nom}</span>`).join('');
+                            } else { detailsHtml = "-"; }
+                        } catch(e) { detailsHtml = "-"; }
                         
-                    // 3. DÉTECTION DES RELIQUATS
-                    let reliquatInfo = "";
-                    if (v.montant_reliquat && parseFloat(v.montant_reliquat) > 0) {
-                        reliquatInfo = `<br><span style="font-size:0.8rem; color:var(--danger); font-weight:bold;">⚠️ Reliquat déduit : ${v.montant_reliquat} F</span>`;
-                    }
+                        let reliquatInfo = "";
+                        if (v.montant_reliquat && parseFloat(v.montant_reliquat) > 0) {
+                            reliquatInfo = `<br><span style="font-size:0.8rem; color:var(--danger); font-weight:bold;">⚠️ Reliquat déduit : ${v.montant_reliquat} F</span>`;
+                        }
 
-                    // 4. AFFICHAGE DE LA LIGNE
-                    tbody.innerHTML += `
-                    <tr>
-                        <td>${heureStr}</td>
-                        <td><strong>${v.num_panier}</strong><br>${badgeSource}</td>
-                        <td>${clientInfo}</td>
-                        <td style="max-width:250px; line-height:1.4;">${detailsHtml}</td>
-                        <td><span class="badge" style="background:#ecf0f1; color:#2c3e50; border:1px solid #bdc3c7;">🧑‍💼 ${v.caissiere_nom || 'Inconnue'}</span></td>
-                        <td><strong>${paiement}</strong>${reliquatInfo}</td>
-                        <td><span class="badge badge-cash">✅ Payé</span></td>
-                    </tr>
-                    `;
-                      });  
+                        tbody.innerHTML += `
+                        <tr>
+                            <td>${heureStr}</td>
+                            <td><strong>${v.num_panier}</strong><br>${badgeSource}</td>
+                            <td>${clientInfo}</td>
+                            <td style="max-width:250px; line-height:1.4;">${detailsHtml}</td>
+                            <td><span class="badge" style="background:#ecf0f1; color:#2c3e50; border:1px solid #bdc3c7;">🧑‍💼 ${v.caissiere_nom || 'Inconnue'}</span></td>
+                            <td><strong>${paiement}</strong>${reliquatInfo}</td>
+                            <td><span class="badge badge-cash">✅ Payé</span></td>
+                        </tr>
+                        `;
+                    });  
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d;">Aucun encaissement pour le moment aujourd\'hui.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#7f8c8d;">Aucun encaissement pour le moment aujourd\'hui.</td></tr>';
                 }
 
-                                    // --- LECTURE DES DETTES (RELIQUATS) DU JOUR ---
-                    const { data: reliquatsJour } = await clientSupabase
-                        .from('reliquats')
-                        .select('*')
-                        .gte('created_at', debutJournee.toISOString())
-                        .order('created_at', { ascending: false });
+                // --- LECTURE DES DETTES (RELIQUATS) DU JOUR ---
+                const { data: reliquatsJour } = await clientSupabase
+                    .from('reliquats')
+                    .select('*')
+                    .gte('created_at', debutJournee.toISOString())
+                    .order('created_at', { ascending: false });
 
-                    const tbodyReq = document.getElementById('table-reliquats-jour');
-                    tbodyReq.innerHTML = '';
-                    let totalReliquatsJour = 0;
+                const tbodyReq = document.getElementById('table-reliquats-jour');
+                tbodyReq.innerHTML = '';
+                let totalReliquatsJour = 0;
 
-                    if (reliquatsJour && reliquatsJour.length > 0) {
-                        reliquatsJour.forEach(r => {
-                            totalReliquatsJour += parseFloat(r.montant) || 0;
-                            let dateR = new Date(r.created_at);
-                            let heureR = dateR.getHours().toString().padStart(2, '0') + ':' + dateR.getMinutes().toString().padStart(2, '0');
-                            let badgeStatut = r.statut === 'actif' ? '<span class="badge" style="background:var(--danger);">⚠️ En attente</span>' : '<span class="badge" style="background:var(--success);">✅ Remboursé</span>';
-                            
-                            tbodyReq.innerHTML += `
-                            <tr>
-                                <td>${heureR}</td>
-                                <td><strong>${r.nom_client || 'Inconnu'}</strong></td>
-                                <td><span class="badge" style="background:#ecf0f1; color:#333; border:1px solid #bdc3c7;">${r.num_recu}</span></td>
-                                <td><strong>${r.montant} F</strong></td>
-                                <td>${badgeStatut}</td>
-                            </tr>`;
-                        });
-                    } else {
-                        tbodyReq.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Aucune dette créée aujourd'hui.</td></tr>`;
-                    }
+                if (reliquatsJour && reliquatsJour.length > 0) {
+                    reliquatsJour.forEach(r => {
+                        totalReliquatsJour += parseFloat(r.montant) || 0;
+                        let dateR = new Date(r.created_at);
+                        let heureR = dateR.getHours().toString().padStart(2, '0') + ':' + dateR.getMinutes().toString().padStart(2, '0');
+                        let badgeStatut = r.statut === 'actif' ? '<span class="badge" style="background:var(--danger);">⚠️ En attente</span>' : '<span class="badge" style="background:var(--success);">✅ Remboursé</span>';
+                        
+                        tbodyReq.innerHTML += `
+                        <tr>
+                            <td>${heureR}</td>
+                            <td><strong>${r.nom_client || 'Inconnu'}</strong></td>
+                            <td><span class="badge" style="background:#ecf0f1; color:#333; border:1px solid #bdc3c7;">${r.num_recu}</span></td>
+                            <td><strong>${r.montant} F</strong></td>
+                            <td>${badgeStatut}</td>
+                        </tr>`;
+                    });
+                } else {
+                    tbodyReq.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Aucune dette créée aujourd'hui.</td></tr>`;
+                }
 
-                    // --- DÉDUCTION DES RELIQUATS REMBOURSÉS EN ESPÈCES ---
-    const { data: remboursements } = await clientSupabase
-        .from('reliquats')
-        .select('montant')
-        .eq('statut', 'rembourse')
-        .gte('date_remboursement', debutJournee.toISOString()); 
+                // --- DÉDUCTION DES RELIQUATS REMBOURSÉS EN ESPÈCES ---
+                const { data: remboursements } = await clientSupabase
+                    .from('reliquats')
+                    .select('montant')
+                    .eq('statut', 'rembourse')
+                    .gte('date_remboursement', debutJournee.toISOString()); 
 
-    let totalRembourse = 0;
-    if (remboursements && remboursements.length > 0) {
-        remboursements.forEach(r => {
-            totalRembourse += parseFloat(r.montant) || 0;
-        });
-    }
+                let totalRembourse = 0;
+                if (remboursements && remboursements.length > 0) {
+                    remboursements.forEach(r => {
+                        totalRembourse += parseFloat(r.montant) || 0;
+                    });
+                }
 
-    // On fait le trou dans la caisse mathématiquement :
-    totalCash = totalCash - totalRembourse;
-    // -----------------------------------------------------
+                totalCash = totalCash - totalRembourse;
                 
-                    // Mise à jour du titre rouge avec le total du jour
-                    document.getElementById('titre-radar-reliquat').innerHTML = `⚠️ Dettes (Reliquats) Créées Aujourd'hui : <span style="color:var(--danger);">${totalReliquatsJour.toLocaleString('fr-FR')} F</span>`;
+                document.getElementById('titre-radar-reliquat').innerHTML = `⚠️ Dettes (Reliquats) Créées Aujourd'hui : <span style="color:var(--danger);">${totalReliquatsJour.toLocaleString('fr-FR')} F</span>`;
                 document.getElementById('stat-cash').innerText = totalCash.toLocaleString('fr-FR') + " F";
+                chargerTicketsEnAttente();
                 document.getElementById('stat-momo').innerText = totalMomo.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-depenses-jour').innerText = totalDepenses.toLocaleString('fr-FR') + " F";
                 document.getElementById('stat-machiniste').innerText = caAtelier.toLocaleString('fr-FR') + " F";
-// On cache la valeur mathématique pour la récupérer facilement à la clôture
-document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
+                document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
+                document.getElementById('stat-avances-atelier').innerText = totalAvancesAujourdHui.toLocaleString('fr-FR') + " F";
+                document.getElementById('stat-avances-atelier').dataset.valeur = totalAvancesAujourdHui;
                 
-                // AFFICHAGE DU BÉNÉFICE NET DU JOUR
-        let beneficeNetJour = (caBoutique + caAtelier) - coutMarchandiseJour - totalDepenses;
-        document.getElementById('stat-benefice-jour').innerText = beneficeNetJour.toLocaleString('fr-FR') + " F";
-        
-        // On cache la vraie valeur mathématique dans la balise pour pouvoir l'envoyer à la clôture
-        document.getElementById('stat-benefice-jour').dataset.valeur = beneficeNetJour;
+                let beneficeNetJour = (caBoutique + caAtelier) - coutMarchandiseJour - totalDepenses;
+                document.getElementById('stat-benefice-jour').innerText = beneficeNetJour.toLocaleString('fr-FR') + " F";
+                document.getElementById('stat-benefice-jour').dataset.valeur = beneficeNetJour;
             } catch (e) {
-    alert("❌ CRASH JAVASCRIPT : " + e.message);
-    console.error("Erreur Caisse:", e);
+                alert("❌ CRASH JAVASCRIPT : " + e.message);
+                console.error("Erreur Caisse:", e);
             }
-                 }
+        }
         
         async function cloturerJournee() {
-    if(confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro.")) {
-        let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
-        let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
-        let depenses = parseInt(document.getElementById('stat-depenses-jour').innerText.replace(/\D/g, '')) || 0;
-        
-        // Nouvelle ligne pour récupérer le montant du machiniste
-        let totalMachiniste = parseInt(document.getElementById('stat-machiniste').dataset.valeur) || 0;
+            if(confirm("⚠️ Attention : Êtes-vous sûr de vouloir archiver le bilan de cette journée ? Le tiroir caisse sera remis à zéro.")) {
+                let cashAttendu = parseInt(document.getElementById('stat-cash').innerText.replace(/\D/g, '')) || 0;
+                let momoAttendu = parseInt(document.getElementById('stat-momo').innerText.replace(/\D/g, '')) || 0;
+                let depenses = parseInt(document.getElementById('stat-depenses-jour').innerText.replace(/\D/g, '')) || 0;
+                let totalMachiniste = parseInt(document.getElementById('stat-machiniste').dataset.valeur) || 0;
+                let totalAvances = parseInt(document.getElementById('stat-avances-atelier').dataset.valeur) || 0;
 
-        try {
-            await clientSupabase.from('clotures_caisse').insert([{
-                date_cloture: new Date().toISOString().split('T')[0],
-                total_especes_attendu: cashAttendu,
-                total_momo_attendu: momoAttendu,
-                total_atelier: totalMachiniste, // Ajout du point journalier du machiniste
-                total_depenses: depenses,
-                benefice_net_estime: parseFloat(document.getElementById('stat-benefice-jour').dataset.valeur)
-            }]);
-            
-            alert("✅ La journée est clôturée et archivée.");
-        } catch(err) { alert("❌ Erreur lors de la clôture."); }
-    }
+                if (totalAvances > 0 && !confirm(`⚠️ ${totalAvances.toLocaleString('fr-FR')} F d'avances atelier sont encore chez la machiniste et ne sont PAS dans le tiroir. Ce montant est normal (pas perdu), mais pensez à le récupérer. Continuer la clôture ?`)) {
+                    return;
+                }
+
+                try {
+                    const { error: errCloture } = await clientSupabase.from('clotures_caisse').insert([{
+                        date_cloture: new Date().toISOString().split('T')[0],
+                        total_especes_attendu: cashAttendu,
+                        total_momo_attendu: momoAttendu,
+                        total_atelier: totalMachiniste,
+                        total_avances_atelier: totalAvances,
+                        total_depenses: depenses,
+                        benefice_net_estime: parseFloat(document.getElementById('stat-benefice-jour').dataset.valeur)
+                    }]);
+                    if (errCloture) throw errCloture;
+                    
+                    alert("✅ La journée est clôturée et archivée.");
+                } catch(err) { alert("❌ Erreur lors de la clôture : " + err.message); }
+            }
+        }
+
+        // --- TICKETS EN ATTENTE : seul l'Administrateur peut les annuler ---
+        let TICKETS_ATTENTE_CACHE = [];
+        async function chargerTicketsEnAttente() {
+            const tbody = document.getElementById('table-tickets-attente');
+            try {
+                const { data, error } = await clientSupabase.from('commandes').select('*')
+                    .in('statut', ['en_attente', 'en_atelier']).order('created_at', { ascending: false });
+                if (error) throw error;
+                TICKETS_ATTENTE_CACHE = data || [];
+                if (TICKETS_ATTENTE_CACHE.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#7f8c8d;">Aucun ticket en attente.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = TICKETS_ATTENTE_CACHE.map((t, idx) => {
+                    let heure = new Date(t.created_at).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                    let source = t.origine === 'atelier' ? '✂️ Atelier' : '🛒 Boutique';
+                    let montant = t.origine === 'atelier' ? (parseFloat(t.reste_a_payer) || 0) : (parseFloat(t.total) || 0);
+                    let auteur = t.vendeur_nom || t.machiniste_nom || 'Inconnu';
+                    return `<tr>
+                        <td><small>${heure}</small></td>
+                        <td>${t.num_panier || '-'} <br><small>${source}</small></td>
+                        <td>${t.client_nom || '<i style="color:#bbb;">Anonyme</i>'}</td>
+                        <td>${auteur}</td>
+                        <td><strong>${montant.toLocaleString('fr-FR')} F</strong></td>
+                        <td><button class="btn-danger" style="font-size:11px; padding:6px 8px; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold;" onclick="supprimerTicketEnAttente(${idx})">🗑️ Supprimer / Annuler</button></td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--danger);">❌ Erreur de chargement.</td></tr>';
+            }
+        }
+
+        async function supprimerTicketEnAttente(idx) {
+            const t = TICKETS_ATTENTE_CACHE[idx];
+            if (!t) return;
+            const motif = prompt(`⚠️ SUPPRESSION DÉFINITIVE du ticket ${t.num_panier || ''} (${(parseFloat(t.total)||0).toLocaleString('fr-FR')} F).\n\nCette action est irréversible et sera à justifier en cas de contrôle.\nPour confirmer, tapez le motif de l'annulation (ex: "Client parti sans payer", "Erreur de saisie") :`);
+            if (!motif || !motif.trim()) return;
+
+            try {
+                await clientSupabase.from('depenses_boutique').insert([{
+                    motif: `🗑️ Ticket annulé (${t.num_panier || t.id}) — ${motif.trim()}`,
+                    montant: 0,
+                    categorie_depense: 'Annulation Admin',
+                    utilisateur: localStorage.getItem('nomEmploye') || 'Admin'
+                }]).catch(() => {});
+
+                const { error: errLignes } = await clientSupabase.from('lignes_commandes').delete().eq('commande_id', t.id);
+                if (errLignes) throw errLignes;
+
+                const { error: errCmd } = await clientSupabase.from('commandes').delete().eq('id', t.id);
+                if (errCmd) throw errCmd;
+
+                alert('✅ Ticket supprimé.');
+                chargerCaisse();
+            } catch (err) {
+                alert('❌ Erreur lors de la suppression : ' + err.message);
+            }
         }
 
                 // ==========================================
@@ -664,21 +723,28 @@ document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
 
         async function chargerComptabilite() {
             try {
-                // 1. Valeur du stock dormant
-                const { data: stock } = await clientSupabase.from('stock_depot').select('quantite, article_id');
+                // 1. Valeur du stock dormant (dépôt + rayon + atelier)
+                const { data: stockD } = await clientSupabase.from('stock_depot').select('quantite, article_id');
+                const { data: stockR } = await clientSupabase.from('stock_rayon').select('quantite, article_id');
+                const { data: stockA } = await clientSupabase.from('stock_atelier').select('quantite, article_id');
                 const { data: articles } = await clientSupabase.from('articles_v2').select('*');
                 
                 let valeurStock = 0;
-                let mapArticles = {}; 
-                if(articles) {
-                    articles.forEach(a => { mapArticles[a.ref] = a; });
-                    if(stock) {
-                        stock.forEach(s => {
-                            let art = articles.find(a => a.id === s.article_id);
-                            if(art) valeurStock += (parseFloat(s.quantite) * parseFloat(art.prix_achat || 0));
-                        });
-                    }
+                let mapArticlesParId = {};
+                let mapArticles = {};
+                if (articles) {
+                    articles.forEach(a => {
+                        mapArticlesParId[a.id] = a;
+                        mapArticlesParId[String(a.id)] = a;
+                        mapArticles[a.ref] = a;
+                    });
                 }
+                [stockD, stockR, stockA].forEach(liste => {
+                    (liste || []).forEach(s => {
+                        let art = mapArticlesParId[s.article_id];
+                        if (art) valeurStock += (parseFloat(s.quantite) || 0) * (parseFloat(art.prix_achat) || 0);
+                    });
+                });
                 document.getElementById('stat-valeur-stock').innerText = valeurStock.toLocaleString('fr-FR') + " F";
 
                 // 2. Calcul du mois en cours
@@ -686,16 +752,17 @@ document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
                 dateDebutMois.setDate(1);
                 dateDebutMois.setHours(0,0,0,0);
 
-                const { data: commandesMois } = await clientSupabase.from('commandes').select('*').gte('created_at', dateDebutMois.toISOString()).eq('statut', 'paye');
+                const { data: commandesMois } = await clientSupabase.from('commandes').select('*').gte('paye_le', dateDebutMois.toISOString()).eq('statut', 'paye');
                 const { data: depensesMois } = await clientSupabase.from('depenses_boutique').select('*').gte('created_at', dateDebutMois.toISOString()).order('created_at', { ascending: false });
+                const { data: atelierCreeMois } = await clientSupabase.from('commandes').select('avance').gte('created_at', dateDebutMois.toISOString()).eq('origine', 'atelier');
+                const totalAvancesCollecteesMois = (atelierCreeMois || []).reduce((s, c) => s + (parseFloat(c.avance) || 0), 0);
 
                 let caBoutique = 0;
                 let caAtelier = 0;
                 let coutMarchandiseVendue = 0;
                 let totalDepensesMois = 0;
-                let palmares = {}; // Pour calculer qui rapporte le plus
+                let palmares = {};
 
-                // Analyse des dépenses
                 const tbodyDep = document.getElementById('table-depenses-compta');
                 tbodyDep.innerHTML = '';
                 if(depensesMois && depensesMois.length > 0) {
@@ -709,11 +776,10 @@ document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
                     tbodyDep.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Aucune dépense enregistrée ce mois-ci.</td></tr>';
                 }
 
-                // Analyse des ventes et de la rentabilité article par article
                 if(commandesMois) {
                     commandesMois.forEach(cmd => {
                         let totalCmd = parseFloat(cmd.total) || 0;
-                        if(cmd.origine === 'atelier') { caAtelier += totalCmd; } 
+                        if(cmd.origine === 'atelier') { caAtelier += totalCmd; }
                         else { caBoutique += totalCmd; }
 
                         try {
@@ -722,43 +788,37 @@ document.getElementById('stat-machiniste').dataset.valeur = caAtelier;
                                 details.forEach(item => {
                                     let articleDb = mapArticles[item.ref];
                                     let prixAchatUnitaire = articleDb ? parseFloat(articleDb.prix_achat) || 0 : 0;
-                                    let prixVenteUnitaire = parseFloat(item.prix_unitaire_vente) || parseFloat(item.prix) || 0;
                                     let qte = parseFloat(item.quantite) || parseFloat(item.qte) || 0;
-                                    
 
                                     let coutAchatLigne = prixAchatUnitaire * qte;
                                     coutMarchandiseVendue += coutAchatLigne;
 
-                                // Le nouveau compteur de ventes (Quantités écoulées)
-let nomArt = item.nom_article || item.nom || 'Article inconnu';
-
-if(!palmares[nomArt]) palmares[nomArt] = 0;
-palmares[nomArt] += qte; // On additionne les quantités vendues !
+                                    let nomArt = item.nom_article || item.nom || 'Article inconnu';
+                                    if(!palmares[nomArt]) palmares[nomArt] = 0;
+                                    palmares[nomArt] += qte;
                                 });
                             }
                         } catch(e) {}
                     });
                 }
 
-                // Calcul du vrai bénéfice net du mois
                 let chiffreAffairesTotal = caBoutique + caAtelier;
                 let beneficeNet = chiffreAffairesTotal - coutMarchandiseVendue - totalDepensesMois;
                 document.getElementById('stat-benefice').innerText = beneficeNet.toLocaleString('fr-FR') + " F";
+                document.getElementById('stat-avances-atelier-mois').innerText = totalAvancesCollecteesMois.toLocaleString('fr-FR') + " F";
 
-                // Dessin du graphique
                 dessinerGraphiqueComparatif(caBoutique, caAtelier, totalDepensesMois, beneficeNet);
                 
-                // Affichage du Palmarès Top 30
-let top30 = Object.entries(palmares).filter(item => item[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 30);
-let palmaresHtml = "";
-if(top30.length > 0) {
-    top30.forEach((item, index) => {
-        palmaresHtml += `
-            <div class="rank-item">
-                <div><span class="rank-number">#${index + 1}</span> <strong>${item[0]}</strong></div>
-                <div style="color:var(--primary); font-weight:bold;">${item[1]} vendus</div>
-            </div>`;
-    });
+                let top30 = Object.entries(palmares).filter(item => item[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 30);
+                let palmaresHtml = "";
+                if(top30.length > 0) {
+                    top30.forEach((item, index) => {
+                        palmaresHtml += `
+                            <div class="rank-item">
+                                <div><span class="rank-number">#${index + 1}</span> <strong>${item[0]}</strong></div>
+                                <div style="color:var(--primary); font-weight:bold;">${item[1]} vendus</div>
+                            </div>`;
+                    });
                 } else {
                     palmaresHtml = "<div style='text-align:center; padding:10px; color:#7f8c8d;'>Pas assez de données pour le moment.</div>";
                 }
@@ -767,25 +827,25 @@ if(top30.length > 0) {
             } catch (e) { console.error("Erreur Comptabilité:", e); }
         }
 
-function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses, benefice) {
-    const ctx = document.getElementById('comptaChart');
-    if(!ctx) return;
-    if(chartInstance) chartInstance.destroy();
-    
-    chartInstance = new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Boutique (Ventes)', 'Atelier (Prestations)', 'Dépenses Totales', 'Bénéfice Net'],
-            datasets: [{
-                label: 'Flux du Mois (FCFA)',
-                data: [caBoutique, caAtelier, depenses, benefice],
-                backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c', '#27ae60'],
-                borderRadius: 4
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-}
+        function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses, benefice) {
+            const ctx = document.getElementById('comptaChart');
+            if(!ctx) return;
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Boutique (Ventes)', 'Atelier (Prestations)', 'Dépenses Totales', 'Bénéfice Net'],
+                    datasets: [{
+                        label: 'Flux du Mois (FCFA)',
+                        data: [caBoutique, caAtelier, depenses, benefice],
+                        backgroundColor: ['#2980b9', '#8e44ad', '#e74c3c', '#27ae60'],
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
         
         async function enregistrerDepenseComptable() {
             const motif = document.getElementById('compta-motif').value;
@@ -807,108 +867,108 @@ function dessinerGraphiqueComparatif(caBoutique, caAtelier, depenses, benefice) 
         }
 
         async function ouvrirModalJournee(dateStr) {
-    const modal = document.getElementById('modal-archive-journee');
-    const titre = document.getElementById('modal-archive-titre');
-    const contenu = document.getElementById('modal-archive-contenu');
+            const modal = document.getElementById('modal-archive-journee');
+            const titre = document.getElementById('modal-archive-titre');
+            const contenu = document.getElementById('modal-archive-contenu');
 
-    let parts = dateStr.split('-');
-    let dateFormatee = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
-    
-    titre.innerText = `📋 Rapport détaillé du ${dateFormatee}`;
-    contenu.innerHTML = `<div style="text-align: center; color: #7f8c8d; padding: 30px;">⏳ Recherche des transactions...</div>`;
-    modal.style.display = 'flex';
+            let parts = dateStr.split('-');
+            let dateFormatee = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+            
+            titre.innerText = `📋 Rapport détaillé du ${dateFormatee}`;
+            contenu.innerHTML = `<div style="text-align: center; color: #7f8c8d; padding: 30px;">⏳ Recherche des transactions...</div>`;
+            modal.style.display = 'flex';
 
-    try {
-        const debut = `${dateStr}T00:00:00`;
-        const fin = `${dateStr}T23:59:59`;
+            try {
+                const debut = `${dateStr}T00:00:00`;
+                const fin = `${dateStr}T23:59:59`;
 
-        const { data: ventes, error: errVentes } = await clientSupabase.from('commandes').select('*').gte('created_at', debut).lte('created_at', fin).eq('statut', 'paye').order('created_at', { ascending: true });
-        const { data: depenses, error: errDepenses } = await clientSupabase.from('depenses_boutique').select('*').gte('created_at', debut).lte('created_at', fin);
+                const { data: ventes, error: errVentes } = await clientSupabase.from('commandes').select('*').gte('paye_le', debut).lte('paye_le', fin).eq('statut', 'paye').order('paye_le', { ascending: true });
+                const { data: depenses } = await clientSupabase.from('depenses_boutique').select('*').gte('created_at', debut).lte('created_at', fin);
 
-        if (errVentes) throw errVentes;
+                if (errVentes) throw errVentes;
 
-        let html = `<h4 style="color: var(--primary); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 5px;">🛒 Tickets de caisse émis (${ventes ? ventes.length : 0})</h4>`;
-        
-        if (ventes && ventes.length > 0) {
-            html += `<div class="table-responsive" style="margin-bottom: 25px;"><table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;"><thead><tr style="background: #f8f9fa;"><th style="padding: 8px; border-bottom: 1px solid #ddd;">Heure</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Ticket</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Client</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Articles</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Paiement</th></tr></thead><tbody>`;
-            ventes.forEach(v => {
-                let dObj = new Date(v.created_at);
-                let heure = dObj.getHours().toString().padStart(2, '0') + ':' + dObj.getMinutes().toString().padStart(2, '0');
-                let det = '';
-                try {
-                    let arts = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
-                    det = arts ? arts.map(i => `${i.nom_article || i.nom} (x${i.quantite || i.qte})`).join(', ') : '-';
-                } catch(e) { det = '-'; }
-                let pay = (parseFloat(v.montant_cash) > 0 && parseFloat(v.montant_momo) > 0) ? `Mixte (${v.montant_cash}F Cash / ${v.montant_momo}F MoMo)` : (parseFloat(v.montant_momo) > 0 ? 'Mobile Money' : 'Espèces');
-                html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${heure}</td><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${v.num_panier || '-'}</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${v.client_nom || 'Anonyme'}</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${det}</td><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${Number(v.total).toLocaleString('fr-FR')} F</strong><br><small style="color: #7f8c8d;">${pay}</small></td></tr>`;
-            });
-            html += `</tbody></table></div>`;
-        } else {
-            html += `<p style="color: #7f8c8d; font-style: italic;">Aucune vente enregistrée.</p>`;
-        }
-
-        html += `<h4 style="color: var(--danger); margin-top: 20px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">💸 Dépenses (${depenses ? depenses.length : 0})</h4>`;
-        if (depenses && depenses.length > 0) {
-            html += `<div class="table-responsive"><table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;"><thead><tr style="background: #f8f9fa;"><th style="padding: 8px; border-bottom: 1px solid #ddd;">Motif</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Catégorie</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Montant</th></tr></thead><tbody>`;
-            depenses.forEach(d => {
-                html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${d.motif || d.libelle || '-'}</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${d.categorie_depense || d.categorie || '-'}</td><td style="padding: 8px; border-bottom: 1px solid #eee; color: var(--danger); font-weight: bold;">${Number(d.montant).toLocaleString('fr-FR')} F</td></tr>`;
-            });
-            html += `</tbody></table></div>`;
-        } else {
-            html += `<p style="color: #7f8c8d; font-style: italic;">Aucune dépense enregistrée.</p>`;
-        }
-
-        contenu.innerHTML = html;
-    } catch (e) {
-        contenu.innerHTML = `<div style="color: var(--danger); padding: 20px;">❌ Erreur : ${e.message}</div>`;
-    }
-}
-
-function fermerModalJournee() {
-    document.getElementById('modal-archive-journee').style.display = 'none';
+                let html = `<h4 style="color: var(--primary); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 5px;">🛒 Tickets de caisse émis (${ventes ? ventes.length : 0})</h4>`;
+                
+                if (ventes && ventes.length > 0) {
+                    html += `<div class="table-responsive" style="margin-bottom: 25px;"><table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;"><thead><tr style="background: #f8f9fa;"><th style="padding: 8px; border-bottom: 1px solid #ddd;">Heure</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Ticket</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Client</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Articles</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Paiement</th></tr></thead><tbody>`;
+                    ventes.forEach(v => {
+                        let dObj = new Date(v.paye_le || v.created_at);
+                        let heure = dObj.getHours().toString().padStart(2, '0') + ':' + dObj.getMinutes().toString().padStart(2, '0');
+                        let det = '';
+                        try {
+                            let arts = typeof v.details === 'string' ? JSON.parse(v.details) : v.details;
+                            det = arts ? arts.map(i => `${i.nom_article || i.nom} (x${i.quantite || i.qte})`).join(', ') : '-';
+                        } catch(e) { det = '-'; }
+                        let pay = (parseFloat(v.montant_cash) > 0 && parseFloat(v.montant_momo) > 0) ? `Mixte (${v.montant_cash}F Cash / ${v.montant_momo}F MoMo)` : (parseFloat(v.montant_momo) > 0 ? 'Mobile Money' : 'Espèces');
+                        html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${heure}</td><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${v.num_panier || '-'}</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${v.client_nom || 'Anonyme'}</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${det}</td><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${Number(v.total).toLocaleString('fr-FR')} F</strong><br><small style="color: #7f8c8d;">${pay}</small></td></tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                } else {
+                    html += `<p style="color: #7f8c8d; font-style: italic;">Aucune vente enregistrée.</p>`;
                 }
-        
-async function chargerArchivesJours() {
-    try {
-        const { data, error } = await clientSupabase
-            .from('clotures_caisse')
-            .select('*')
-            .order('date_cloture', { ascending: false });
 
-        if (error) throw error;
+                html += `<h4 style="color: var(--danger); margin-top: 20px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">💸 Dépenses (${depenses ? depenses.length : 0})</h4>`;
+                if (depenses && depenses.length > 0) {
+                    html += `<div class="table-responsive"><table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;"><thead><tr style="background: #f8f9fa;"><th style="padding: 8px; border-bottom: 1px solid #ddd;">Motif</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Catégorie</th><th style="padding: 8px; border-bottom: 1px solid #ddd;">Montant</th></tr></thead><tbody>`;
+                    depenses.forEach(d => {
+                        html += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${d.motif || d.libelle || '-'}</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${d.categorie_depense || d.categorie || '-'}</td><td style="padding: 8px; border-bottom: 1px solid #eee; color: var(--danger); font-weight: bold;">${Number(d.montant).toLocaleString('fr-FR')} F</td></tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                } else {
+                    html += `<p style="color: #7f8c8d; font-style: italic;">Aucune dépense enregistrée.</p>`;
+                }
 
-        const conteneur = document.getElementById('liste-archives-jours');
-
-        if (data && data.length > 0) {
-            conteneur.innerHTML = data.map(d => {
-                let parts = d.date_cloture.split('-');
-                let dateFormatee = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d.date_cloture;
-
-                return `
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" 
-                     onclick="ouvrirModalJournee('${d.date_cloture}')"
-                     onmouseover="this.style.background='#f8f9fa'" 
-                     onmouseout="this.style.background='white'">
-                    <div>
-                        <strong style="color: var(--primary); font-size: 1.1rem;">📅 Clôture du ${dateFormatee}</strong><br>
-                        <span style="font-size: 0.85rem; color: #7f8c8d;">Espèces: ${Number(d.total_especes_attendu).toLocaleString('fr-FR')} F | MoMo: ${Number(d.total_momo_attendu).toLocaleString('fr-FR')} F</span>
-                    </div>
-                    <div style="text-align: right;">
-                        <span style="font-size: 0.85rem; color: var(--danger);">Dépenses: ${Number(d.total_depenses).toLocaleString('fr-FR')} F</span><br>
-                        <strong style="color: var(--success);">Bénéfice (est.): ${Number(d.benefice_net_estime).toLocaleString('fr-FR')} F</strong>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        } else {
-            conteneur.innerHTML = '<div style="color: #7f8c8d; padding: 20px; text-align: center;">Aucune archive de journée trouvée.</div>';
+                contenu.innerHTML = html;
+            } catch (e) {
+                contenu.innerHTML = `<div style="color: var(--danger); padding: 20px;">❌ Erreur : ${e.message}</div>`;
+            }
         }
-    } catch (e) {
-        console.error("Erreur de chargement des archives:", e);
-    }
-}
+
+        function fermerModalJournee() {
+            document.getElementById('modal-archive-journee').style.display = 'none';
+        }
         
-        // ==========================================
+        async function chargerArchivesJours() {
+            try {
+                const { data, error } = await clientSupabase
+                    .from('clotures_caisse')
+                    .select('*')
+                    .order('date_cloture', { ascending: false });
+
+                if (error) throw error;
+
+                const conteneur = document.getElementById('liste-archives-jours');
+
+                if (data && data.length > 0) {
+                    conteneur.innerHTML = data.map(d => {
+                        let parts = d.date_cloture.split('-');
+                        let dateFormatee = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d.date_cloture;
+
+                        return `
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" 
+                             onclick="ouvrirModalJournee('${d.date_cloture}')"
+                             onmouseover="this.style.background='#f8f9fa'" 
+                             onmouseout="this.style.background='white'">
+                            <div>
+                                <strong style="color: var(--primary); font-size: 1.1rem;">📅 Clôture du ${dateFormatee}</strong><br>
+                                <span style="font-size: 0.85rem; color: #7f8c8d;">Espèces: ${Number(d.total_especes_attendu).toLocaleString('fr-FR')} F | MoMo: ${Number(d.total_momo_attendu).toLocaleString('fr-FR')} F</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 0.85rem; color: var(--danger);">Dépenses: ${Number(d.total_depenses).toLocaleString('fr-FR')} F</span><br>
+                                <strong style="color: var(--success);">Bénéfice (est.): ${Number(d.benefice_net_estime).toLocaleString('fr-FR')} F</strong>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                } else {
+                    conteneur.innerHTML = '<div style="color: #7f8c8d; padding: 20px; text-align: center;">Aucune archive de journée trouvée.</div>';
+                }
+            } catch (e) {
+                console.error("Erreur de chargement des archives:", e);
+            }
+        }
+
+                // ==========================================
         // --- 5. CATALOGUE & IMPORT CSV          ---
         // ==========================================
         async function chargerCatalogue() {
@@ -926,9 +986,9 @@ async function chargerArchivesJours() {
                         <td style="color:var(--success); font-weight:bold;">${a.prix_vente} F</td>
                         <td style="color:var(--danger);">${a.prix_achat} F</td>
                         <td>
-    <button class="btn btn-action" style="background: var(--gold); color: white; margin-right: 5px;" onclick="editerArticle('${a.ref}')">✏️ Modifier</button>
-    <button class="btn btn-action btn-danger" onclick="supprimerArticle('${a.id}')">❌</button>
-</td>
+                            <button class="btn btn-action" style="background: var(--gold); color: white; margin-right: 5px;" onclick="editerArticle('${a.ref}')">✏️ Modifier</button>
+                            <button class="btn btn-action btn-danger" onclick="supprimerArticle('${a.id}')">❌</button>
+                        </td>
                     </tr>`;
                 });
             } else {
@@ -936,64 +996,60 @@ async function chargerArchivesJours() {
             }
         }
         
-function filtrerCatalogue() {
-    let input = document.getElementById('recherche-catalogue').value.toLowerCase();
-    let lignes = document.querySelectorAll('#table-articles tr');
-    
-    lignes.forEach(ligne => {
-        // On ne cache pas la ligne qui dit "Chargement..." s'il n'y a pas encore de données
-        if(ligne.innerText.includes("Chargement")) return; 
+        function filtrerCatalogue() {
+            let input = document.getElementById('recherche-catalogue').value.toLowerCase();
+            let lignes = document.querySelectorAll('#table-articles tr');
+            
+            lignes.forEach(ligne => {
+                if(ligne.innerText.includes("Chargement")) return; 
+                let texteLigne = ligne.innerText.toLowerCase();
+                ligne.style.display = texteLigne.includes(input) ? '' : 'none';
+            });
+        }
         
-        let texteLigne = ligne.innerText.toLowerCase();
-        ligne.style.display = texteLigne.includes(input) ? '' : 'none';
-    });
-}
-        
-async function ajouterArticleManuel() {
-    const payload = {
-        ref: document.getElementById('art-ref').value,
-        nom_article: document.getElementById('art-nom').value,
-        famille: document.getElementById('art-cat').value,
-        cible_utilisation: document.getElementById('art-scope').value,
-        prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
-        prix_achat: parseFloat(document.getElementById('art-pa').value) || 0,
-        seuil_alerte: parseInt(document.getElementById('art-seuil').value) || 5
-    };
+        async function ajouterArticleManuel() {
+            const payload = {
+                ref: document.getElementById('art-ref').value,
+                nom_article: document.getElementById('art-nom').value,
+                famille: document.getElementById('art-cat').value,
+                cible_utilisation: document.getElementById('art-scope').value,
+                prix_vente: parseFloat(document.getElementById('art-pv').value) || 0,
+                prix_achat: parseFloat(document.getElementById('art-pa').value) || 0,
+                seuil_alerte: parseInt(document.getElementById('art-seuil').value) || 5
+            };
 
-    if (!payload.nom_article || !payload.ref) {
-        alert("La Référence et le Nom de l'article sont obligatoires.");
-        return;
-    }
+            if (!payload.nom_article || !payload.ref) {
+                alert("La Référence et le Nom de l'article sont obligatoires.");
+                return;
+            }
 
-    try {
-        const { error } = await clientSupabase.from('articles_v2').upsert([payload], { onConflict: 'ref' });
-        if (error) throw error; // S'il y a un refus, on déclenche l'erreur
+            try {
+                const { error } = await clientSupabase.from('articles_v2').upsert([payload], { onConflict: 'ref' });
+                if (error) throw error;
 
-        alert("✅ Article ajouté avec succès au catalogue !");
-        
-        // Vider les cases après succès
-        document.querySelectorAll('#tab-catalogue input').forEach(input => input.value = "");
-        chargerCatalogue(); // Rafraîchit le tableau en bas
-    } catch(err) {
-        alert("❌ Erreur lors de l'ajout : " + err.message);
-    }
-}
+                alert("✅ Article ajouté avec succès au catalogue !");
+                document.querySelectorAll('#tab-catalogue input').forEach(input => input.value = "");
+                chargerCatalogue();
+            } catch(err) {
+                alert("❌ Erreur lors de l'ajout : " + err.message);
+            }
+        }
 
         function editerArticle(ref) {
-    if (!window.articlesCatalogue) return;
-    const article = window.articlesCatalogue.find(a => a.ref === ref);
-    
-    if (article) {
-        document.getElementById('art-ref').value = article.ref || '';
-        document.getElementById('art-nom').value = article.nom_article || '';
-        document.getElementById('art-cat').value = article.famille || '';
-        document.getElementById('art-scope').value = article.cible_utilisation || '';
-        document.getElementById('art-pv').value = article.prix_vente || 0;
-        document.getElementById('art-pa').value = article.prix_achat || 0;
-        document.getElementById('art-seuil').value = article.seuil_alerte || 5;
+            if (!window.articlesCatalogue) return;
+            const article = window.articlesCatalogue.find(a => a.ref === ref);
+            
+            if (article) {
+                document.getElementById('art-ref').value = article.ref || '';
+                document.getElementById('art-nom').value = article.nom_article || '';
+                document.getElementById('art-cat').value = article.famille || '';
+                document.getElementById('art-scope').value = article.cible_utilisation || '';
+                document.getElementById('art-pv').value = article.prix_vente || 0;
+                document.getElementById('art-pa').value = article.prix_achat || 0;
+                document.getElementById('art-seuil').value = article.seuil_alerte || 5;
 
-        document.getElementById('art-ref').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+                document.getElementById('art-ref').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
         
         async function supprimerArticle(id) {
@@ -1007,17 +1063,17 @@ async function ajouterArticleManuel() {
         function preparerImport() {
             const file = document.getElementById('csv-file').files[0];
             if (!file) return;
-                Papa.parse(file, {
-        header: true, 
-        skipEmptyLines: true,
-        delimiter: "\t",
-        complete: function(results) {
-            articlesPourImport = results.data;
-            const btn = document.getElementById('btn-import');
+            Papa.parse(file, {
+                header: true, 
+                skipEmptyLines: true,
+                delimiter: "\t",
+                complete: function(results) {
+                    articlesPourImport = results.data;
+                    const btn = document.getElementById('btn-import');
                     btn.style.display = 'inline-block';
-            btn.innerText = `🚀 Injecter ${articlesPourImport.length} articles`;
-        }
-    });
+                    btn.innerText = `🚀 Injecter ${articlesPourImport.length} articles`;
+                }
+            });
         }
 
         async function lancerImport() {
@@ -1025,29 +1081,27 @@ async function ajouterArticleManuel() {
             const btn = document.getElementById('btn-import');
             btn.disabled = true; btn.innerText = "⏳ Injection en cours...";
             try {
-                        const articlesNettoyes = articlesPourImport.map(row => ({
-            ref: row.ref || row.reference || row.REF || row['Référence'] || row.Code || row.code,
-            nom_article: row.nom_article || row.designation || row.nom || row.NOM || row['Désignation'] || row['Article'] || row.article,
-            famille: row.categorie || row.section || row.famille || row['Catégorie'] || row.Famille || 'Catalogue',
-            prix_vente: parseFloat(row.prix_detail || row.prix_vente || row['Prix Vente']) || 0,
-            prix_achat: parseFloat(row.prix_achat || row.prix_gros || row['Prix Achat']) || 0,
-            cible_utilisation: "VENTE_PUBLIQUE"
-        })).filter(a => a.ref && a.nom_article);
-                            const { data, error } = await clientSupabase.from('articles_v2').upsert(articlesNettoyes, { onConflict: 'ref' });
+                const articlesNettoyes = articlesPourImport.map(row => ({
+                    ref: row.ref || row.reference || row.REF || row['Référence'] || row.Code || row.code,
+                    nom_article: row.nom_article || row.designation || row.nom || row.NOM || row['Désignation'] || row['Article'] || row.article,
+                    famille: row.categorie || row.section || row.famille || row['Catégorie'] || row.Famille || 'Catalogue',
+                    prix_vente: parseFloat(row.prix_detail || row.prix_vente || row['Prix Vente']) || 0,
+                    prix_achat: parseFloat(row.prix_achat || row.prix_gros || row['Prix Achat']) || 0,
+                    cible_utilisation: "VENTE_PUBLIQUE"
+                })).filter(a => a.ref && a.nom_article);
 
-            if (error) {
-                alert("❌ REFUS DE SUPABASE : " + error.message);
-                console.error("Détails de l'erreur :", error);
+                const { error } = await clientSupabase.from('articles_v2').upsert(articlesNettoyes, { onConflict: 'ref' });
+                if (error) {
+                    alert("❌ REFUS DE SUPABASE : " + error.message);
+                    btn.disabled = false;
+                    return;
+                }
+
+                alert(`🔥 Importation réussie ! ${articlesNettoyes.length} fiches créées.`);
+                document.getElementById('csv-file').value = "";
+                btn.style.display = 'none';
                 btn.disabled = false;
-                return;
-            }
-
-            alert(`🔥 Importation réussie ! ${articlesNettoyes.length} fiches créées.`);
-            document.getElementById('csv-file').value = "";
-            btn.style.display = 'none';
-            btn.disabled = false;
-            chargerCatalogue();
-                
+                chargerCatalogue();
             } catch(err) { alert("❌ Erreur lors de l'injection."); btn.disabled = false; }
         }
 
@@ -1055,7 +1109,7 @@ async function ajouterArticleManuel() {
         // --- 6. AUDIT LOGISTIQUE (Dépôt)        ---
         // ==========================================
         async function chargerAuditDepot() {
-            // Jointure pour récupérer le nom de l'article depuis sa référence (si enregistré sous forme d'ID ou de ref)
+            chargerTransfertsAudit();
             const { data } = await clientSupabase.from('mouvements_stock').select('*').order('created_at', { ascending: false }).limit(50);
             const tbody = document.getElementById('table-mouvements-audit');
             tbody.innerHTML = '';
@@ -1063,18 +1117,54 @@ async function ajouterArticleManuel() {
                 data.forEach(m => {
                     let date = new Date(m.created_at).toLocaleString('fr-FR');
                     let badgeMvt = m.type_mouvement === 'ENTREE' ? '<span class="badge badge-cash">🟢 ENTRÉE</span>' : '<span class="badge btn-danger">🔴 SORTIE</span>';
+                    let destInfo = m.destination ? `<br><small style="color:#7f8c8d;">${m.destination}</small>` : '';
                     
                     tbody.innerHTML += `<tr>
                         <td><small>${date}</small></td>
                         <td><strong>${m.nom_article || m.non_article || 'Inconnu'}</strong></td>
                         <td>🎨 ${m.couleur || m.nuance || '-'}</td>
-                        <td>${badgeMvt}</td>
+                        <td>${badgeMvt}${destInfo}</td>
                         <td><strong>${m.quantite_totale || m.quantite}</strong></td>
                         <td><span class="badge" style="background:#ecf0f1; color:#2c3e50;">👤 ${m.utilisateur || 'Magasinier'}</span></td>
                     </tr>`;
                 });
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Aucun mouvement logistique récent.</td></tr>';
+            }
+        }
+
+        async function chargerTransfertsAudit() {
+            const tbody = document.getElementById('table-transferts-audit');
+            try {
+                const { data, error } = await clientSupabase.from('transferts').select('*').order('created_at', { ascending: false }).limit(50);
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Aucun transfert enregistré.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(t => {
+                    let date = new Date(t.created_at).toLocaleString('fr-FR');
+                    let trajet = `${t.source === 'DEPOT' ? '📦 Dépôt' : '🪡 Rayon'} → ${t.destination === 'RAYON' ? '🪡 Rayon' : '✂️ Atelier'}`;
+                    let badgeStatut;
+                    if (t.statut === 'en_attente') badgeStatut = '<span class="badge" style="background:#f39c12; color:white;">⏳ En attente</span>';
+                    else if (t.statut === 'refuse') badgeStatut = '<span class="badge btn-danger">❌ Refusé</span>';
+                    else {
+                        let ecart = t.quantite - (t.quantite_recue ?? t.quantite);
+                        badgeStatut = ecart > 0
+                            ? `<span class="badge" style="background:#e74c3c; color:white;">⚠️ Reçu avec écart (${ecart})</span>`
+                            : '<span class="badge badge-cash">✅ Reçu conforme</span>';
+                    }
+                    return `<tr>
+                        <td><small>${date}</small></td>
+                        <td><strong>${t.nom_article || ''}</strong><br><small>🎨 ${t.couleur_ref || ''}</small></td>
+                        <td>${trajet}</td>
+                        <td>${t.quantite}</td>
+                        <td>${badgeStatut}</td>
+                        <td>${t.recu_par || '-'}</td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--danger);">❌ Erreur de chargement.</td></tr>';
             }
         }
 
@@ -1087,23 +1177,23 @@ async function ajouterArticleManuel() {
             tbody.innerHTML = '';
             if(data) {
                 data.forEach(m => {
-                                tbody.innerHTML += `<tr>
-                <td><strong>${m.nom_employe || 'Inconnu'}</strong></td>
-                <td>${m.role}</td>
-                <td><code style="background:#eee; padding:3px 6px; border-radius:4px;">${m.code_pin}</code></td>
-                <td>${m.actif ? '<span class="badge badge-cash" style="background:#2ecc71;">✔ Actif</span>' : '<span class="badge" style="background:#95a5a6;">❌ Inactif</span>'}</td>
-                <td>
-                    ${m.actif 
-                        ? '<button class="btn btn-action btn-danger" onclick="desactiverEmploye(' + m.id + ')">Désactiver</button>' 
-                        : '<button class="btn btn-action" style="background:#2ecc71;" onclick="reactiverEmploye(' + m.id + ')">Réactiver</button>'
-                    }
-                </td>
-            </tr>`;
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${m.nom_employe || 'Inconnu'}</strong></td>
+                        <td>${m.role}</td>
+                        <td><code style="background:#eee; padding:3px 6px; border-radius:4px;">${m.code_pin}</code></td>
+                        <td>${m.actif ? '<span class="badge badge-cash" style="background:#2ecc71;">✔ Actif</span>' : '<span class="badge" style="background:#95a5a6;">❌ Inactif</span>'}</td>
+                        <td>
+                            ${m.actif 
+                                ? '<button class="btn btn-action btn-danger" onclick="desactiverEmploye(' + m.id + ')">Désactiver</button>' 
+                                : '<button class="btn btn-action" style="background:#2ecc71;" onclick="reactiverEmploye(' + m.id + ')">Réactiver</button>'
+                            }
+                        </td>
+                    </tr>`;
                 });
             }
         }
 
-                async function desactiverEmploye(id) {
+        async function desactiverEmploye(id) {
             if(confirm("Désactiver cet employé ? Il ne pourra plus se connecter à la caisse.")) {
                 await clientSupabase.from('personnel_nina').update({ actif: false }).eq('id', id);
                 chargerEquipe();
@@ -1115,39 +1205,32 @@ async function ajouterArticleManuel() {
             chargerEquipe();
         }
         
-                async function ajouterEmploye() {
+        async function ajouterEmploye() {
             const nom = document.getElementById('emp-nom').value;
             const role = document.getElementById('emp-role').value;
             const pin = document.getElementById('emp-pin').value;
             if(!nom || pin.length < 4) { alert("⚠️ Saisissez un nom et un PIN à 4 chiffres."); return; }
-           await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin, actif: true}]);
+            await clientSupabase.from('personnel_nina').insert([{nom_employe: nom, role: role, code_pin: pin, actif: true}]);
             document.getElementById('emp-nom').value = ""; document.getElementById('emp-pin').value = "";
             chargerEquipe();
         }
 
-        // ==========================================
-        // --- 8. DÉMARRAGE DU LOGICIEL           ---
-        // ==========================================
-        // Lance la caisse par défaut et précharge la dette en fond
+        // --- 8. DÉMARRAGE DU LOGICIEL ---
         chargerCaisse();
         chargerReliquats();
-
     </script>
-    <!-- MODAL DE DÉTAILS D'UNE JOURNÉE ARCHIVÉE -->
-<div id="modal-archive-journee" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 15px;">
-    <div style="background: white; border-radius: 12px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-        
-        <!-- En-tête du Modal -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 20px;">
-            <h3 id="modal-archive-titre" style="margin: 0; color: var(--primary);">📋 Rapport détaillé de la journée</h3>
-            <button onclick="fermerModalJournee()" style="background: var(--danger); color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ Fermer</button>
-        </div>
 
-        <!-- Contenu injecté dynamiquement -->
-        <div id="modal-archive-contenu">
-            <div style="text-align: center; color: #7f8c8d; padding: 30px;">⏳ Chargement des tickets du jour...</div>
+    <!-- MODAL DE DÉTAILS D'UNE JOURNÉE ARCHIVÉE -->
+    <div id="modal-archive-journee" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 15px;">
+        <div style="background: white; border-radius: 12px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 20px;">
+                <h3 id="modal-archive-titre" style="margin: 0; color: var(--primary);">📋 Rapport détaillé de la journée</h3>
+                <button onclick="fermerModalJournee()" style="background: var(--danger); color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ Fermer</button>
+            </div>
+            <div id="modal-archive-contenu">
+                <div style="text-align: center; color: #7f8c8d; padding: 30px;">⏳ Chargement des tickets du jour...</div>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>
