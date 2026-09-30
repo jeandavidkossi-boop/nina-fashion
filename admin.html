@@ -701,7 +701,7 @@
                     montant: 0,
                     categorie_depense: 'Annulation Admin',
                     utilisateur: localStorage.getItem('nomEmploye') || 'Admin'
-                }]).catch(() => {});
+                }]);
 
                 const { error: errLignes } = await clientSupabase.from('lignes_commandes').delete().eq('commande_id', t.id);
                 if (errLignes) throw errLignes;
@@ -715,7 +715,7 @@
                 alert('❌ Erreur lors de la suppression : ' + err.message);
             }
         }
-
+        
                 // ==========================================
         // --- 4. LE CERVEAU : RENTABILITÉ & BILAN ---
         // ==========================================
