@@ -112,7 +112,7 @@
     </style>
 </head>
 
-    <body>
+<body>
 
     <div class="login-card">
         <img src="logo.jpg" alt="Logo Nina Fashion" class="logo-officiel">
@@ -128,7 +128,13 @@
         <div id="message-erreur">❌ Accès refusé. Veuillez vérifier vos habilitations.</div>
     </div>
 
-            <script>
+    <script>
+        function deconnexionPropre() {
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('roleUtilisateur');
+            localStorage.removeItem('nomEmploye');
+        }
+
         // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
@@ -157,55 +163,52 @@
                 if (error) throw error;
 
                 if (employe) {
+                    const role = employe.role.toLowerCase().trim();
+
+                    // --- CONNEXION SECRÈTE SUPABASE ---
+                    let emailFantome = "";
+                    let passwordFantome = "";
+
+                    if (role === 'administrateur') { emailFantome = 'admin@ninafashion.ci'; passwordFantome = 'NinaAdmin2026*'; }
+                    else if (role === 'magasinier') { emailFantome = 'magasinier@ninafashion.ci'; passwordFantome = 'NinaMagasinier2026*'; }
+                    else if (role === 'vendeur') { emailFantome = 'vendeur@ninafashion.ci'; passwordFantome = 'NinaVendeur2026*'; }
+                    else if (role === 'machiniste') { emailFantome = 'machiniste@ninafashion.ci'; passwordFantome = 'NinaMachiniste2026*'; }
+                    else if (role === 'caissière') { emailFantome = 'caissiere@ninafashion.ci'; passwordFantome = 'NinaCaissiere2026*'; }
+
+                    if (emailFantome) {
+                        const { error: authError } = await clientSupabase.auth.signInWithPassword({
+                            email: emailFantome,
+                            password: passwordFantome
+                        });
+                        if (authError) throw new Error(authError.message);
+                    }
+
+                    // Enregistrement de la session uniquement après validation complète
                     localStorage.setItem('sessionActive', 'true');
                     localStorage.setItem('roleUtilisateur', employe.role);
                     localStorage.setItem('nomEmploye', employe.nom_employe);
 
-                const role = employe.role.toLowerCase().trim();
-                                // --- DÉBUT DE LA CONNEXION SECRÈTE SUPABASE ---
-            let emailFantome = "";
-            let passwordFantome = "";
-
-            if (role === 'administrateur') { emailFantome = 'admin@ninafashion.ci'; passwordFantome = 'NinaAdmin2026*'; }
-            else if (role === 'magasinier') { emailFantome = 'magasinier@ninafashion.ci'; passwordFantome = 'NinaMagasinier2026*'; }
-            else if (role === 'vendeur') { emailFantome = 'vendeur@ninafashion.ci'; passwordFantome = 'NinaVendeur2026*'; }
-            else if (role === 'machiniste') { emailFantome = 'machiniste@ninafashion.ci'; passwordFantome = 'NinaMachiniste2026*'; }
-            else if (role === 'caissière') { emailFantome = 'caissiere@ninafashion.ci'; passwordFantome = 'NinaCaissiere2026*'; }
-
-            // Supabase valide le compte fantôme en arrière-plan et nous donne le Jeton
-                    
-                    
-            const { data: authData, error: authError } = await clientSupabase.auth.signInWithPassword({
-                email: emailFantome,
-                password: passwordFantome
-            });
-
-if (authError) throw new Error(authError.message);
-                
-            // --- FIN DE LA CONNEXION SECRÈTE ---
-                    
-                            if (role === 'administrateur') {
-            window.location.href = 'admin.html';
-        } else if (role === 'magasinier') {
-            window.location.href = 'stock.html';
-        } else if (role === 'caissière') {
-            window.location.href = 'caisse.html';
-        } else if (role === 'vendeur') {
-            window.location.href = 'vendeur.html';
-        } else if (role === 'machiniste') {
-            window.location.href = 'machiniste.html';
-        } else {
-            throw new Error("Rôle non configuré");
-                            }
-                    
+                    if (role === 'administrateur') {
+                        window.location.href = 'admin.html';
+                    } else if (role === 'magasinier') {
+                        window.location.href = 'stock.html';
+                    } else if (role === 'caissière') {
+                        window.location.href = 'caisse.html';
+                    } else if (role === 'vendeur') {
+                        window.location.href = 'vendeur.html';
+                    } else if (role === 'machiniste') {
+                        window.location.href = 'machiniste.html';
+                    } else if (role === 'serveuse') {
+                        window.location.href = 'rayon.html';
+                    } else {
+                        throw new Error("Rôle non configuré");
+                    }
                 } else {
                     throw new Error("Accès refusé");
                 }
 
-                        } catch (err) {
-            
-            msgErreur.style.display = 'block';
-            
+            } catch (err) {
+                deconnexionPropre();
                 msgErreur.style.display = 'block';
                 btnSubmit.innerText = "S'AUTHENTIFIER";
                 btnSubmit.disabled = false;
