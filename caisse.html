@@ -81,7 +81,7 @@
 
     <header>
         <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="btn-action-top" style="background:transparent; border:1px solid #fff; cursor: pointer;" onclick="localStorage.clear(); window.location.replace('index.html')">🚪 Accueil</button>
+            <button class="btn-action-top" style="background:transparent; border:1px solid #fff; cursor: pointer;" onclick="deconnexionPropre(); window.location.replace('index.html')">🚪 Accueil</button>
             <h1>Nina Fashion - Caisse</h1>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -90,7 +90,7 @@
         </div>
     </header>
 
-        <div class="main-layout">
+    <div class="main-layout">
         <div class="queue-panel">
             <div class="panel-header">
                 <span>🛒 Tickets en attente</span>
@@ -153,7 +153,7 @@
             <div id="section-ajustement-monnaie" class="ajustement-box" style="display:none;">
                 <div class="pay-row">
                     <div class="pay-label" style="color:var(--primary);">💰 Espèces RÉELLEMENT rendues :</div>
-                    <input type="number" id="pay-rendu-reel" class="pay-input" style="border-color:var(--gold);" oninput="calculerReliquatPartiel()">
+                    <input type="number" id="pay-rendu-reel" class="pay-input" style="border-color:var(--gold);" oninput="this.dataset.modifie='true'; calculerReliquatPartiel();">
                 </div>
                 <div style="font-size:12px; font-weight:bold; color:var(--danger); text-align:right; margin-top:5px;">
                     ⚠️ Reste dû au client (Nouveau Reliquat) : <span id="label-reliquat-genere" style="font-size:14px;">0 F</span>
@@ -167,31 +167,35 @@
         </div>
     </div>
         <script>
+        function deconnexionPropre() {
+            localStorage.removeItem('sessionActive');
+            localStorage.removeItem('roleUtilisateur');
+            localStorage.removeItem('nomEmploye');
+        }
+
         // --- 1. CONFIGURATION SUPABASE ---
         const SUPABASE_URL = "https://tkqosylavymaracevaxt.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrcW9zeWxhdnltYXJhY2V2YXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTUyMTksImV4cCI6MjA5Nzk3MTIxOX0.hsF2SN7OrxIixwDgRznyYYlEtFzw7MKM2WIO7Aqsb0U";
         const clientSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
         // --- 2. SÉCURITÉ INSTITUTIONNELLE : LE GARDIEN DES PORTES ---
-        const roleActuel = localStorage.getItem('roleUtilisateur') || ''; // Conservé pour ton badge
+        const roleActuel = localStorage.getItem('roleUtilisateur') || '';
 
         (function verifierSecurite() {
             const sessionActive = localStorage.getItem('sessionActive');
             const roleMinuscule = roleActuel.toLowerCase();
 
-            // Si le ticket est invalide ou que le rôle n'est pas autorisé (Caissière, Admin ou Vendeur), on expulse.
             if (!sessionActive || (roleMinuscule !== 'caissière' && roleMinuscule !== 'administrateur' && roleMinuscule !== 'vendeur')) {
-                localStorage.clear();
+                deconnexionPropre();
                 window.location.replace('index.html');
                 return;
             }
 
-            // Le radar d'inactivité (30 minutes)
             let tempsInactivite;
             const TEMPS_LIMITE = 30 * 60 * 1000; 
 
             function deconnexionAutomatique() {
-                localStorage.clear();
+                deconnexionPropre();
                 window.location.replace('index.html');
             }
 
@@ -200,35 +204,29 @@
                 tempsInactivite = setTimeout(deconnexionAutomatique, TEMPS_LIMITE);
             }
 
-            // On surveille les mouvements
             window.onload = reinitialiserMinuteur;
             document.onmousemove = reinitialiserMinuteur;
             document.onkeypress = reinitialiserMinuteur;
             document.ontouchstart = reinitialiserMinuteur; 
 
-            // LE DÉTECTEUR ANTI-RETOUR (Contre le cache du téléphone)
             window.addEventListener('pageshow', function(event) {
                 if (event.persisted || !localStorage.getItem('sessionActive')) {
-                    localStorage.clear();
+                    deconnexionPropre();
                     window.location.replace('index.html');
                 }
             });
         })();
             
-// On affiche le rôle validé sur le badge en haut de l'écran
-document.getElementById('badge-caissiere').innerText = "👩‍💻 " + roleActuel;
-
-// On garde le rôle pour l'enregistrer dans les commandes validées
-let nomCaissiere = roleActuel; 
+        let nomCaissiere = localStorage.getItem('nomEmploye') || roleActuel;
+        document.getElementById('badge-caissiere').innerText = "👩‍💻 " + nomCaissiere;
 
         let ticketsEnAttente = [];
         let ticketSelectionne = null;
 
-        // Variables pour la mémoire du paiement
         let reliquatValideMontant = 0;
         let reliquatValideId = null;
 
-                // --- 3. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
+        // --- 3. GESTION AUTOMATIQUE DE LA FILE D'ATTENTE ---
         async function chargerCommandes() {
             const { data, error } = await clientSupabase.from('commandes')
                 .select('*')
@@ -241,20 +239,18 @@ let nomCaissiere = roleActuel;
             }
         }
 
-            // Charger les tickets une première fois au lancement
-chargerCommandes();
+        chargerCommandes();
 
-// Écouter automatiquement les nouveautés en temps réel
-clientSupabase
-  .channel('suivi-caisse')
-  .on(
-    'postgres_changes',
-    { event: '*', schema: 'public', table: 'commandes' },
-    (payload) => {
-      chargerCommandes();
-    }
-  )
-  .subscribe();
+        clientSupabase
+          .channel('suivi-caisse')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'commandes' },
+            () => {
+              chargerCommandes();
+            }
+          )
+          .subscribe();
             
         function afficherFileDAttente() {
             const liste = document.getElementById("queue-list");
@@ -275,77 +271,72 @@ clientSupabase
                 let dateObj = new Date(ticket.created_at);
                 let heure = dateObj.getHours().toString().padStart(2, '0') + ':' + dateObj.getMinutes().toString().padStart(2, '0');
 
-                            // Détermination du badge et du nom client
-            let estAtelier = ticket.origine === 'atelier';
-            let badge = estAtelier ? `<span style="background:#8e44ad; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">✂️ ATELIER</span>` : `<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛒 BOUTIQUE</span>`;
-            let nomClientAffiche = ticket.client_nom ? `<br><small style="color:#7f8c8d;">👤 Client: ${ticket.client_nom}</small>` : '';
+                let estAtelier = ticket.origine === 'atelier';
+                let badge = estAtelier ? `<span style="background:#8e44ad; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">✂️ ATELIER</span>` : `<span style="background:#2980b9; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛒 BOUTIQUE</span>`;
+                let nomClientAffiche = ticket.client_nom ? `<br><small style="color:#7f8c8d;">👤 Client: ${ticket.client_nom}</small>` : '';
 
-            card.innerHTML = `
-                <div class="ticket-top"><span>Ticket ${ticket.num_panier}</span> 🕒 ${heure}</div>
-                <div class="ticket-vendeur">Source: ${badge} | Par: ${ticket.vendeur_nom || 'Anonyme'}${nomClientAffiche}</div>
-                <div class="ticket-price">${parseFloat(ticket.total).toLocaleString('fr-FR')} F</div>
-            `;
+                card.innerHTML = `
+                    <div class="ticket-top"><span>Ticket ${ticket.num_panier}</span> 🕒 ${heure}</div>
+                    <div class="ticket-vendeur">Source: ${badge} | Par: ${ticket.vendeur_nom || 'Anonyme'}${nomClientAffiche}</div>
+                    <div class="ticket-price">${(estAtelier ? parseFloat(ticket.reste_a_payer) : parseFloat(ticket.total)).toLocaleString('fr-FR')} F</div>
+                `;
                 
                 liste.appendChild(card);
             });
         }
 
         async function selectionnerTicket(ticket) {
-    ticketSelectionne = ticket;
-    afficherFileDAttente(); // Pour mettre en surbrillance
+            ticketSelectionne = ticket;
+            afficherFileDAttente();
 
-    document.getElementById("empty-state").style.display = "none";
-    document.getElementById("active-receipt").style.display = "flex";
-    
-    // Affichage des entêtes de base
-    document.getElementById("receipt-title").innerText = "Ticket N° " + ticket.num_panier;
-    
-    // Si c'est l'atelier, on montre le calcul financier complet à la caissière
-    if (ticket.origine === 'atelier') {
-        let avancePayee = parseFloat(ticket.avance) || 0;
-        let resteAPayer = parseFloat(ticket.reste_a_payer) || 0;
-        document.getElementById("receipt-info").innerHTML = `📢 <strong>PRESTATION ATELIER</strong><br>Dépôt par : ${ticket.vendeur_nom || 'Anonyme'}<br>Client : ${ticket.client_nom || 'Anonyme'} (${ticket.client_numero || 'Pas de numéro'})<br><br><span style="color:#27ae60;">Montant Total : ${parseFloat(ticket.total).toLocaleString('fr-FR')} F</span><br><span style="color:#e74c3c;">Avance déjà reçue : ${avancePayee.toLocaleString('fr-FR')} F</span>`;
-        document.getElementById("receipt-total").innerText = resteAPayer.toLocaleString('fr-FR') + " F";
-    } else {
-        let telAffiche = ticket.client_numero ? ` (${ticket.client_numero})` : '';
-        document.getElementById("receipt-info").innerHTML = `👤 Client : ${ticket.client_nom || 'Anonyme'}${telAffiche}<br>Vendeur : ${ticket.vendeur_nom || 'Anonyme'}`;
-        document.getElementById("receipt-total").innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + " F";
-    }
+            document.getElementById("empty-state").style.display = "none";
+            document.getElementById("active-receipt").style.display = "flex";
+            document.getElementById("receipt-title").innerText = "Ticket N° " + ticket.num_panier;
+            
+            if (ticket.origine === 'atelier') {
+                let avancePayee = parseFloat(ticket.avance) || 0;
+                let resteAPayer = parseFloat(ticket.reste_a_payer) || 0;
+                document.getElementById("receipt-info").innerHTML = `📢 <strong>PRESTATION ATELIER</strong><br>Dépôt par : ${ticket.vendeur_nom || 'Anonyme'}<br>Client : ${ticket.client_nom || 'Anonyme'} (${ticket.client_numero || 'Pas de numéro'})<br><br><span style="color:#27ae60;">Montant Total : ${parseFloat(ticket.total).toLocaleString('fr-FR')} F</span><br><span style="color:#e74c3c;">Avance déjà reçue : ${avancePayee.toLocaleString('fr-FR')} F</span>`;
+                document.getElementById("receipt-total").innerText = resteAPayer.toLocaleString('fr-FR') + " F";
+            } else {
+                let telAffiche = ticket.client_numero ? ` (${ticket.client_numero})` : '';
+                document.getElementById("receipt-info").innerHTML = `👤 Client : ${ticket.client_nom || 'Anonyme'}${telAffiche}<br>Vendeur : ${ticket.vendeur_nom || 'Anonyme'}`;
+                document.getElementById("receipt-total").innerText = parseFloat(ticket.total).toLocaleString('fr-FR') + " F";
+            }
 
-    const boxItems = document.getElementById("receipt-items");
-    boxItems.innerHTML = "";
+            const boxItems = document.getElementById("receipt-items");
+            boxItems.innerHTML = "";
 
-    try {
-        // Interrogation de la nouvelle table détaillée lignes_commandes
-        const { data: lignes, error } = await clientSupabase
-            .from('lignes_commandes')
-            .select('*')
-            .eq('commande_id', ticket.id);
+            try {
+                const { data: lignes, error } = await clientSupabase
+                    .from('lignes_commandes')
+                    .select('*')
+                    .eq('commande_id', ticket.id);
 
-        if (error) throw error;
+                if (error) throw error;
 
-        if (!lignes || lignes.length === 0) {
-            boxItems.innerHTML = '<div style="text-align:center; padding:10px; color:#95a5a6;">Aucun article trouvé pour ce ticket.</div>';
-            return;
+                if (!lignes || lignes.length === 0) {
+                    boxItems.innerHTML = '<div style="text-align:center; padding:10px; color:#95a5a6;">Aucun article trouvé pour ce ticket.</div>';
+                    return;
+                }
+
+                lignes.forEach(art => {
+                    let sousTotal = parseFloat(art.prix_unitaire_vente) * parseFloat(art.quantite);
+                    boxItems.innerHTML += `
+                        <div class="item-line">
+                            <div>
+                                <div class="item-name">${art.nom_article}</div>
+                                <div class="item-calc">Qté: ${art.quantite} x ${parseFloat(art.prix_unitaire_vente).toLocaleString('fr-FR')} F</div>
+                            </div>
+                            <div class="item-total">${Math.round(sousTotal).toLocaleString('fr-FR')} F</div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                boxItems.innerHTML = '<div style="color:red; text-align:center; padding:10px;">⚠️ Erreur lors du chargement des articles détaillés.</div>';
+                console.error(e);
+            }
         }
-
-        lignes.forEach(art => {
-            let sousTotal = parseFloat(art.prix_unitaire_vente) * parseFloat(art.quantite);
-            boxItems.innerHTML += `
-                <div class="item-line">
-                    <div>
-                        <div class="item-name">${art.nom_article}</div>
-                        <div class="item-calc">Qté: ${art.quantite} x ${parseFloat(art.prix_unitaire_vente).toLocaleString('fr-FR')} F</div>
-                    </div>
-                    <div class="item-total">${Math.round(sousTotal).toLocaleString('fr-FR')} F</div>
-                </div>
-            `;
-        });
-    } catch (e) {
-        boxItems.innerHTML = '<div style="color:red; text-align:center; padding:10px;">⚠️ Erreur lors du chargement des articles détaillés.</div>';
-        console.error(e);
-    }
-                                     }
             
         function masquerDetails() {
             document.getElementById("empty-state").style.display = "block";
@@ -357,13 +348,15 @@ clientSupabase
         function ouvrirModalPaiement() {
             if (!ticketSelectionne) return;
             document.getElementById("modal-ticket-num").innerText = ticketSelectionne.num_panier;
-            document.getElementById("modal-ticket-total").innerText = parseFloat(ticketSelectionne.total).toLocaleString('fr-FR') + " FCFA";
+            const totalFactureAffiche = ticketSelectionne.origine === 'atelier' ? parseFloat(ticketSelectionne.reste_a_payer) : parseFloat(ticketSelectionne.total);
+            document.getElementById("modal-ticket-total").innerText = totalFactureAffiche.toLocaleString('fr-FR') + " FCFA";
 
-            // Nettoyage des cases
             document.getElementById("pay-cash").value = "";
             document.getElementById("pay-momo").value = "";
             document.getElementById("pay-reliquat-code").value = "";
             document.getElementById("reliquat-status").innerText = "";
+            document.getElementById("pay-rendu-reel").value = "";
+            delete document.getElementById("pay-rendu-reel").dataset.modifie;
             reliquatValideMontant = 0;
             reliquatValideId = null;
 
@@ -380,12 +373,12 @@ clientSupabase
             const btn = document.querySelector(".btn-verify");
             btn.innerText = "...";
 
-            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code).eq('statut', 'actif').maybeSingle();
+            const { data } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code).eq('statut', 'actif').maybeSingle();
 
             if (data) {
                 reliquatValideMontant = parseFloat(data.montant);
                 reliquatValideId = data.id;
-                document.getElementById("reliquat-status").innerHTML = `<span style="color:var(--success);">✅ Valide: ${reliquatValideMontant} F (Client: ${data.non_client})</span>`;
+                document.getElementById("reliquat-status").innerHTML = `<span style="color:var(--success);">✅ Valide: ${reliquatValideMontant} F (Client: ${data.nom_client})</span>`;
             } else {
                 reliquatValideMontant = 0;
                 reliquatValideId = null;
@@ -409,43 +402,39 @@ clientSupabase
             const inputRenduReel = document.getElementById("pay-rendu-reel");
 
             if (difference < 0) {
-                // Le client n'a pas encore donné assez d'argent
                 divReste.innerHTML = `<span style="color: var(--danger);">Reste à payer : ${Math.abs(difference).toLocaleString('fr-FR')} F</span>`;
                 btnConf.disabled = true;
                 boxAjustement.style.display = "none";
             } 
             else if (difference > 0) {
-                // Le client a donné trop d'argent, il faut rendre la monnaie
                 divReste.innerHTML = `<span style="color: var(--success);">Monnaie normale à rendre : ${difference.toLocaleString('fr-FR')} F</span>`;
                 btnConf.disabled = false;
                 
-                // On affiche la zone d'ajustement de la caissière et on met la monnaie max par défaut
                 boxAjustement.style.display = "block";
                 if(!inputRenduReel.dataset.modifie) inputRenduReel.value = difference; 
                 calculerReliquatPartiel();
             } 
             else {
-                // Le compte est juste parfait (0 franc de différence)
                 divReste.innerHTML = `<span style="color: var(--success);">Le compte est bon.</span>`;
                 btnConf.disabled = false;
                 boxAjustement.style.display = "none";
             }
         }
 
-        // --- LA MAGIE DU RELIQUAT PARTIEL ---
         function calculerReliquatPartiel() {
-            document.getElementById("pay-rendu-reel").dataset.modifie = "true";
-            
             const totalFacture = ticketSelectionne.origine === 'atelier' ? parseFloat(ticketSelectionne.reste_a_payer) : parseFloat(ticketSelectionne.total);
             const cash = parseFloat(document.getElementById("pay-cash").value) || 0;
             const momo = parseFloat(document.getElementById("pay-momo").value) || 0;
             const totalPaye = cash + momo + reliquatValideMontant;
-            const difference = totalPaye - totalFacture; // Monnaie théorique
+            const difference = totalPaye - totalFacture;
 
             let renduReel = parseFloat(document.getElementById("pay-rendu-reel").value) || 0;
+            if (renduReel < 0) {
+                renduReel = 0;
+                document.getElementById("pay-rendu-reel").value = 0;
+            }
             let reliquatGenere = difference - renduReel;
 
-            // Sécurité : on ne peut pas rendre plus de monnaie qu'on ne doit
             if (renduReel > difference) {
                 renduReel = difference;
                 document.getElementById("pay-rendu-reel").value = renduReel;
@@ -469,36 +458,33 @@ clientSupabase
             const totalPaye = cash + momo + oldReliqMontant;
             const difference = totalPaye - totalFacture;
             let renduReel = parseFloat(document.getElementById("pay-rendu-reel").value) || 0;
-            
-            // Si la case d'ajustement n'était pas affichée, le rendu réel est égal à la différence
-            if(difference <= 0) renduReel = 0;
+            if (renduReel < 0) renduReel = 0;
+            if (difference <= 0) renduReel = 0;
 
             let reliquatACreer = difference - renduReel;
             let nomClient = "";
             let numRecuNouveau = "";
 
-                    if (reliquatACreer > 0) {
-            // SÉCURITÉ ANTIVOL & CONFORT : Si le client a déjà donné son nom à l'atelier ou au vendeur, on l'utilise directement !
-            if (ticketSelectionne.client_nom && ticketSelectionne.client_nom.trim() !== "") {
-                nomClient = ticketSelectionne.client_nom.trim();
-            } else {
-                // S'il n'y a aucun nom (Client Anonyme au comptoir), ALORS SEULEMENT on demande à la caissière
-                nomClient = prompt("⚠️ Le ticket est anonyme. Veuillez inscrire le NOM DU CLIENT pour lui éditer son Reçu d'Avoir (Reliquat) :");
-                if (!nomClient || !nomClient.trim()) {
-                    alert("❌ OPÉRATION ANNULÉE : Il est strictement interdit de créer un avoir sans y attacher le nom d'un client.");
-                    btn.disabled = false;
-                    btn.innerText = "✅ CONFIRMER LE PAIEMENT";
-                    return;
-                }
-            }
-            numRecuNouveau = "R-" + Math.floor(1000 + Math.random() * 9000);
+            if (reliquatACreer > 0) {
+                if (ticketSelectionne.client_nom && ticketSelectionne.client_nom.trim() !== "") {
+                    nomClient = ticketSelectionne.client_nom.trim();
+                } else {
+                    nomClient = prompt("⚠️ Le ticket est anonyme. Veuillez inscrire le NOM DU CLIENT pour lui éditer son Reçu d'Avoir (Reliquat) :");
+                    if (!nomClient || !nomClient.trim()) {
+                        alert("❌ OPÉRATION ANNULÉE : Il est strictement interdit de créer un avoir sans y attacher le nom d'un client.");
+                        btn.disabled = false;
+                        btn.innerText = "✅ CONFIRMER LE PAIEMENT";
+                        return;
                     }
+                }
+                numRecuNouveau = "R-" + Math.floor(1000 + Math.random() * 9000);
+            }
             
             try {
-                // 1. CLÔTURER LA COMMANDE AVEC TOUS LES DÉTAILS FINANCIERS POUR LE RADAR ADMIN
                 const { error: errCmd } = await clientSupabase.from('commandes').update({ 
                     statut: 'paye',
-                    montant_cash: cash - renduReel, // 🔒 CORRECTION : Le vrai argent resté dans le tiroir !
+                    paye_le: new Date().toISOString(),
+                    montant_cash: cash - renduReel,
                     montant_momo: momo,
                     montant_reliquat: oldReliqMontant,
                     caissiere_nom: nomCaissiere
@@ -506,25 +492,22 @@ clientSupabase
 
                 if (errCmd) throw errCmd;
 
-                // 2. INVALIDER L'ANCIEN RELIQUAT S'IL A ÉTÉ UTILISÉ
                 if (reliquatValideId) {
                     await clientSupabase.from('reliquats').update({ statut: 'utilise' }).eq('id', reliquatValideId);
                 }
 
-                        // 3. ENREGISTRER LE NOUVEAU RELIQUAT (S'IL Y EN A UN)
-        if (reliquatACreer > 0) {
-            await clientSupabase.from('reliquats').insert([{
-                num_recu: numRecuNouveau,
-                nom_client: nomClient, // <-- LA CORRECTION EST ICI (nom_client avec un M)
-                montant: reliquatACreer,
-                statut: 'actif'
-            }]);
+                if (reliquatACreer > 0) {
+                    await clientSupabase.from('reliquats').insert([{
+                        num_recu: numRecuNouveau,
+                        nom_client: nomClient,
+                        montant: reliquatACreer,
+                        statut: 'actif'
+                    }]);
                     alert(`✅ ENCAISSEMENT RÉUSSI !\n\n1️⃣ Rendez ${renduReel} F en espèces au client.\n2️⃣ Écrivez le reçu papier pour sa dette :\n➡️ Code: ${numRecuNouveau} | Valeur: ${reliquatACreer} F`);
                 } else {
                     alert(`✅ ENCAISSEMENT RÉUSSI !\n\nRendez la monnaie : ${renduReel} F`);
                 }
 
-                // Nettoyage de l'écran
                 fermerModal('payment-modal');
                 masquerDetails();
                 chargerCommandes();
@@ -542,7 +525,7 @@ clientSupabase
             const code = prompt("💸 REMBOURSEMENT D'UN RELIQUAT\nEntrez le code du reçu papier apporté par le client (Ex: R-1234) :");
             if (!code) return;
 
-            const { data, error } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code.trim()).eq('statut', 'actif').maybeSingle();
+            const { data } = await clientSupabase.from('reliquats').select('*').eq('num_recu', code.trim()).eq('statut', 'actif').maybeSingle();
 
             if (data) {
                 const conf = confirm(`👤 Client : ${data.nom_client}\n💰 Montant à rembourser physiquement : ${data.montant} F\n\nConfirmez-vous avoir sorti cet argent de la caisse ?`);
@@ -554,8 +537,6 @@ clientSupabase
                 alert("❌ Ce reçu est introuvable, déjà utilisé, ou déjà remboursé.");
             }
         }
-
-        chargerCommandes();
     </script>
 </body>
 </html>
