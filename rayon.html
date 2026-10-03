@@ -60,6 +60,12 @@
         .modal-actions { display: flex; gap: 10px; }
         .btn-cancel { flex: 1; padding: 12px; border: none; background: #e2e8f0; color: #7f8c8d; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-confirm { flex: 1; padding: 12px; border: none; background: var(--success); color: white; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* Styles pour le rangement par famille (Accordéon) */
+        .cache { display: none !important; }
+        .titre-famille { color: var(--primary); padding: 15px 0 5px 0; border-bottom: 2px solid var(--primary); margin-top: 15px; font-family: 'Georgia', serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; }
+        .titre-article { background: white; color: var(--primary); padding: 14px; margin-top: 8px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem; }
+        .contenu-couleurs { background: white; border: 1px solid var(--border); border-top: none; padding: 10px; border-radius: 0 0 4px 4px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -79,7 +85,6 @@
     </div>
 
     <div class="main-content">
-
         <!-- ONGLET 1 : CONSULTATION -->
         <div id="tab-consultation" class="tab-content active">
             <button class="btn-add-new" onclick="ouvrirModalNouveau()">➕ Déclarer / Compter un article en rayon</button>
@@ -104,7 +109,6 @@
             <p style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 15px; text-align: center;">Ces articles sont presque épuisés dans les rayons de la boutique. Demandez au magasinier de vous ravitailler.</p>
             <div id="liste-alertes"></div>
         </div>
-
     </div>
 
     <!-- MODAL 1 : CORRECTION / INVENTAIRE DE LA QUANTITÉ -->
@@ -125,18 +129,16 @@
         <div class="modal-content">
             <div class="modal-header">➕ Ajouter / Compter au rayon</div>
             <p style="font-size: 0.8rem; color: #7f8c8d; margin-bottom: 10px;">Utilisez ceci pour votre premier inventaire, ou pour tout article présent en rayon mais absent de cette liste.</p>
-
-            <label class="modal-label">1. Article du catalogue :</label>
+            <label class="modal-label">1. Chercher l'article :</label>
+            <input type="text" id="mn-search" class="modal-input" placeholder="🔍 Taper pour filtrer (ex: bouton doré)..." oninput="filtrerSelectCatalogue()">
+            <label class="modal-label">Sélectionnez l'article trouvé :</label>
             <select id="mn-article" class="modal-input">
                 <option value="">Chargement du catalogue...</option>
             </select>
-
             <label class="modal-label">2. Couleur / Motif :</label>
             <input type="text" id="mn-couleur" class="modal-input" placeholder="Ex: Rouge, Blanc, ou Standard">
-
             <label class="modal-label">3. Quantité comptée en rayon :</label>
             <input type="number" id="mn-qte" class="modal-input" placeholder="Ex: 5">
-
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="fermerModal('modal-nouveau')">Annuler</button>
                 <button class="btn-confirm" id="btn-valider-nouveau" onclick="validerNouveau()">✅ Enregistrer</button>
@@ -156,8 +158,7 @@
             </div>
         </div>
     </div>
-    
-    <script>
+        <script>
         function deconnexionPropre() {
             localStorage.removeItem('sessionActive');
             localStorage.removeItem('roleUtilisateur');
@@ -241,72 +242,156 @@
             }
         }
 
-        // --- 6. AFFICHAGE DES ARTICLES ---
+        // --- 6. AFFICHAGE DES ARTICLES (AVEC ACCORDÉON) ---
         function afficherRayon() {
             const conteneurRayon = document.getElementById('liste-rayon');
             const conteneurAlertes = document.getElementById('liste-alertes');
-            const recherche = document.getElementById('search-input').value.toLowerCase();
-
             conteneurRayon.innerHTML = '';
             conteneurAlertes.innerHTML = '';
-
-            let articlesFiltres = RAYON_DATA
-                .map((art, idx) => ({ art, idx }))
-                .filter(({ art }) =>
-                    art.nom_article.toLowerCase().includes(recherche) ||
-                    (art.couleur_ref && art.couleur_ref.toLowerCase().includes(recherche))
-                );
-
-            if (articlesFiltres.length === 0) {
-                conteneurRayon.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 20px;">Aucun article trouvé dans les rayons.</div>';
-            }
-
             let nbAlertes = 0;
 
-            articlesFiltres.forEach(({ art, idx }) => {
-                let qte = parseFloat(art.quantite) || 0;
-                let seuil = parseFloat(art.seuil_alerte) || 3;
-                let enRupture = (qte <= seuil);
+            if (RAYON_DATA.length === 0) {
+                conteneurRayon.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 20px;">Aucun article dans les rayons.</div>';
+                return;
+            }
 
-                let carteHtml = `
-                    <div class="rayon-card ${enRupture ? 'alerte' : ''}">
-                        <div class="rayon-info">
-                            <div class="art-nom">${escHtml(art.nom_article)}</div>
-                            <div class="art-couleur">🎨 ${escHtml(art.couleur_ref)}</div>
-                            <span class="art-prix">${art.prix_vente} F</span>
-                        </div>
-                        <div class="rayon-action">
-                            <span class="stock-badge ${enRupture ? 'alerte' : ''}">${qte}</span>
-                            <button class="btn-maj" onclick="ouvrirModalCorrection(${idx})">✍️ Éditer</button>
-                            <button class="btn-machiniste" onclick="ouvrirModalMachiniste(${idx})">✂️ Donner</button>
-                        </div>
-                    </div>
-                `;
+            let donneesGroupees = {};
+            RAYON_DATA.forEach((art, idx) => {
+                let infoCat = CATALOGUE.find(c => c.id == art.article_id) || {};
+                let famille = infoCat.famille || 'SANS CATÉGORIE';
+                let nomArticle = art.nom_article;
 
-                conteneurRayon.innerHTML += carteHtml;
-
-                if (enRupture) {
-                    conteneurAlertes.innerHTML += carteHtml;
-                    nbAlertes++;
-                }
+                if (!donneesGroupees[famille]) donneesGroupees[famille] = {};
+                if (!donneesGroupees[famille][nomArticle]) donneesGroupees[famille][nomArticle] = [];
+                
+                donneesGroupees[famille][nomArticle].push({ data: art, index: idx });
             });
+
+            let htmlRayon = '';
+            
+            for (let famille in donneesGroupees) {
+                let idFamille = 'ray_cat_' + Math.random().toString(36).substr(2, 9);
+                htmlRayon += `<div class="titre-famille" onclick="document.getElementById('${idFamille}').classList.toggle('cache')">
+                                <span>📦 ${famille.toUpperCase()}</span>
+                                <span style="color: var(--gold); font-size: 0.8rem;">▼ OUVRIR</span>
+                             </div>
+                             <div id="${idFamille}" class="cache" style="padding-left: 10px; border-left: 2px solid var(--border); margin-bottom: 20px;">`;
+
+                for (let article in donneesGroupees[famille]) {
+                    let idUnique = 'ray_art_' + Math.random().toString(36).substr(2, 9);
+                    htmlRayon += `<div class="titre-article" onclick="document.getElementById('${idUnique}').classList.toggle('cache')">
+                                    <span>${article}</span>
+                                    <span style="color: #888; font-size: 0.8rem;">▼</span>
+                                 </div>
+                                 <div id="${idUnique}" class="contenu-couleurs cache">`;
+                    
+                    donneesGroupees[famille][article].forEach(item => {
+                        let art = item.data;
+                        let idx = item.index;
+                        let qte = parseFloat(art.quantite) || 0;
+                        let seuil = parseFloat(art.seuil_alerte) || 3;
+                        let enRupture = (qte <= seuil);
+
+                        htmlRayon += `
+                            <div class="rayon-card ${enRupture ? 'alerte' : ''} ligne-recherche" style="margin-bottom: 10px;">
+                                <div class="rayon-info">
+                                    <div class="art-couleur">🎨 <span class="texte-couleur">${escHtml(art.couleur_ref)}</span></div>
+                                    <span class="art-prix">${art.prix_vente} F</span>
+                                </div>
+                                <div class="rayon-action">
+                                    <span class="stock-badge ${enRupture ? 'alerte' : ''}">${qte}</span>
+                                    <div style="display: flex; gap: 5px;">
+                                        <button class="btn-maj" onclick="ouvrirModalCorrection(${idx})">✍️ Éditer</button>
+                                        <button class="btn-machiniste" onclick="ouvrirModalMachiniste(${idx})">✂️ Donner</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        if (enRupture) {
+                            conteneurAlertes.innerHTML += `
+                                <div class="rayon-card alerte">
+                                    <div class="rayon-info">
+                                        <div class="art-nom">${escHtml(article)}</div>
+                                        <div class="art-couleur">🎨 ${escHtml(art.couleur_ref)}</div>
+                                        <span class="art-prix">${art.prix_vente} F</span>
+                                    </div>
+                                    <div class="rayon-action">
+                                        <span class="stock-badge alerte">${qte}</span>
+                                    </div>
+                                </div>`;
+                            nbAlertes++;
+                        }
+                    });
+                    htmlRayon += `</div>`;
+                }
+                htmlRayon += `</div>`;
+            }
+            
+            conteneurRayon.innerHTML = htmlRayon;
 
             if (nbAlertes === 0) {
                 conteneurAlertes.innerHTML = '<div style="text-align: center; color: var(--success); font-weight: bold; padding: 20px;">✅ Aucun article en alerte.</div>';
             }
-
             const badgeAlertes = document.getElementById('badge-alertes');
             if (nbAlertes > 0) { badgeAlertes.style.display = 'inline-block'; badgeAlertes.innerText = nbAlertes; }
             else { badgeAlertes.style.display = 'none'; }
+            
+            filtrerRayon();
         }
 
         function escHtml(s) {
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
-        function filtrerRayon() { afficherRayon(); }
+        function filtrerRayon() {
+            let recherche = document.getElementById("search-input").value.toLowerCase();
+            let categories = document.getElementById("liste-rayon").querySelectorAll(".titre-famille");
 
-        // --- 7. ARRIVAGES DU DÉPÔT ---
+            categories.forEach(titreFamille => {
+                let conteneurFamille = titreFamille.nextElementSibling;
+                let articles = conteneurFamille.querySelectorAll(".titre-article");
+                let familleVisible = false;
+
+                articles.forEach(titreArticle => {
+                    let conteneurCouleurs = titreArticle.nextElementSibling;
+                    let cartesRayon = conteneurCouleurs.querySelectorAll(".ligne-recherche");
+                    let nomArticle = titreArticle.innerText.toLowerCase();
+                    let articleVisible = false;
+
+                    cartesRayon.forEach(carte => {
+                        let texteCouleur = carte.querySelector(".texte-couleur").innerText.toLowerCase();
+                        if (nomArticle.includes(recherche) || texteCouleur.includes(recherche)) {
+                            carte.style.display = ""; 
+                            articleVisible = true;
+                        } else {
+                            carte.style.display = "none"; 
+                        }
+                    });
+
+                    if (articleVisible) {
+                        titreArticle.style.display = ""; 
+                        familleVisible = true;
+                        if (recherche !== "") conteneurCouleurs.classList.remove("cache"); 
+                        else conteneurCouleurs.classList.add("cache"); 
+                    } else {
+                        titreArticle.style.display = "none"; 
+                        conteneurCouleurs.classList.add("cache");
+                    }
+                });
+
+                if (familleVisible) {
+                    titreFamille.style.display = ""; 
+                    if (recherche !== "") conteneurFamille.classList.remove("cache"); 
+                    else conteneurFamille.classList.add("cache"); 
+                } else {
+                    titreFamille.style.display = "none"; 
+                    conteneurFamille.classList.add("cache");
+                }
+            });
+        }
+
+                    // --- 7. ARRIVAGES DU DÉPÔT ---
         async function chargerArrivages() {
             const conteneur = document.getElementById('liste-arrivages');
             const badge = document.getElementById('badge-arrivages');
@@ -402,17 +487,29 @@
             }
         }
 
-        // --- 9. DÉCLARER / COMPTER UN ARTICLE ---
+        // --- 9. DÉCLARER / COMPTER UN ARTICLE (AVEC BARRE DE RECHERCHE RAPIDE) ---
         function preparerSelectCatalogue() {
+            filtrerSelectCatalogue('');
+        }
+
+        function filtrerSelectCatalogue(recherche = null) {
             const select = document.getElementById('mn-article');
+            const inputRecherche = document.getElementById('mn-search');
+            let terme = recherche !== null ? recherche.toLowerCase() : inputRecherche.value.toLowerCase();
+
             select.innerHTML = '<option value="">-- Choisissez un article --</option>';
-            let catTrie = [...CATALOGUE].sort((a, b) => a.nom_article.localeCompare(b.nom_article));
+            
+            let catFiltre = CATALOGUE.filter(art => art.nom_article.toLowerCase().includes(terme));
+            let catTrie = catFiltre.sort((a, b) => a.nom_article.localeCompare(b.nom_article));
+            
             catTrie.forEach(art => {
                 select.innerHTML += `<option value="${art.id}">${escHtml(art.nom_article)}</option>`;
             });
         }
 
         function ouvrirModalNouveau() {
+            document.getElementById('mn-search').value = ""; 
+            filtrerSelectCatalogue(''); 
             document.getElementById('mn-article').value = "";
             document.getElementById('mn-couleur').value = "";
             document.getElementById('mn-qte').value = "";
@@ -479,7 +576,7 @@
 
         function fermerModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // DÉMARRAGE ET ÉCOUTE EN TEMPS RÉEL (SANS SETINTERVAL)
+        // DÉMARRAGE ET ÉCOUTE EN TEMPS RÉEL
         chargerDonnees();
         chargerArrivages();
 
